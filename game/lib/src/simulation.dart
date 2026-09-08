@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'agenda.dart';
 import 'care.dart';
 import 'domestic.dart';
 import 'household.dart';
@@ -96,6 +97,8 @@ class PersonState {
     this.householdId,
     this.roomId,
     this.routine,
+    this.skills,
+    this.agenda,
   });
 
   final String id;
@@ -108,6 +111,12 @@ class PersonState {
   final String? householdId;
   final String? roomId;
   final RoutineState? routine;
+
+  /// Tay nghề theo mã việc; người không có hồ sơ này làm ra sản lượng gốc.
+  final PersonSkills? skills;
+
+  /// Trạng thái riêng quyết định nhận hay từ chối việc được giao.
+  final PersonAgenda? agenda;
 
   PersonState withGoal(String goal) => _copy(activeGoal: goal);
 
@@ -124,6 +133,8 @@ class PersonState {
 
   PersonState withRoutine(RoutineState value) => _copy(routine: value);
 
+  PersonState withAgenda(PersonAgenda value) => _copy(agenda: value);
+
   PersonState _copy({
     String? activeGoal,
     InfantState? infancy,
@@ -131,6 +142,7 @@ class PersonState {
     CaregiverAgentState? caregiverAgent,
     String? roomId,
     RoutineState? routine,
+    PersonAgenda? agenda,
   }) => PersonState(
     id: id,
     name: name,
@@ -142,6 +154,8 @@ class PersonState {
     householdId: householdId,
     roomId: roomId ?? this.roomId,
     routine: routine ?? this.routine,
+    skills: skills,
+    agenda: agenda ?? this.agenda,
   );
 
   Map<String, Object?> toJson() {
@@ -159,6 +173,8 @@ class PersonState {
     if (householdId != null) result['household_id'] = householdId;
     if (roomId != null) result['room_id'] = roomId;
     if (routine != null) result['routine'] = routine!.toJson();
+    if (skills != null) result['skills'] = skills!.toJson();
+    if (agenda != null) result['agenda'] = agenda!.toJson();
     return result;
   }
 
@@ -187,6 +203,12 @@ class PersonState {
         : RoutineState.fromJson(
             (json['routine']! as Map).cast<String, Object?>(),
           ),
+    skills: json['skills'] == null
+        ? null
+        : PersonSkills.fromJson((json['skills']! as Map).cast<String, Object?>()),
+    agenda: json['agenda'] == null
+        ? null
+        : PersonAgenda.fromJson((json['agenda']! as Map).cast<String, Object?>()),
   );
 }
 
@@ -618,6 +640,16 @@ class Simulation {
               householdId: event.payload['household_id'] as String?,
               roomId: event.payload['room_id'] as String?,
               routine: _routineFromPayload(event.payload['routine']),
+              skills: event.payload['skills'] == null
+                  ? null
+                  : PersonSkills.fromJson(
+                      (event.payload['skills']! as Map).cast<String, Object?>(),
+                    ),
+              agenda: event.payload['agenda'] == null
+                  ? null
+                  : PersonAgenda.fromJson(
+                      (event.payload['agenda']! as Map).cast<String, Object?>(),
+                    ),
             ),
           },
           facts: <WorldFact>[
@@ -831,6 +863,16 @@ class Simulation {
   /// Còn dưới ngần này ngày dự trữ thì nhu cầu bắt đầu sinh việc.
   static const int _supplyHorizonDays = 12;
 
+  /// Mã nghề cần cho từng loại việc do nhu cầu sinh ra.
+  static const Map<String, String> _skillByResource = <String, String>{
+    'fuel': 'gather_fuel',
+    'water': 'fetch_water',
+    'food': 'gather_food',
+  };
+
+  /// Dưới mức này thì coi như chưa biết làm, không được giao việc.
+  static const int _minimumWorkSkill = 200;
+
   /// Việc do kế hoạch sinh ra: thời lượng, phòng và sản lượng nếu làm trọn.
   static const Map<String, (String, int, int, String)> _workByResource =
       <String, (String, int, int, String)>{
@@ -879,6 +921,19 @@ class Simulation {
         payload: event.payload,
       );
     }
+    // Một đêm ngủ trước khi tính việc hôm nay.
+    final Map<String, PersonState> rested = <String, PersonState>{
+      ..._state.people,
+    };
+    bool anyRest = false;
+    for (final String memberId in household.memberIds) {
+      final PersonState? member = rested[memberId];
+      final PersonAgenda? agenda = member?.agenda;
+      if (member == null || agenda == null) continue;
+      rested[memberId] = member.withAgenda(agenda.rest());
+      anyRest = true;
+    }
+    if (anyRest) _replace(people: rested);
     final List<HouseholdNeed> needs = householdNeeds(
       householdId,
     ).where((HouseholdNeed need) => need.needed).toList();
@@ -900,12 +955,15 @@ class Simulation {
       if (work == null) continue;
       final String? itemId = household.resourceItemIds[need.resourceKey];
       if (itemId == null) continue;
-      final String? assignee = _chooseWorker(
+      final String skillCode = _skillByResource[need.resourceKey] ?? '';
+      final (String, PersonAgenda?)? offer = _offerWork(
         household: household,
         itemId: itemId,
+        skillCode: skillCode,
+        priority: need.priority,
         planned: planned,
-        durationSeconds: work.$2,
       );
+      final String? assignee = offer?.$1;
       if (assignee == null) {
         lines.add('${need.kind}:khong-co-nguoi');
         _replace(
@@ -915,7 +973,7 @@ class Simulation {
               'household_need_unstaffed',
               householdId,
               'need=${need.kind} days=${need.daysOfSupply} '
-                  'urgency=${need.urgency}',
+                  'urgency=${need.urgency} skill=$skillCode',
             ),
           ],
         );
@@ -941,6 +999,7 @@ class Simulation {
         );
         continue;
       }
+      final PersonState worker = _state.people[assignee]!;
       final RoutineBlock block = RoutineBlock(
         id: 'GEN-${need.kind.toUpperCase()}-D$day',
         activity: work.$1,
@@ -950,10 +1009,20 @@ class Simulation {
         priority: need.priority,
         needKind: need.kind,
         outputResource: need.resourceKey,
-        outputAmount: work.$3,
+        outputAmount:
+            worker.skills?.output(skillCode, work.$3) ?? work.$3,
         planDay: day,
       );
       planned[assignee]!.add(block);
+      if (offer!.$2 case final PersonAgenda accepted) {
+        people[assignee] = worker.withAgenda(accepted);
+        _replace(
+          people: <String, PersonState>{
+            ..._state.people,
+            assignee: worker.withAgenda(accepted),
+          },
+        );
+      }
       lines.add(
         '${need.kind}:$assignee@${startSecond ~/ 3600}h/p${need.priority}',
       );
@@ -997,20 +1066,34 @@ class Simulation {
     }
   }
 
-  /// Người trong hộ có quyền chạm vào kho và còn ít giờ đã nhận nhất.
-  String? _chooseWorker({
+  /// Chào việc lần lượt cho người đủ quyền và đủ tay nghề, theo thứ tự
+  /// tay nghề cao trước rồi tới người còn rảnh hơn.
+  ///
+  /// Người có hồ sơ riêng được quyền từ chối khi đang quá mệt so với mức gấp
+  /// của việc; khi đó việc được chào cho người tiếp theo.
+  (String, PersonAgenda?)? _offerWork({
     required HouseholdState household,
     required String itemId,
+    required String skillCode,
+    required int priority,
     required Map<String, List<RoutineBlock>> planned,
-    required int durationSeconds,
   }) {
     final List<String> candidates =
         planned.keys.where((String personId) {
           final PersonState? person = _state.people[personId];
           if (person == null || person.infancy != null) return false;
           if (person.caregiverAgent?.available == false) return false;
-          return household.canUse(personId, itemId);
+          if (!household.canUse(personId, itemId)) return false;
+          final PersonSkills? skills = person.skills;
+          if (skills == null) return true;
+          return skills.level(skillCode) >= _minimumWorkSkill;
         }).toList()..sort((String a, String b) {
+          final PersonState left = _state.people[a]!;
+          final PersonState right = _state.people[b]!;
+          final int bySkill = (right.skills?.level(skillCode) ?? 0).compareTo(
+            left.skills?.level(skillCode) ?? 0,
+          );
+          if (bySkill != 0) return bySkill;
           final int loadA = planned[a]!.fold(
             0,
             (int total, RoutineBlock block) => total + block.durationSeconds,
@@ -1022,7 +1105,35 @@ class Simulation {
           final int byLoad = loadA.compareTo(loadB);
           return byLoad != 0 ? byLoad : a.compareTo(b);
         });
-    return candidates.firstOrNull;
+    for (final String personId in candidates) {
+      final PersonState person = _state.people[personId]!;
+      final PersonAgenda? agenda = person.agenda;
+      if (agenda == null) return (personId, null);
+      if (agenda.accepts(priority)) {
+        return (personId, agenda.recordOffer(accepted: true));
+      }
+      final String reason =
+          'mệt ${agenda.fatigue}/1000, chỉ nhận việc từ mức '
+          '${agenda.acceptanceFloor}';
+      _replace(
+        people: <String, PersonState>{
+          ..._state.people,
+          personId: person.withAgenda(
+            agenda.recordOffer(accepted: false, reason: reason),
+          ),
+        },
+        facts: <WorldFact>[
+          ..._state.facts,
+          _fact(
+            'work_offer_refused',
+            personId,
+            'skill=$skillCode priority=$priority fatigue=${agenda.fatigue} '
+                'floor=${agenda.acceptanceFloor}',
+          ),
+        ],
+      );
+    }
+    return null;
   }
 
   /// Giờ trống sớm nhất trong ngày.
@@ -1035,8 +1146,8 @@ class Simulation {
     required List<RoutineBlock> planned,
     required int durationSeconds,
     required int priority,
+    int earliest = 6 * 3600,
   }) {
-    const int earliest = 6 * 3600;
     const int latest = 20 * 3600;
     final List<RoutineBlock> taken = <RoutineBlock>[
       ...person.routine!.fixedBlocks.where(
@@ -1044,8 +1155,8 @@ class Simulation {
       ),
       ...planned,
     ];
-    for (int start = earliest; start + durationSeconds <= latest;
-        start += 1800) {
+    final int from = ((earliest + 1799) ~/ 1800) * 1800;
+    for (int start = from; start + durationSeconds <= latest; start += 1800) {
       final RoutineBlock probe = RoutineBlock(
         id: 'probe',
         activity: 'probe',
@@ -1191,6 +1302,7 @@ class Simulation {
     final PersonState person = _state.people[personId]!;
     final RoutineState routine = person.routine!;
     final bool canDefer = attempt < _routineMaxDeferrals;
+    if (!canDefer && _rescheduleBlock(personId, block)) return;
     final RoutineState next = canDefer
         ? routine.deferStart(
             nowSeconds: _state.now.seconds,
@@ -1230,6 +1342,76 @@ class Simulation {
     }
   }
 
+  /// Xếp lại một khối đã lùi hết lượt vào giờ trống còn lại trong ngày.
+  ///
+  /// Bản xếp lại là một khối riêng chỉ sống trong ngày hôm đó, nên bảng giờ
+  /// gốc không bị sửa. Bản đã xếp lại thì không xếp lại lần nữa.
+  bool _rescheduleBlock(String personId, RoutineBlock block) {
+    if (block.id.startsWith('RESCHED-')) return false;
+    final PersonState? person = _state.people[personId];
+    final RoutineState? routine = person?.routine;
+    if (person == null || routine == null) return false;
+    final int day = _state.now.day;
+    final int secondOfDay = _state.now.seconds % gameSecondsPerDay;
+    final int? slot = _freeSlot(
+      person: person,
+      planned: routine.generatedBlocks
+          .where((RoutineBlock value) => value.id != block.id)
+          .toList(),
+      durationSeconds: block.durationSeconds,
+      priority: block.priority,
+      earliest: secondOfDay + 1800,
+    );
+    if (slot == null) return false;
+    final RoutineBlock moved = RoutineBlock(
+      id: 'RESCHED-${block.id}-D$day',
+      activity: block.activity,
+      startSecondOfDay: slot,
+      durationSeconds: block.durationSeconds,
+      roomId: block.roomId,
+      priority: block.priority,
+      blocking: block.blocking,
+      needKind: block.needKind,
+      outputResource: block.outputResource,
+      outputAmount: block.outputAmount,
+      planDay: day,
+    );
+    _replace(
+      people: <String, PersonState>{
+        ..._state.people,
+        personId: person.withRoutine(
+          routine.withGeneratedBlocks(<RoutineBlock>[
+            ...routine.generatedBlocks.where(
+              (RoutineBlock value) => value.id != block.id,
+            ),
+            moved,
+          ]),
+        ),
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'routine_block_rescheduled',
+          personId,
+          'block=${block.id} moved_to=${slot ~/ 3600}h '
+              'activity=${block.activity}',
+        ),
+      ],
+    );
+    schedule(
+      due: SimTime(
+        (_state.now.seconds ~/ gameSecondsPerDay) * gameSecondsPerDay + slot,
+      ),
+      phase: EventPhase.intent,
+      kind: 'routine_block_started',
+      payload: <String, Object?>{
+        'person_id': personId,
+        'block_id': moved.id,
+      },
+    );
+    return true;
+  }
+
   /// Đóng một khối đã hết giờ và giao sản lượng theo số giây thật sự làm.
   RoutineState _finishBlock(
     String personId,
@@ -1238,6 +1420,20 @@ class Simulation {
   ) {
     final int lost = routine.lostInActiveBlock(_state.now.seconds);
     final RoutineState ended = routine.endBlock(_state.now.seconds);
+    final PersonState? worker = _state.people[personId];
+    final PersonAgenda? agenda = worker?.agenda;
+    if (worker != null && agenda != null) {
+      final int worked = (block.durationSeconds - lost).clamp(
+        0,
+        block.durationSeconds,
+      );
+      _replace(
+        people: <String, PersonState>{
+          ..._state.people,
+          personId: worker.withAgenda(agenda.tire(worked)),
+        },
+      );
+    }
     _deliverBlockOutput(personId, block, lost);
     _replace(
       facts: <WorldFact>[

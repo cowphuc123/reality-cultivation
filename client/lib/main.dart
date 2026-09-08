@@ -170,6 +170,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'current_activity': 'chuẩn bị bữa ăn',
         'care_skill': 800,
         'routine': _routineN01,
+        'skills': <String, int>{'fetch_water': 700, 'gather_food': 300},
+        'agenda': <String, Object?>{'fatigue': 0},
       },
     )
     ..schedule(
@@ -187,6 +189,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'care_skill': 520,
         'current_activity': 'chuẩn bị bữa ăn',
         'routine': _routineN02,
+        'skills': <String, int>{
+          'cook': 900,
+          'gather_fuel': 150,
+          'fetch_water': 400,
+          'gather_food': 400,
+        },
+        'agenda': <String, Object?>{'fatigue': 0},
       },
     )
     ..schedule(
@@ -201,6 +210,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'room_id': 'ROOM-YARD',
         'household_id': 'H01',
         'routine': _routineN03,
+        'skills': <String, int>{
+          'gather_fuel': 850,
+          'gather_food': 700,
+          'fetch_water': 600,
+        },
+        'agenda': <String, Object?>{'fatigue': 850},
       },
     )
     ..schedule(
@@ -725,6 +740,14 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 /// Nhịp sống hằng ngày của hộ ven suối. Giờ giấc và mức ưu tiên là fixture
 /// kỹ thuật để xung đột lịch quan sát được, chưa phải cân bằng đã chốt.
 const List<Map<String, Object?>> _routineN01 = <Map<String, Object?>>[
+  <String, Object?>{
+    'id': 'R-N01-SAN',
+    'activity': 'quét sân',
+    'start_second_of_day': 22500,
+    'duration_seconds': 1800,
+    'room_id': 'ROOM-YARD',
+    'priority': 20,
+  },
   <String, Object?>{
     'id': 'R-N01-VA',
     'activity': 'may vá',
@@ -1433,6 +1456,31 @@ class _PersonProfileCard extends StatelessWidget {
                     'Sức khỏe: ${_illnessKindLabel(person.illnessKind!)}'
                     '${person.illnessStage == null ? '' : ' (${_illnessStageLabel(person.illnessStage!)})'}',
                   ),
+                if (person.agenda case final PersonAgenda agenda) ...<Widget>[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sức lực: mệt ${agenda.fatigue}/1000 · '
+                    'chỉ nhận việc từ mức ${agenda.acceptanceFloor}',
+                  ),
+                  Text(
+                    'Việc được chào: nhận ${agenda.acceptedOffers}, '
+                    'từ chối ${agenda.refusedOffers}',
+                    style: small,
+                  ),
+                  if (agenda.lastRefusalReason != null)
+                    Text(
+                      'Lần từ chối gần nhất: ${agenda.lastRefusalReason}',
+                      style: small,
+                    ),
+                ],
+                if (person.skills case final PersonSkills skills)
+                  if (skills.levels.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tay nghề: ${(skills.levels.keys.toList()..sort()).map((String code) => '${_skillLabel(code)} ${skills.level(code)}').join(' · ')}',
+                      style: small,
+                    ),
+                  ],
                 if (person.routine != null) ...<Widget>[
                   const SizedBox(height: 10),
                   _RoutineDetail(routine: person.routine!),
@@ -2070,6 +2118,11 @@ class _HouseholdPanel extends StatelessWidget {
                         value: '${value.scheduleConflicts}',
                         icon: Icons.event_busy_outlined,
                       ),
+                      _MetricTile(
+                        label: 'Từ chối việc',
+                        value: '${value.refusedOffers}',
+                        icon: Icons.front_hand_outlined,
+                      ),
                     ],
                   ),
                   if (value.supplyJourneys.isNotEmpty) ...<Widget>[
@@ -2197,6 +2250,14 @@ class _PlanPanel extends StatelessWidget {
     );
   }
 }
+
+String _skillLabel(String code) => switch (code) {
+  'gather_fuel' => 'kiếm củi',
+  'fetch_water' => 'gánh nước',
+  'gather_food' => 'kiếm lương thực',
+  'cook' => 'nấu ăn',
+  _ => code,
+};
 
 String _needLabel(String kind) => switch (kind) {
   'food' => 'lương thực',
@@ -2721,6 +2782,11 @@ String _factDetail(WorldFact fact) {
           '${values['lost_seconds'] == '0' ? ' đúng kế hoạch' : ', hụt so với kế hoạch ${values['planned'] ?? '?'} vì mất giờ'}.',
     'routine_work_lost' =>
       'Công việc bị cắt ngang hết giờ nên không thu được gì.',
+    'work_offer_refused' =>
+      '${fact.subjectId} từ chối vì đang mệt ${values['fatigue'] ?? '?'}/1000, '
+          'chỉ nhận việc từ mức ${values['floor'] ?? '?'} trở lên.',
+    'routine_block_rescheduled' =>
+      'Việc bị lùi hết lượt được xếp lại sang ${values['moved_to'] ?? 'giờ khác'}.',
     'routine_block_started' =>
       '${fact.subjectId} bắt đầu ${values['activity'] ?? 'công việc'} tại ${values['room'] ?? 'chỗ làm'}.',
     'routine_block_ended' =>
@@ -2810,6 +2876,8 @@ String _factLabel(String kind) => switch (kind) {
   'routine_block_outranked' => 'Việc gấp hơn giành mất chỗ',
   'routine_work_delivered' => 'Làm xong và nhập kho',
   'routine_work_lost' => 'Mất trắng công việc',
+  'work_offer_refused' => 'Từ chối việc được giao',
+  'routine_block_rescheduled' => 'Xếp lại việc sang giờ khác',
   'routine_block_started' => 'Bắt đầu một khối việc trong ngày',
   'routine_block_ended' => 'Kết thúc một khối việc',
   'routine_block_deferred' => 'Khối việc bị lùi giờ',

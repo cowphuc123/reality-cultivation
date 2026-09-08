@@ -35,6 +35,7 @@ Game text mô phỏng thế giới tu tiên liên tục, ưu tiên chiều sâu 
 - [[docs/K5_9_V2_2_VAN_CHUYEN_BENH_SINH_LY_NGUOI_THAY|K5.9 — V2.2 vận chuyển, bệnh sinh lý và người chăm sóc thay thế]]
 - [[docs/K5_10_V2_3_NHIP_SONG_NPC_VA_HO_SO_THE_GIOI|K5.10 — V2.3 nhịp sống NPC, xung đột lịch và hồ sơ thế giới]]
 - [[docs/K5_11_V2_4_NHU_CAU_SINH_VIEC_VA_UU_TIEN|K5.11 — V2.4 nhu cầu sinh việc và ưu tiên phân xử]]
+- [[docs/K5_12_V2_5_KY_NANG_NGHE_VA_QUYEN_TU_CHOI|K5.12 — V2.5 kỹ năng nghề và quyền từ chối việc]]
 - Mã chạy được nằm trong thư mục `game/` ở gốc dự án.
 - Shell Flutter responsive nằm trong `client/`; bản web release được tạo tại `client/build/web`.
 

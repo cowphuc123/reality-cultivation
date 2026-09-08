@@ -1,5 +1,18 @@
 # Nhật ký dự án
 
+## 2026-09-08 — K5.12: V2.5 kỹ năng nghề, quyền từ chối và xếp lại lịch
+
+- Thêm `PersonSkills`: mỗi người có tay nghề theo mã việc (0–1000). Phải vừa có quyền dùng kho vừa đủ nghề tối thiểu 200 mới được giao; xếp theo nghề cao trước rồi tới người rảnh hơn.
+- Chữa cái dở của V2.4: người nấu ăn tay nghề kiếm củi 150 nay bị loại khỏi việc kiếm củi dù vẫn giữ quyền dùng kho. Việc về tay người làm công nghề 850.
+- Sản lượng theo tay nghề: nghề 0 làm được 60% mức gốc, nghề 1000 làm đủ 100%. Nghề 850 cho 2.256 g thay vì 2.400 g.
+- Thêm `PersonAgenda`: mức mệt 0–1000, ngưỡng nhận việc bằng mệt chia mười. Người mệt 600 nhận việc ưu tiên 69 nhưng từ chối việc ưu tiên 48; việc bị từ chối được chào tiếp cho người sau chứ không bỏ lửng.
+- Mệt là số thật: trọn tám giờ cộng 400, ngủ một đêm hồi 250. Cả nhà kiệt sức thì hộ ghi thiếu người, không ép ai làm.
+- Việc bị lùi hết ba lượt nay được **xếp lại** vào giờ trống còn lại trong ngày thay vì bỏ hẳn; bản xếp lại là khối riêng của ngày nên bảng giờ gốc không đổi và không lặp vô hạn.
+- Runner V2.5 đạt ngày 4 hash `9d3521d32a5b66b6`; lưu sau lần từ chối tái hiện đúng. Catalog 22 điều kiện.
+- **Chín runner V0–V2.4 giữ nguyên hash** — mọi tính năng mới gắn với trường dữ liệu mới nên thế giới cũ không đổi hành vi.
+- GUI: hồ sơ riêng hiện tay nghề, mức mệt, ngưỡng nhận việc và lý do từ chối; trang Hộ thêm ô đo Từ chối việc; 9/9 widget test đạt; web release đã đóng gói lại.
+- Thêm [[K5_12_V2_5_KY_NANG_NGHE_VA_QUYEN_TU_CHOI]].
+
 ## 2026-09-08 — K5.11: V2.4 nhu cầu sinh việc và ưu tiên phân xử
 
 - Hộ tự tính số ngày dự trữ từ tồn kho thật rồi sinh nhu cầu; mức gấp thành ưu tiên của khối việc. Củi 5 ngày (ưu tiên 69), nước 8 ngày (56), lương thực 10 ngày (48).

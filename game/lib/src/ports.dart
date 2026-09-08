@@ -1,3 +1,4 @@
+import 'agenda.dart';
 import 'care.dart';
 import 'domestic.dart';
 import 'household.dart';
@@ -228,6 +229,13 @@ class HouseholdView {
         a.$2.startSecondOfDay.compareTo(b.$2.startSecondOfDay),
   );
 
+  /// Số lần thành viên từ chối việc hộ giao.
+  int get refusedOffers => members.fold(
+    0,
+    (int total, HouseholdMemberView member) =>
+        total + (member.agenda?.refusedOffers ?? 0),
+  );
+
   int get scheduleConflicts => members.fold(
     0,
     (int total, HouseholdMemberView member) =>
@@ -244,6 +252,7 @@ class HouseholdMemberView {
     required this.available,
     required this.careSkill,
     this.routine,
+    this.agenda,
   });
 
   final String id;
@@ -253,6 +262,7 @@ class HouseholdMemberView {
   final bool? available;
   final int? careSkill;
   final RoutineSummaryView? routine;
+  final PersonAgenda? agenda;
 }
 
 /// Nhịp sống của một người và những lần lịch bị xung đột thật.
@@ -314,6 +324,8 @@ class PersonProfileView {
     required this.illnessKind,
     required this.illnessStage,
     required this.routine,
+    required this.skills,
+    required this.agenda,
   });
 
   final String id;
@@ -330,6 +342,12 @@ class PersonProfileView {
   final String? illnessKind;
   final IllnessStage? illnessStage;
   final RoutineSummaryView? routine;
+
+  /// Tay nghề theo mã việc, nếu người này có hồ sơ nghề.
+  final PersonSkills? skills;
+
+  /// Sức lực và thái độ nhận việc, nếu người này có tiếng nói riêng.
+  final PersonAgenda? agenda;
 
   bool get inHousehold => householdId != null;
 }
@@ -631,6 +649,8 @@ class SimulationHost implements CommandPort, QueryPort {
               routine: person.routine == null
                   ? null
                   : RoutineSummaryView.of(person.routine!),
+              skills: person.skills,
+              agenda: person.agenda,
             );
           }(),
       ]),
@@ -743,6 +763,7 @@ class SimulationHost implements CommandPort, QueryPort {
               routine: person.routine == null
                   ? null
                   : RoutineSummaryView.of(person.routine!),
+              agenda: person.agenda,
             ),
       ],
       needs: simulation.householdNeeds(id),

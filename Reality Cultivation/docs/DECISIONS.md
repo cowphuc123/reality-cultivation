@@ -44,6 +44,8 @@ Lịch sử đầy đủ từng lượt việc — tài liệu nào thêm gì, s
 
 ## Diễn biến gần nhất
 
+Ngày 2026-09-08: hoàn thành V2.5 tại [[K5_12_V2_5_KY_NANG_NGHE_VA_QUYEN_TU_CHOI]]. NPC nay có tay nghề và quyền từ chối việc, nhưng **mệt mỏi là trục duy nhất** dẫn tới từ chối — chưa có đói, đau, tâm trạng, quan hệ hay mục tiêu cá nhân dài hạn, và từ chối chưa có hậu quả xã hội. Tay nghề là số cố định, chưa lên theo số lần làm. Ngưỡng nhận việc bằng mệt chia mười, nghề tối thiểu 200, dải sản lượng 60–100%, hồi 250 mỗi đêm và tăng 400 cho tám giờ đều là fixture chưa duyệt. Chín runner V0–V2.4 giữ nguyên hash vì mọi tính năng mới đều gắn với trường dữ liệu mới.
+
 Ngày 2026-09-08: hoàn thành V2.4 tại [[K5_11_V2_4_NHU_CAU_SINH_VIEC_VA_UU_TIEN]]. Kế hoạch nay là của **hộ**, chưa phải của từng NPC: chưa có mục tiêu cá nhân, chưa thương lượng, chưa từ chối việc, và chưa có mô hình kỹ năng nghề nên người nấu ăn có thể bị giao đi kiếm củi nếu rảnh hơn. Ngưỡng 12 ngày dự trữ, nhịp tiêu thụ, thời lượng/sản lượng từng loại việc là fixture chưa duyệt. Đã sửa lỗi nuốt khối của V2.3 nên hash runner V2.3 đổi từ `8df759ae2a42eca0` sang `ade0b8a4300276c9`; đây là hệ quả sửa lỗi, mọi điều kiện V2.3 vẫn đạt.
 
 Ngày 2026-09-08: hoàn thành V2.3 tại [[K5_10_V2_3_NHIP_SONG_NPC_VA_HO_SO_THE_GIOI]]. Nhịp sống hiện là bảng giờ cố định, **không phải** kế hoạch NPC tự lập — không giảm tham vọng NPC tự trị của U004/K4.6. Trường `priority` có trong dữ liệu nhưng chưa dùng để phân xử. Việc mở hồ sơ toàn thế giới đáp ứng U015 ở phạm vi dữ liệu đã mô phỏng, không tạo số liệu cho hệ chưa có.

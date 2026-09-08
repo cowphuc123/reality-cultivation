@@ -1,6 +1,7 @@
 library reality_cultivation;
 
 export 'src/clock.dart';
+export 'src/agenda.dart';
 export 'src/care.dart';
 export 'src/domestic.dart';
 export 'src/infancy.dart';

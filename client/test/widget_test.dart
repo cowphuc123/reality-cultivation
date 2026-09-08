@@ -345,4 +345,61 @@ void main() {
     expect(find.text('Hộ lập kế hoạch trong ngày'), findsWidgets);
     expect(find.text('Hộ hoàn tất bữa ăn'), findsNothing);
   });
+  testWidgets('skills pick the worker and a tired person may refuse', (
+    WidgetTester tester,
+  ) async {
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-world')));
+    await tester.pumpAndSettle();
+
+    final Simulation morning = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(6 * 3600));
+
+    // Người nấu ăn có quyền dùng kho củi nhưng không đủ tay nghề.
+    expect(morning.state.households['H01']!.canUse('N02', 'I-FUEL-01'), isTrue);
+    final WorldFact plan = morning.state.facts.lastWhere(
+      (WorldFact fact) => fact.kind == 'household_plan_made',
+    );
+    expect(plan.detail.contains('fuel:N03'), isTrue);
+
+    // Người đang kiệt sức từ chối việc chưa đủ gấp.
+    expect(
+      morning.state.facts.any(
+        (WorldFact fact) =>
+            fact.kind == 'work_offer_refused' && fact.subjectId == 'N03',
+      ),
+      isTrue,
+    );
+    expect(morning.state.people['N03']!.agenda!.refusedOffers, greaterThan(0));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: morning,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('nav-2')));
+    await tester.pumpAndSettle();
+    expect(find.text('Từ chối việc'), findsOneWidget);
+
+    // Hồ sơ riêng của người làm công cho thấy sức lực và lần từ chối.
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('person-profile-N03')), findsOneWidget);
+  });
 }
