@@ -41,6 +41,8 @@ Game text mô phỏng thế giới tu tiên liên tục, ưu tiên chiều sâu 
 - [[docs/K5_15_V2_8_NUOC_VA_CON_KHAT|K5.15 — V2.8 nước và cơn khát]]
 - [[docs/K5_16_V2_9_TUYEN_VAN_TAI_THAT|K5.16 — V2.9 tuyến vận tải thật]]
 - [[docs/K5_17_V2_10_HAI_CHIEU_VA_NGA_RE|K5.17 — V2.10 vị trí hai chiều và ngã rẽ]]
+- [[docs/K5_18_V2_11_BENH_CUA_NGUOI_LON|K5.18 — V2.11 bệnh của người lớn]]
+- [[docs/K5_19_V2_12_NGHI_BENH|K5.19 — V2.12 người ốm được nghỉ thật]]
 - Mã chạy được nằm trong thư mục `game/` ở gốc dự án.
 - Shell Flutter responsive nằm trong `client/`; bản web release được tạo tại `client/build/web`.
 

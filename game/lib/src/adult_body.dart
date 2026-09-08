@@ -121,10 +121,18 @@ class AdultBodyState {
   ///
   /// Đốt hết dự trữ rồi mới ăn vào khối lượng; còn dư thì tích lại, đầy trần
   /// mới lên cân.
-  AdultBodyDayResult advanceDay({required int workedSeconds}) {
+  AdultBodyDayResult advanceDay({
+    required int workedSeconds,
+    int illnessSeverity = 0,
+  }) {
     final int workHours = workedSeconds ~/ 3600;
-    final int burned = basalKjPerDay + workKjPerHour * workHours;
-    final int waterLost = basalWaterMlPerDay + workWaterMlPerHour * workHours;
+    // Bệnh nặng 1000 đốt thêm một nghìn kilojoule và mất thêm một lít nước.
+    final int illnessKj = illnessSeverity;
+    final int illnessWaterMl = illnessSeverity;
+    final int burned =
+        basalKjPerDay + workKjPerHour * workHours + illnessKj;
+    final int waterLost =
+        basalWaterMlPerDay + workWaterMlPerHour * workHours + illnessWaterMl;
     final int fromReserve = burned.clamp(0, energyReserveKj);
     final int deficit = burned - fromReserve;
     int nextMass = massGrams;

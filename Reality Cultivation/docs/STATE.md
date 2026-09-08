@@ -34,24 +34,27 @@ Lịch sử đầy đủ từng lượt việc nằm trong [[CHANGELOG]]. Tóm t
 | V2.8 | Nước và cơn khát: uống từ kho hộ, thiếu nước thì kiệt sức nhanh | [[K5_15_V2_8_NUOC_VA_CON_KHAT]] · `469fab7582a4aa34` |
 | V2.9 | Tuyến vận tải thật: điểm mốc, địa hình, trễ giờ là hệ quả | [[K5_16_V2_9_TUYEN_VAN_TAI_THAT]] · `a4830eb8844ec469` |
 | V2.10 | Vị trí hai chiều và tuyến có ngã rẽ; sức lực đổi cả đường đi | [[K5_17_V2_10_HAI_CHIEU_VA_NGA_RE]] · `2a87b934f03e0f29` |
+| V2.11 | Bệnh của người lớn, khởi phát từ mất nước hoặc kiệt sức | [[K5_18_V2_11_BENH_CUA_NGUOI_LON]] · `beabb8f20438f377` |
+| V2.12 | Người ốm được nghỉ thật, tới khi khỏi hẳn | [[K5_19_V2_12_NGHI_BENH]] · `f57b6f0fb06205bb` |
 
 Web đang chạy: **https://cowphuc123.github.io/reality-cultivation/** — tự động build lại mỗi lần đẩy `client/` lên GitHub (`.github/workflows/deploy-web.yml`). Bản cũ trên Sites (`chatgpt.site`) vẫn còn, chưa gỡ.
 
-**Cách làm từ 2026-09-08:** làm việc và cập nhật hồ sơ tại chỗ, **không** commit/push/build web sau mỗi lát cắt; chỉ đẩy lên khi người dùng yêu cầu. V2.9 và V2.10 hiện đã xong tại chỗ nhưng chưa đẩy.
+**Cách làm từ 2026-09-08:** làm việc và cập nhật hồ sơ tại chỗ, **không** commit/push/build web sau mỗi lát cắt; chỉ đẩy lên khi người dùng yêu cầu. V2.11 và V2.12 hiện đã xong tại chỗ nhưng chưa đẩy; V2.9 và V2.10 đã đẩy ở commit `25eaaa9`.
 Mở tại máy: `MO_GAME.bat` ở gốc dự án; hướng dẫn tại [[HUONG_DAN_MO_BAN_TEST]].
 
 ## Chưa thực hiện
 
 - Chưa chọn công nghệ cuối cùng. S2 Dart/Flutter là working stack PROPOSED (ADR chưa ACCEPTED); S1/S3, full workload, APK/EXE chưa chạy.
 - Chưa chốt phạm vi bản đầu, quy tắc tạm dừng, mô phỏng khi đóng game hoặc hệ cảnh giới.
-- Chưa có: giải phẫu đa bộ phận, bệnh/thương tích/già đi/chết của người lớn, diễn biến cơ thể trong ngày (cơ thể người lớn chạy theo ngày), nước bẩn và bệnh do nước, khẩu phần riêng từng người, quan hệ giữa người với người, hậu quả xã hội của việc từ chối, mục tiêu cá nhân dài hạn, lây nhiễm/thuốc, chuỗi game sau tháng đầu.
+- Chưa có: giải phẫu đa bộ phận, thương tích, già đi, chết; diễn biến cơ thể trong ngày (cơ thể người lớn chạy theo ngày); nước bẩn và bệnh do nước; khẩu phần riêng từng người; quan hệ giữa người với người; hậu quả xã hội của việc từ chối; mục tiêu cá nhân dài hạn; lây bệnh và thuốc; chuỗi game sau tháng đầu.
+- Nghỉ bệnh hiện là **tất cả hoặc không có gì**: chưa có làm nhẹ hay nửa buổi, và khối cố định của người ốm thì mất hẳn chứ không chuyển sang ai gánh; xem [[K5_19_V2_12_NGHI_BENH]].
 - Vị trí đã có **hai chiều** nhưng chưa ai dùng ngoài tuyến vận tải: ba gian nhà vẫn trên trục, chưa có bản đồ, chưa có vùng, chưa có worldgen. Địa hình vẫn là hệ số cố định, chưa có mưa/mùa/đêm làm chậm; đồ thị đường đi viết sẵn trong fixture chứ chưa sinh từ địa hình.
 - Thân nhiệt người lớn **cố ý chưa làm**: chưa có mùa, thời tiết hay nhiệt độ môi trường để nó phản ứng lại; xem [[K5_15_V2_8_NUOC_VA_CON_KHAT]].
 - Kho git đã có commit đầu và đẩy lên `github.com/cowphuc123/reality-cultivation` (công khai); chưa thiết lập sao lưu tự động ngoài GitHub.
 
 ## Bước tiếp theo đề xuất
 
-Cho người lớn ốm được như trẻ sơ sinh, hoặc bắt đầu bản đồ vùng để `WorldPoint` có chỗ dùng thật. Thân nhiệt nên chờ có mô hình môi trường trước.
+Cho người khác gánh việc của người đang nghỉ (chuyển khối cố định, không chỉ chào việc mới), hoặc bắt đầu bản đồ vùng để `WorldPoint` có chỗ dùng thật. Thân nhiệt nên chờ có mô hình môi trường trước.
 
 Shared fixture V1 chưa chạy parity PWA. TN01–TN08 ([[LUA_CHON_TRAI_NGHIEM]]) và ADR công nghệ ACCEPTED vẫn mở.
 

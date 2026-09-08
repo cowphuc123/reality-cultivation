@@ -727,4 +727,155 @@ void main() {
     expect(find.textContaining('Đã chọn lối'), findsOneWidget);
     expect(find.textContaining('Đồng ngoài'), findsWidgets);
   });
+  testWidgets('an adult falls ill from a real body state, not a timer', (
+    WidgetTester tester,
+  ) async {
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-world')));
+    await tester.pumpAndSettle();
+
+    // Tới ngày 10: N03 kiệt sức trước, được nghỉ và khỏi, rồi mới mất nước —
+    // vì nghỉ bệnh làm anh ta thôi cày mười hai tiếng nên mất nước chậm lại.
+    final Simulation later = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(10 * gameSecondsPerDay));
+
+    // Hai nguyên nhân đều là trạng thái cơ thể thật, không phải hẹn giờ.
+    // N03 không có quyền lấy nước nên khát dần; N01 làm gần mười tiếng mỗi
+    // ngày nên kiệt sức. Thứ tự ai ốm trước là hệ quả, không phải điều được
+    // đặt sẵn, nên bài test tìm theo nguyên nhân chứ không theo thứ tự.
+    final WorldFact onset = later.state.facts.firstWhere(
+      (WorldFact fact) =>
+          fact.kind == 'adult_illness_onset' &&
+          fact.detail.contains('cause=mat_nuoc'),
+    );
+    expect(onset.subjectId, 'N03');
+    // Nguyên nhân là con số cơ thể thật, được ghi kèm để truy được.
+    expect(onset.detail, contains('hydration='));
+    expect(
+      later.state.facts.any(
+        (WorldFact fact) =>
+            fact.kind == 'adult_illness_onset' &&
+            fact.detail.contains('cause=kiet_suc'),
+      ),
+      isTrue,
+    );
+
+    // N03 làm mười hai tiếng mỗi ngày nên còn ốm cả vì kiệt sức; lấy đúng
+    // ca bệnh mà mốc khởi phát trên kia đã nêu, thay vì ca đầu tiên gặp được.
+    final String illnessId = onset.detail
+        .split(' ')
+        .firstWhere((String part) => part.startsWith('illness='))
+        .substring('illness='.length);
+    expect(later.state.illnesses[illnessId]!.kind, 'adult_dehydration');
+    expect(later.state.illnesses[illnessId]!.personId, 'N03');
+
+    // Hộ nhận ra và cử người chăm, tiêu nước thật của kho.
+    expect(
+      later.state.facts.any(
+        (WorldFact fact) => fact.kind == 'adult_illness_detected',
+      ),
+      isTrue,
+    );
+    expect(
+      later.state.facts.any(
+        (WorldFact fact) =>
+            fact.kind == 'adult_illness_care_completed' &&
+            fact.detail.contains('water_ml=400'),
+      ),
+      isTrue,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: later,
+      ),
+    );
+    await tester.pumpAndSettle();
+    // Cơ chế đã được chứng minh ở tầng mô phỏng phía trên. Nhật ký chỉ giữ
+    // 50 mốc gần nhất và ở ngày 10 phần lớn là mốc sinh lý của trẻ, nên
+    // không neo bài test vào chữ trong nhật ký; chỉ xác nhận giao diện dựng
+    // được hồ sơ của người đã ốm.
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('person-profile-N03')), findsOneWidget);
+    expect(find.byKey(const Key('person-profile-N01')), findsOneWidget);
+  });
+  testWidgets('a sick adult actually rests instead of working through it', (
+    WidgetTester tester,
+  ) async {
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-world')));
+    await tester.pumpAndSettle();
+
+    final Simulation week = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(6 * gameSecondsPerDay));
+
+    // Đang ốm thì khối việc bị lùi rồi bỏ, chứ không cứ thế chạy.
+    expect(
+      week.state.facts.any(
+        (WorldFact fact) =>
+            fact.kind == 'routine_block_deferred' &&
+            fact.detail.contains('competing=nghỉ vì ốm'),
+      ),
+      isTrue,
+    );
+    expect(
+      week.state.facts.any(
+        (WorldFact fact) =>
+            fact.kind == 'routine_block_dropped' &&
+            fact.detail.contains('competing=nghỉ vì ốm'),
+      ),
+      isTrue,
+    );
+    // Khỏi hẳn thì kỳ nghỉ kết thúc và có mốc ghi lại.
+    expect(
+      week.state.facts.any(
+        (WorldFact fact) => fact.kind == 'illness_rest_ended',
+      ),
+      isTrue,
+    );
+    // Kỳ nghỉ để lại dấu thật trong sổ giờ mất.
+    expect(
+      week.state.people['N01']!.routine!.lostSeconds,
+      greaterThan(0),
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: week,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-2')));
+    await tester.pumpAndSettle();
+    expect(find.text('Xung đột lịch'), findsOneWidget);
+  });
 }

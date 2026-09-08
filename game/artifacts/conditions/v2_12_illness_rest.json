@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-12-illness-rest",
+  "conditions": [
+    {"id":"V212-REST-001","title":"Đang ốm thì khối việc bị lùi","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"routine_block_deferred names nghỉ vì ốm as the competing obligation"},
+    {"id":"V212-REST-002","title":"Hết lượt lùi mà vẫn ốm thì khối mất hẳn","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"routine_block_dropped fires with the same reason"},
+    {"id":"V212-REST-003","title":"Nghỉ tới khi khỏi, không theo một mức nặng tuỳ ý","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"Rest still applies at severity 55 of 1000"},
+    {"id":"V212-REST-004","title":"Kỳ nghỉ được ghi thành xung đột lịch có tên việc bị bỏ","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"A conflict records may vá against nghỉ vì ốm"},
+    {"id":"V212-REST-005","title":"Khỏi hẳn thì kỳ nghỉ kết thúc và có mốc ghi lại","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"illness_rest_ended fires on resolution"},
+    {"id":"V212-REST-006","title":"Ngày nghỉ thì sổ giờ lao động bằng không","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"workedSecondsToday stays zero while ill"},
+    {"id":"V212-EFFECT-001","title":"Nghỉ làm mệt mỏi giảm thật","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"Fatigue after the rest spell is below its starting value"},
+    {"id":"V212-EFFECT-002","title":"Nghỉ có giá: giờ công mất và khối bị bỏ đều được ghi","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"N01 loses 223773 seconds and drops six blocks over ten days"},
+    {"id":"V212-EFFECT-003","title":"Nghỉ kéo mệt mỏi khỏi mức kịch trần","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"N01 ends at fatigue 500 instead of the permanent 1000 seen in V2.11"},
+    {"id":"V212-SCHEDULE-001","title":"Lịch nặng vẫn ốm lại dù đã được nghỉ","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"The ten-hour schedule produces three onsets in ten days"},
+    {"id":"V212-SCHEDULE-002","title":"Lịch nhẹ hơn ốm ít lần hơn","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"The six-hour schedule produces fewer onsets than the ten-hour one"},
+    {"id":"V212-HOUSEHOLD-001","title":"Hộ vẫn lập kế hoạch khi có người nghỉ bệnh","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"household_plan_made keeps firing during the rest spell"},
+    {"id":"V212-DESIGN-001","title":"Khởi phát ở mốc chốt ngày nên không cắt giữa buổi","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"Rest blocks the next morning's first block rather than interrupting a running one"},
+    {"id":"V212-SAVE-001","title":"Lưu giữa kỳ nghỉ bệnh tái hiện đúng","status":"automated","runner":"tool/verify_v2_12_illness_rest.dart","oracle":"Continuous and restored day-ten hashes both equal f57b6f0fb06205bb"},
+    {"id":"V212-REGRESSION-001","title":"Mười lăm runner V0–V2.10 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart; tool/verify_v1_infancy.dart; tool/verify_v1_care_chain.dart; tool/verify_v1_body.dart; tool/verify_v2_household.dart; tool/verify_v2_1_household_health.dart; tool/verify_v2_2_transport_substitution.dart; tool/verify_v2_3_routine_directory.dart; tool/verify_v2_4_need_driven_plan.dart; tool/verify_v2_5_skills_and_refusal.dart; tool/verify_v2_6_growth_hunger_mood.dart; tool/verify_v2_7_adult_body.dart; tool/verify_v2_8_water_and_thirst.dart; tool/verify_v2_9_trade_route.dart; tool/verify_v2_10_two_axes_and_fork.dart","oracle":"All earlier runners pass with unchanged hashes"},
+    {"id":"V212-REGRESSION-002","title":"V2.11 đạt lại sau khi người ốm được nghỉ","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"All V2.11 assertions pass at the updated hash beabb8f20438f377"},
+    {"id":"V212-CHAIN-001","title":"Nghỉ bệnh làm chậm việc mất nước","status":"automated","runner":"../client/test/widget_test.dart","oracle":"In the client world N03 dehydrates at day eight instead of day three because rest stops the twelve-hour shifts"},
+    {"id":"V212-UI-001","title":"GUI chiếu kỳ nghỉ bệnh trong nhật ký và hồ sơ","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Deferred and dropped blocks read as nghỉ bệnh, and the household shows the conflict metric"},
+    {"id":"V212-UI-002","title":"Hồ sơ nói rõ người lớn đang nghỉ bệnh","status":"manual","runner":"../client/lib/main.dart","oracle":"An ill adult profile states they take no work until recovered"}
+  ]
+}

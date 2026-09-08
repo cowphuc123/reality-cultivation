@@ -413,7 +413,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         },
         'authorized_users_by_item_id': <String, List<String>>{
           'I-FOOD-01': <String>['N02', 'N03'],
-          'I-WATER-01': <String>['N01', 'N02', 'N03'],
+          // N03 chưa được ghi quyền lấy nước, nên sẽ khát dần rồi đổ bệnh.
+          'I-WATER-01': <String>['N01', 'N02'],
           'I-FUEL-01': <String>['N02', 'N03'],
           'I-FEED-01': <String>['N01', 'N02'],
           'I-CLOTH-01': <String>['N01', 'N02'],
@@ -428,6 +429,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'enable_v2_2': true,
         'auto_plan': true,
         'enable_v2_6': true,
+        'enable_v2_11': true,
         'infant_id': 'P00',
         'caregiver_id': 'N01',
         'production_actor_id': 'N03',
@@ -1535,11 +1537,17 @@ class _PersonProfileCard extends StatelessWidget {
                     'Chăm sóc: ${person.available == false ? 'đang gián đoạn' : 'sẵn sàng'}'
                     ' · kỹ năng ${person.careSkill}/1000',
                   ),
-                if (person.illnessKind != null)
+                if (person.illnessKind != null) ...<Widget>[
                   Text(
                     'Sức khỏe: ${_illnessKindLabel(person.illnessKind!)}'
                     '${person.illnessStage == null ? '' : ' (${_illnessStageLabel(person.illnessStage!)})'}',
                   ),
+                  if (!person.isInfant)
+                    Text(
+                      'Đang nghỉ bệnh, chưa nhận việc cho tới khi khỏi.',
+                      style: small,
+                    ),
+                ],
                 if (person.agenda case final PersonAgenda agenda) ...<Widget>[
                   const SizedBox(height: 8),
                   Text(
@@ -2375,6 +2383,12 @@ String _skillLabel(String code) => switch (code) {
   _ => code,
 };
 
+String _causeLabel(String cause) => switch (cause) {
+  'mat_nuoc' => 'mất nước',
+  'kiet_suc' => 'kiệt sức',
+  _ => cause,
+};
+
 String _needLabel(String kind) => switch (kind) {
   'food' => 'lương thực',
   'water' => 'nước sạch',
@@ -2704,6 +2718,8 @@ class _HistoryPanelState extends State<_HistoryPanel> {
   bool _matches(WorldFact fact) => switch (_filter) {
     'care' =>
       fact.kind.startsWith('body_') ||
+          fact.kind.startsWith('adult_illness') ||
+          fact.kind == 'illness_rest_ended' ||
           fact.kind.contains('infant') ||
           fact.kind.contains('cry') ||
           fact.kind.contains('care') ||
@@ -2927,6 +2943,23 @@ String _factDetail(WorldFact fact) {
           '${values['lost_seconds'] == '0' ? ' đúng kế hoạch' : ', hụt so với kế hoạch ${values['planned'] ?? '?'} vì mất giờ'}.',
     'routine_work_lost' =>
       'Công việc bị cắt ngang hết giờ nên không thu được gì.',
+    'adult_illness_onset' =>
+      '${fact.subjectId} đổ bệnh vì ${_causeLabel(values['cause'] ?? '')} '
+          '(mức ${values['severity'] ?? '?'}/1000, đủ nước ${values['hydration'] ?? '?'}, '
+          'mệt ${values['fatigue'] ?? '?'}).',
+    'adult_illness_detected' =>
+      '${values['carer'] ?? 'Một người'} nhận ra ${fact.subjectId} đang ốm '
+          'ở mức ${values['severity'] ?? '?'}/1000.',
+    'adult_illness_care_completed' =>
+      '${values['carer'] ?? 'Người chăm'} cho ${fact.subjectId} '
+          '${values['water_ml'] ?? '0'} ml nước; mức bệnh còn '
+          '${values['severity'] ?? '?'}/1000.',
+    'adult_illness_care_failed' =>
+      'Không chăm được ${fact.subjectId}: thiếu nước hoặc thiếu quyền dùng kho.',
+    'illness_rest_ended' =>
+      '${fact.subjectId} đã khỏi và trở lại nhịp làm việc bình thường.',
+    'adult_illness_unattended' =>
+      'Không ai đủ điều kiện trông ${fact.subjectId} lúc này.',
     'body_drank' =>
       '${fact.subjectId} uống ${values['ml'] ?? '?'} ml trên ${values['wanted'] ?? '?'} ml cần; '
           'đủ nước ${values['hydration'] ?? '?'}/1000.',
@@ -2949,9 +2982,11 @@ String _factDetail(WorldFact fact) {
     'routine_block_ended' =>
       '${fact.subjectId} kết thúc khối việc; mất ${((int.tryParse(values['lost_seconds'] ?? '') ?? 0) ~/ 60)} phút vì bị cắt ngang.',
     'routine_block_deferred' =>
-      '${fact.subjectId} phải lùi ${values['planned'] ?? 'công việc'} vì ${values['competing'] ?? 'việc khác'}.',
+      '${fact.subjectId} phải lùi ${values['planned'] ?? 'công việc'} vì '
+          '${fact.detail.contains('competing=nghỉ vì ốm') ? 'đang nghỉ bệnh' : values['competing'] ?? 'việc khác'}.',
     'routine_block_dropped' =>
-      '${fact.subjectId} mất hẳn ${values['planned'] ?? 'công việc'} hôm nay vì ${values['competing'] ?? 'việc khác'}.',
+      '${fact.subjectId} mất hẳn ${values['planned'] ?? 'công việc'} hôm nay vì '
+          '${fact.detail.contains('competing=nghỉ vì ốm') ? 'phải nghỉ bệnh' : values['competing'] ?? 'việc khác'}.',
     'room_created' => 'Ghi nhận không gian ${fact.detail}.',
     'illness_onset' =>
       'Bệnh nhẹ khởi phát với mức ${values['severity'] ?? '?'}/1000 và thân nhiệt ${_milliC(values['temp_millic'])}.',
@@ -3050,6 +3085,12 @@ String _factLabel(String kind) => switch (kind) {
   'body_mass_lost' => 'Sụt cân vì thiếu ăn',
   'body_drank' => 'Uống nước từ kho hộ',
   'body_dehydrated' => 'Thiếu nước',
+  'adult_illness_onset' => 'Người lớn đổ bệnh',
+  'adult_illness_detected' => 'Hộ phát hiện người ốm',
+  'adult_illness_care_completed' => 'Đã chăm người ốm',
+  'adult_illness_care_failed' => 'Không chăm được người ốm',
+  'adult_illness_unattended' => 'Không ai trông người ốm',
+  'illness_rest_ended' => 'Khỏi bệnh, đi làm lại',
   'routine_block_rescheduled' => 'Xếp lại việc sang giờ khác',
   'routine_block_started' => 'Bắt đầu một khối việc trong ngày',
   'routine_block_ended' => 'Kết thúc một khối việc',
@@ -3085,6 +3126,8 @@ String _factLabel(String kind) => switch (kind) {
 
 String _illnessKindLabel(String kind) => switch (kind) {
   'mild_respiratory_infection' => 'Nhiễm đường hô hấp nhẹ',
+  'adult_dehydration' => 'Kiệt nước',
+  'adult_exhaustion' => 'Kiệt sức vì làm quá',
   _ => kind,
 };
 

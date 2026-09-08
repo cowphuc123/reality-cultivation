@@ -746,6 +746,10 @@ class Simulation {
         _applyRouteLegArrived(event);
       case 'infant_illness_onset':
         _applyInfantIllnessOnset(event);
+      case 'adult_illness_observed':
+        _applyAdultIllnessObserved(event);
+      case 'adult_illness_care':
+        _applyAdultIllnessCare(event);
       case 'illness_observed':
         _applyIllnessObserved(event);
       case 'illness_caregiver_arrives':
@@ -930,8 +934,11 @@ class Simulation {
       final AdultBodyState? body = member?.body;
       final PersonAgenda? agenda = member?.agenda;
       if (member == null || body == null || agenda == null) continue;
+      // Bệnh đang hoạt động thì đốt thêm năng lượng và mất thêm nước.
+      final IllnessState? sick = _activeIllness(memberId);
       final AdultBodyDayResult result = body.advanceDay(
         workedSeconds: agenda.workedSecondsToday,
+        illnessSeverity: sick?.severity ?? 0,
       );
       AdultBodyState settled = result.body.recover();
       // Uống nước lấy từ kho hộ, phải có quyền và kho phải còn.
@@ -978,6 +985,11 @@ class Simulation {
       }
     }
     if (changed) _replace(people: updated, facts: facts);
+    if (household.adultIllness) {
+      for (final String memberId in household.memberIds) {
+        _checkAdultIllnessOnset(household.id, memberId);
+      }
+    }
   }
 
   /// Rút nước uống khỏi kho hộ, trả về số mililít thật sự lấy được.
@@ -1015,6 +1027,12 @@ class Simulation {
     if (person.caregiverAgent?.available == false) {
       return 'không đủ sức làm việc';
     }
+    // Đang ốm thì nghỉ cho tới khi khỏi, không theo một mức nặng tuỳ ý.
+    //
+    // Lấy mức nặng làm ngưỡng thì hỏng: một lượt chăm hạ mức nặng xuống dưới
+    // ngưỡng ngay trong nửa giờ, nên hôm sau người ta lại đi làm và ốm lại.
+    final IllnessState? sick = _activeIllness(person.id);
+    if (sick != null) return 'nghỉ vì ốm (${sick.severity}/1000)';
     return null;
   }
 
@@ -1272,9 +1290,10 @@ class Simulation {
   /// Người sụt cân vì đói làm ra ít hơn dù tay nghề không đổi.
   int _plannedOutput(PersonState worker, String skillCode, int base) {
     final int bySkill = worker.skills?.output(skillCode, base) ?? base;
-    final AdultBodyState? body = worker.body;
-    if (body == null || body.capability >= 1000) return bySkill;
-    return bySkill * body.capability ~/ 1000;
+    if (worker.body == null) return bySkill;
+    final int capability = _effectiveCapability(worker);
+    if (capability >= 1000) return bySkill;
+    return bySkill * capability ~/ 1000;
   }
 
   /// Chào việc lần lượt cho người đủ quyền và đủ tay nghề, theo thứ tự
@@ -1320,7 +1339,11 @@ class Simulation {
       final PersonState person = _state.people[personId]!;
       final PersonAgenda? agenda = person.agenda;
       if (agenda == null) return (personId, null);
-      if (agenda.accepts(priority)) {
+      // Người đang ốm càng nặng thì càng khó nhận việc.
+      final IllnessState? sick = _activeIllness(personId);
+      final int floor =
+          agenda.acceptanceFloor + (sick == null ? 0 : sick.severity ~/ 10);
+      if (priority >= floor) {
         return (personId, agenda.recordOffer(accepted: true));
       }
       // Hộ có theo dõi đói/tâm trạng thì lý do nói rõ cả ba trục.
@@ -1330,6 +1353,9 @@ class Simulation {
                 '${agenda.acceptanceFloor}'
           : 'mệt ${agenda.fatigue}/1000, chỉ nhận việc từ mức '
                 '${agenda.acceptanceFloor}';
+      final String sickNote = sick == null
+          ? ''
+          : ' illness=${sick.kind} severity=${sick.severity}';
       _replace(
         people: <String, PersonState>{
           ..._state.people,
@@ -1344,8 +1370,9 @@ class Simulation {
             personId,
             'skill=$skillCode priority=$priority fatigue=${agenda.fatigue} '
                 '${household.wellbeing ? 'hunger=${agenda.hunger} mood=${agenda.mood} ' : ''}'
-                'floor=${agenda.acceptanceFloor}'
-                '${household.wellbeing ? ' strain=${agenda.mainStrain}' : ''}',
+                'floor=$floor'
+                '${household.wellbeing ? ' strain=${agenda.mainStrain}' : ''}'
+                '$sickNote',
           ),
         ],
       );
@@ -2073,6 +2100,7 @@ class Simulation {
           (event.payload['scheduled_work_seconds_by_person']! as Map)
               .cast<String, int>(),
       wellbeing: event.payload['enable_v2_6'] == true,
+      adultIllness: event.payload['enable_v2_11'] == true,
     );
     _replace(
       households: <String, HouseholdState>{
@@ -2632,6 +2660,19 @@ class Simulation {
         ),
       ],
     );
+    // Khỏi hẳn thì kỳ nghỉ kết thúc: từ khối kế tiếp người này đi làm lại.
+    if (!next.active && _state.people[next.personId]?.routine != null) {
+      _replace(
+        facts: <WorldFact>[
+          ..._state.facts,
+          _fact(
+            'illness_rest_ended',
+            next.personId,
+            'illness=$illnessId severity=${next.severity}',
+          ),
+        ],
+      );
+    }
     if (next.active) {
       schedule(
         due: _state.now.addSeconds(6 * 3600),
@@ -2862,9 +2903,224 @@ class Simulation {
     );
   }
 
+  /// Dưới mức đủ nước này thì cơ thể đổ bệnh.
+  static const int _illnessHydrationFloor = 700;
+
+  /// Từ mức mệt này trở lên thì kiệt sức thành bệnh.
+  static const int _illnessFatigueCeiling = 900;
+
+  /// Người lớn đổ bệnh khi cơ thể thật đã quá giới hạn.
+  ///
+  /// Không có hẹn giờ và không có xác suất: bệnh đến từ mất nước nặng hoặc
+  /// kiệt sức, hai thứ đã là số thật trong cơ thể và sổ lao động. Bản đầu chưa
+  /// có bộ sinh số ngẫu nhiên theo seed, nên ngưỡng xác định là cách trung
+  /// thực nhất để chuỗi nhân quả kiểm chứng được.
+  void _checkAdultIllnessOnset(String householdId, String personId) {
+    final PersonState? person = _state.people[personId];
+    final AdultBodyState? body = person?.body;
+    final PersonAgenda? agenda = person?.agenda;
+    if (person == null || body == null || agenda == null) return;
+    if (person.infancy != null) return;
+    if (_activeIllness(personId) != null) return;
+    final String? cause = body.hydration <= _illnessHydrationFloor
+        ? 'mat_nuoc'
+        : agenda.fatigue >= _illnessFatigueCeiling
+        ? 'kiet_suc'
+        : null;
+    if (cause == null) return;
+    final int index = _state.illnesses.keys
+        .where((String id) => id.startsWith('ILL-$personId-'))
+        .length;
+    final String illnessId = 'ILL-$personId-${index + 1}';
+    // Mất nước nặng hơn kiệt sức, và càng thiếu thì càng nặng.
+    final int severity = cause == 'mat_nuoc'
+        ? (300 + (_illnessHydrationFloor - body.hydration)).clamp(300, 800)
+        : (250 + (agenda.fatigue - _illnessFatigueCeiling)).clamp(250, 600);
+    final IllnessState illness = IllnessState(
+      id: illnessId,
+      personId: personId,
+      kind: cause == 'mat_nuoc' ? 'adult_dehydration' : 'adult_exhaustion',
+      onsetSeconds: _state.now.seconds,
+      stage: IllnessStage.symptomatic,
+      severity: severity,
+      bodyTemperatureMilliC: 37600,
+      symptoms: cause == 'mat_nuoc'
+          ? const <String>['dizzy', 'dry_mouth', 'weak_pulse']
+          : const <String>['aching', 'heavy_limbs', 'poor_sleep'],
+    );
+    _replace(
+      illnesses: <String, IllnessState>{
+        ..._state.illnesses,
+        illnessId: illness,
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'adult_illness_onset',
+          personId,
+          'illness=$illnessId cause=$cause severity=$severity '
+              'hydration=${body.hydration} fatigue=${agenda.fatigue}',
+        ),
+      ],
+    );
+    // Không cần dừng khối đang chạy ở đây: bệnh khởi phát lúc chốt ngày
+    // 22:00, khi mọi khối việc trong ngày đã xong. Việc chặn nghỉ do
+    // _competingObligation lo, và nó chặn từ khối đầu tiên của hôm sau.
+    schedule(
+      due: _state.now.addSeconds(1800),
+      phase: EventPhase.observation,
+      kind: 'adult_illness_observed',
+      payload: <String, Object?>{
+        'household_id': householdId,
+        'person_id': personId,
+        'illness_id': illnessId,
+      },
+    );
+    schedule(
+      due: _state.now.addSeconds(6 * 3600),
+      phase: EventPhase.bookkeeping,
+      kind: 'illness_progress',
+      payload: <String, Object?>{'illness_id': illnessId},
+    );
+  }
+
+  /// Người trong hộ nhận ra có người đang ốm và cử người tới chăm.
+  void _applyAdultIllnessObserved(ScheduledEvent event) {
+    final String householdId = event.payload['household_id']! as String;
+    final String personId = event.payload['person_id']! as String;
+    final String illnessId = event.payload['illness_id']! as String;
+    final IllnessState? illness = _state.illnesses[illnessId];
+    final HouseholdState? household = _state.households[householdId];
+    if (illness == null || !illness.active || household == null) return;
+    final String? waterId = household.resourceItemIds['water'];
+    // Người chăm phải khác người bệnh, còn sức, và có quyền lấy nước.
+    final List<String> carers =
+        household.memberIds.where((String id) {
+          if (id == personId) return false;
+          final PersonState? candidate = _state.people[id];
+          if (candidate == null || candidate.infancy != null) return false;
+          if (_activeIllness(id) != null) return false;
+          if (waterId != null && !household.canUse(id, waterId)) return false;
+          return true;
+        }).toList()..sort((String a, String b) {
+          final int skillA = _state.people[a]!.caregiverAgent?.careSkill ?? 0;
+          final int skillB = _state.people[b]!.caregiverAgent?.careSkill ?? 0;
+          final int bySkill = skillB.compareTo(skillA);
+          return bySkill != 0 ? bySkill : a.compareTo(b);
+        });
+    final String? carer = carers.firstOrNull;
+    if (carer == null) {
+      _replace(
+        facts: <WorldFact>[
+          ..._state.facts,
+          _fact(
+            'adult_illness_unattended',
+            personId,
+            'illness=$illnessId severity=${illness.severity}',
+          ),
+        ],
+      );
+      return;
+    }
+    _replace(
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'adult_illness_detected',
+          personId,
+          'illness=$illnessId carer=$carer severity=${illness.severity}',
+        ),
+      ],
+    );
+    schedule(
+      due: _state.now.addSeconds(600),
+      phase: EventPhase.transfer,
+      kind: 'adult_illness_care',
+      payload: <String, Object?>{...event.payload, 'carer_id': carer},
+    );
+  }
+
+  /// Chăm người ốm: tốn nước thật của hộ và hạ mức bệnh.
+  void _applyAdultIllnessCare(ScheduledEvent event) {
+    final String householdId = event.payload['household_id']! as String;
+    final String personId = event.payload['person_id']! as String;
+    final String illnessId = event.payload['illness_id']! as String;
+    final String carerId = event.payload['carer_id']! as String;
+    final IllnessState? illness = _state.illnesses[illnessId];
+    final HouseholdState? household = _state.households[householdId];
+    if (illness == null || !illness.active || household == null) return;
+    const int careWaterMl = 400;
+    final String? waterId = household.resourceItemIds['water'];
+    final CareItemState? water = waterId == null
+        ? null
+        : _state.items[waterId];
+    if (water == null ||
+        water.quantity < careWaterMl ||
+        !household.canUse(carerId, water.id)) {
+      _replace(
+        facts: <WorldFact>[
+          ..._state.facts,
+          _fact(
+            'adult_illness_care_failed',
+            personId,
+            'illness=$illnessId carer=$carerId reason=thieu_nuoc_hoac_quyen',
+          ),
+        ],
+      );
+      return;
+    }
+    // Nước uống vào cũng bù lại phần cơ thể đang thiếu.
+    final PersonState? patient = _state.people[personId];
+    final AdultBodyState? body = patient?.body;
+    final IllnessState cared = illness.afterCare(20);
+    _replace(
+      people: patient == null || body == null
+          ? null
+          : <String, PersonState>{
+              ..._state.people,
+              personId: patient.withBody(body.drink(careWaterMl)),
+            },
+      items: <String, CareItemState>{
+        ..._state.items,
+        water.id: water.consume(careWaterMl),
+      },
+      illnesses: <String, IllnessState>{
+        ..._state.illnesses,
+        illnessId: cared,
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'adult_illness_care_completed',
+          personId,
+          'illness=$illnessId carer=$carerId water_ml=$careWaterMl '
+              'severity=${cared.severity}',
+        ),
+      ],
+    );
+  }
+
+  /// Bệnh đang hoạt động của một người, nếu có.
+  IllnessState? _activeIllness(String personId) => _state.illnesses.values
+      .where(
+        (IllnessState value) => value.personId == personId && value.active,
+      )
+      .firstOrNull;
+
+  /// Sức lực thật sau khi tính cả bệnh.
+  ///
+  /// Bệnh nặng 1000 lấy đi một nửa sức làm việc; không có cơ thể thì coi như
+  /// đủ sức và bệnh không có gì để trừ vào.
+  int _effectiveCapability(PersonState person) {
+    final int base = person.body?.capability ?? 1000;
+    final IllnessState? illness = _activeIllness(person.id);
+    if (illness == null) return base;
+    return base * (1000 - illness.severity ~/ 2) ~/ 1000;
+  }
+
   /// Sức lực của người chở, phần nghìn; chưa có cơ thể thì coi như đủ sức.
   int _carrierCapability(PersonState carrier) =>
-      carrier.body?.capability ?? 1000;
+      _effectiveCapability(carrier);
 
   /// Tốc độ đi trên đường bằng của người này.
   int _carrierBaseSpeed(PersonState carrier) =>

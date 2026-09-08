@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-11-adult-illness",
+  "conditions": [
+    {"id":"V211-DRAIN-001","title":"Bệnh kéo thêm tiêu hao trong nhịp ngày","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"Severity 500 adds exactly 500 kJ to the daily burn"},
+    {"id":"V211-CAUSE-001","title":"Mất nước nặng thành bệnh, không cần hẹn giờ","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"N03 without a water right falls ill at hydration 653"},
+    {"id":"V211-CAUSE-002","title":"Mốc khởi phát ghi lại chính con số đã gây bệnh","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"adult_illness_onset carries hydration and fatigue"},
+    {"id":"V211-CAUSE-003","title":"Bệnh được ghi đúng loại theo nguyên nhân","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"Dehydration case is kind adult_dehydration"},
+    {"id":"V211-CAUSE-004","title":"Mức nặng lúc khởi phát suy từ mức thiếu","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"Onset severity 347 comes from the hydration shortfall"},
+    {"id":"V211-CAUSE-005","title":"Kiệt sức là nguyên nhân thứ hai, độc lập với nước","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"N01 falls ill at fatigue 972 with hydration still 1000"},
+    {"id":"V211-EFFECT-001","title":"Bệnh kéo sức làm việc xuống dù cơ thể còn đủ","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"N01 keeps body capability 1000 but plans below the skill-only output"},
+    {"id":"V211-EFFECT-002","title":"Người đang ốm khó nhận việc hơn","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"work_offer_refused records the illness severity that raised the floor"},
+    {"id":"V211-CARE-001","title":"Hộ nhận ra người ốm và cử được người chăm","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"adult_illness_detected names a carer"},
+    {"id":"V211-CARE-002","title":"Người chăm phải khác người bệnh và còn sức","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"Carer selection skips the patient and anyone already ill"},
+    {"id":"V211-CARE-003","title":"Chăm bệnh tiêu nước thật của kho hộ","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"adult_illness_care_completed spends 400 ml"},
+    {"id":"V211-CARE-004","title":"Được chăm thì mức bệnh giảm","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"Severity after care is below the onset severity"},
+    {"id":"V211-CARE-005","title":"Không ai đủ điều kiện chăm thì ghi rõ","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"adult_illness_unattended fires when no one holds the water right"},
+    {"id":"V211-PROGRESS-001","title":"Bệnh người lớn dùng cùng cơ chế diễn tiến đã có","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"illness_progress and illness_resolved fire for adult cases"},
+    {"id":"V211-SEPARATE-001","title":"Bệnh trẻ sơ sinh không lẫn sang nhánh người lớn","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"P00 keeps only mild_respiratory_infection"},
+    {"id":"V211-GATE-001","title":"Chưa bật cờ thì người lớn không ốm","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"Without enable_v2_11 only the infant has an illness"},
+    {"id":"V211-SAVE-001","title":"Lưu giữa lúc người lớn đang ốm tái hiện đúng","status":"automated","runner":"tool/verify_v2_11_adult_illness.dart","oracle":"Continuous and restored day-ten hashes both equal beabb8f20438f377 (was e81de5a0e3d29c55 before V2.12 let sick people rest)"},
+    {"id":"V211-REGRESSION-001","title":"Mười lăm runner V0–V2.10 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart; tool/verify_v1_infancy.dart; tool/verify_v1_care_chain.dart; tool/verify_v1_body.dart; tool/verify_v2_household.dart; tool/verify_v2_1_household_health.dart; tool/verify_v2_2_transport_substitution.dart; tool/verify_v2_3_routine_directory.dart; tool/verify_v2_4_need_driven_plan.dart; tool/verify_v2_5_skills_and_refusal.dart; tool/verify_v2_6_growth_hunger_mood.dart; tool/verify_v2_7_adult_body.dart; tool/verify_v2_8_water_and_thirst.dart; tool/verify_v2_9_trade_route.dart; tool/verify_v2_10_two_axes_and_fork.dart","oracle":"All earlier runners pass with unchanged hashes"},
+    {"id":"V211-UI-001","title":"GUI chiếu nguyên nhân đổ bệnh của người lớn","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Care filter shows the dehydration cause in Vietnamese"},
+    {"id":"V211-UI-002","title":"Hai nguyên nhân cùng xuất hiện trong thế giới client","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Both mat_nuoc and kiet_suc onsets occur by day six"},
+    {"id":"V211-UI-003","title":"Nhật ký có câu tiếng Việt cho năm mốc bệnh mới","status":"manual","runner":"../client/lib/main.dart","oracle":"onset, detected, care completed, care failed and unattended all have labels"}
+  ]
+}

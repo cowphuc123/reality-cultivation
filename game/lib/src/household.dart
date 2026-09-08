@@ -19,6 +19,7 @@ class HouseholdState {
     this.productionRuns = 0,
     this.caregiverSubstitutions = 0,
     this.wellbeing = false,
+    this.adultIllness = false,
   });
 
   final String id;
@@ -42,6 +43,9 @@ class HouseholdState {
 
   /// Hộ có theo dõi tay nghề lên tay, cơn đói và tâm trạng của thành viên hay không.
   final bool wellbeing;
+
+  /// Hộ có theo dõi bệnh của người lớn hay không.
+  final bool adultIllness;
 
   bool canUse(String personId, String itemId) =>
       authorizedUsersByItemId[itemId]?.contains(personId) ?? false;
@@ -137,6 +141,7 @@ class HouseholdState {
     caregiverSubstitutions:
         caregiverSubstitutions ?? this.caregiverSubstitutions,
     wellbeing: wellbeing,
+    adultIllness: adultIllness,
   );
 
   Map<String, Object?> toJson() {
@@ -173,6 +178,7 @@ class HouseholdState {
       if (caregiverSubstitutions > 0)
         'caregiver_substitutions': caregiverSubstitutions,
       if (wellbeing) 'wellbeing': true,
+      if (adultIllness) 'adult_illness': true,
     };
   }
 
@@ -214,6 +220,7 @@ class HouseholdState {
       productionRuns: json['production_runs'] as int? ?? 0,
       caregiverSubstitutions: json['caregiver_substitutions'] as int? ?? 0,
       wellbeing: json['wellbeing'] as bool? ?? false,
+      adultIllness: json['adult_illness'] as bool? ?? false,
     );
   }
 }

@@ -1,5 +1,31 @@
 # Nhật ký dự án
 
+## 2026-09-09 — K5.19: V2.12 người ốm được nghỉ thật
+
+- Đóng chỗ hở lớn nhất của V2.11: bệnh nâng ngưỡng nhận việc mới nhưng không hủy cam kết cũ, nên người vừa được chăm lại đi làm mười tiếng rồi ốm lại sau hai ngày.
+- Cách làm không cần cơ chế mới: **ốm thành một nghĩa vụ chen chỗ**, đi qua đúng máy móc lùi–xếp lại–bỏ đã có từ V2.5.
+- Lần đầu lấy **mức nặng** làm ngưỡng nghỉ (≥ 300) và hỏng ngay: một lượt chăm hạ mức nặng từ 322 xuống 202 trong bốn mươi phút nên hôm sau lại đi làm. Luật đúng là **nghỉ cho tới khi khỏi hẳn** — lượt chạy xác nhận vẫn còn nghỉ ở mức nặng 55/1000.
+- Nghỉ có tác dụng: mệt mỏi cuối kỳ của N01 từ **1000 kịch trần vĩnh viễn** xuống **500**, vòng ốm giãn từ 2 ngày lên 5 ngày. Và có giá: mất 223.773 giây công (hơn 62 giờ), bỏ hẳn 6 khối việc.
+- **Lượt chạy nói ra điều tôi không đặt trước**: nghỉ không cứu được lịch vốn không bền. N01 làm 10,3 giờ/ngày (+516 mệt, đêm hồi 250) nên cân bằng nằm ở phía luôn kiệt sức — mô hình báo đúng rằng lịch là vấn đề, không phải bệnh. Trái trực giác kèm theo: cuối kỳ N01 mệt 500 còn N02 (làm 6 giờ) mệt 871, vì N01 nghỉ nhiều đến mức lại đỡ mệt hơn.
+- **Chuỗi bốn hệ**: nghỉ bệnh làm chậm mất nước. Trong thế giới client, N03 mất nước đổ bệnh ở ngày 8 thay vì ngày 3, vì nghỉ làm anh ta thôi cày mười hai tiếng.
+- **Bỏ một đoạn code chết**: phần "đang làm dở mà đổ bệnh thì dừng ngay" không bao giờ với tay được, vì bệnh khởi phát ở mốc chốt ngày 22:00 khi khối việc đã xong; mốc nghỉ nó đặt còn bị vòng chăm trẻ xoá mất.
+- Runner V2.12 đạt ngày 10 hash `f57b6f0fb06205bb`; catalog 19 điều kiện; 16/16 widget test đạt.
+- Mười lăm runner V0–V2.10 giữ nguyên hash. Hash V2.11 đổi `e81de5a0e3d29c55` → `beabb8f20438f377`.
+- Thêm [[K5_19_V2_12_NGHI_BENH]].
+
+## 2026-09-09 — K5.18: V2.11 bệnh của người lớn
+
+- Người lớn nay ốm được, và **ốm vì trạng thái cơ thể thật** chứ không vì hẹn giờ như bệnh trẻ sơ sinh ở V2.1: mất nước (đủ nước ≤ 700) hoặc kiệt sức (mệt ≥ 900).
+- Mốc khởi phát ghi lại chính con số đã gây bệnh: `cause=mat_nuoc severity=347 hydration=653` và `cause=kiet_suc severity=322 hydration=1000 fatigue=972`. N03 không có quyền lấy nước nên khát dần; N01 làm gần mười tiếng mỗi ngày nên mệt dồn.
+- Dùng ngưỡng xác định thay vì xác suất vì dự án chưa có bộ sinh số ngẫu nhiên theo seed; bịa ngẫu nhiên tại đây sẽ phá tính tái lập mà 16 bộ chạy đang dựa vào.
+- Ba hậu quả thật: kéo sức làm việc xuống (bệnh 1000 lấy nửa sức), đốt thêm năng lượng và nước theo mức bệnh, và cộng vào ngưỡng nhận việc. Vì sức làm việc chảy vào tốc độ đi đường và chọn tuyến, người chở đang ốm đi chậm hơn và có thể bị chặn khỏi chặng đòi sức.
+- Chăm bệnh đi qua đúng các cửa đã có: người chăm phải khác người bệnh, không đang ốm, có quyền lấy nước; tiêu 400 ml thật và hạ mức bệnh. Không ai đủ điều kiện thì ghi `adult_illness_unattended` và bệnh không tự khỏi.
+- **Vòng lặp đáng chú ý đã lộ ra**: N01 ốm ngày 5, được chăm, rồi ốm lại ngày 7 và ngày 9 — vì chăm bệnh hạ mức bệnh nhưng không hạ mức mệt, và **ốm không làm người ta nghỉ việc**. Đây là hành vi thật của mô hình, và là mắt xích thiếu rõ nhất.
+- Runner V2.11 đạt ngày 10 hash `e81de5a0e3d29c55`; catalog 21 điều kiện; 15/15 widget test đạt.
+- **Mười lăm runner V0–V2.10 giữ nguyên hash** nhờ cờ `enable_v2_11`.
+- GUI thêm năm mốc bệnh tiếng Việt nói rõ nguyên nhân; thế giới client bỏ quyền lấy nước của N03 nên xem được cảnh ốm thật.
+- Thêm [[K5_18_V2_11_BENH_CUA_NGUOI_LON]].
+
 ## 2026-09-09 — K5.17: V2.10 vị trí hai chiều và tuyến có ngã rẽ
 
 - Thêm `WorldPoint` và `integerSquareRoot`: vị trí có trục thứ hai, khoảng cách tính bằng số nguyên. Mở đường cho U013 (chọn nơi trên bản đồ) và K4.4 (địa lý).
