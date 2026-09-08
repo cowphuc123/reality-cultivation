@@ -1,5 +1,11 @@
 # Nhật ký dự án
 
+## 2026-09-08 — Rút gọn STATE.md và DECISIONS.md
+
+- STATE.md: thay danh sách tường thuật 30+ mục bằng một bảng bản K5 (V0–V2.3) kèm hash, cộng tóm tắt một dòng cho K0–K4 (1.860 điều kiện/41 họ). 186 dòng → 51 dòng.
+- DECISIONS.md: gộp ~40 mục nhật ký theo từng tài liệu K thành một quy tắc chung ("mọi con số kỹ thuật ngoài bảng U là fixture chưa duyệt") cộng mục Diễn biến gần nhất. 200 dòng → 68 dòng.
+- Không mất thông tin: lịch sử chi tiết từng lượt việc đã có sẵn trong CHANGELOG.md (mục này) và trong phần mở đầu mỗi tài liệu K; hai file trên giờ chỉ trỏ tới đó thay vì lặp lại.
+
 ## 2026-09-08 — K5.10: V2.3 nhịp sống NPC, xung đột lịch và hồ sơ thế giới
 
 - Thêm `RoutineBlock`/`RoutineState`/`ScheduleConflict`: mỗi NPC người lớn có bảng giờ trong ngày, di chuyển thật tới phòng của khối việc và lặp lại hằng ngày.
