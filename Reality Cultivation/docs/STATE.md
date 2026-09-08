@@ -1,6 +1,8 @@
 # Trạng thái hiện tại
 
-Cập nhật: 2026-09-08.
+Cập nhật: 2026-09-09.
+
+> Trợ lý mới tiếp nhận dự án: đọc [[CHUYEN_GIAO]] trước tiên.
 
 ## Giai đoạn
 
@@ -39,7 +41,7 @@ Lịch sử đầy đủ từng lượt việc nằm trong [[CHANGELOG]]. Tóm t
 
 Web đang chạy: **https://cowphuc123.github.io/reality-cultivation/** — tự động build lại mỗi lần đẩy `client/` lên GitHub (`.github/workflows/deploy-web.yml`). Bản cũ trên Sites (`chatgpt.site`) vẫn còn, chưa gỡ.
 
-**Cách làm từ 2026-09-08:** làm việc và cập nhật hồ sơ tại chỗ, **không** commit/push/build web sau mỗi lát cắt; chỉ đẩy lên khi người dùng yêu cầu. V2.11 và V2.12 hiện đã xong tại chỗ nhưng chưa đẩy; V2.9 và V2.10 đã đẩy ở commit `25eaaa9`.
+**Cách làm từ 2026-09-08:** làm việc và cập nhật hồ sơ tại chỗ, **không** commit/push/build web sau mỗi lát cắt; chỉ đẩy lên khi người dùng yêu cầu. Đã đẩy tới V2.12 (commit `3b60ef7`), cây làm việc sạch.
 Mở tại máy: `MO_GAME.bat` ở gốc dự án; hướng dẫn tại [[HUONG_DAN_MO_BAN_TEST]].
 
 ## Chưa thực hiện

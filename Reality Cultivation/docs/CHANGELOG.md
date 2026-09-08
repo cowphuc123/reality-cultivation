@@ -1,5 +1,11 @@
 # Nhật ký dự án
 
+## 2026-09-09 — Hồ sơ chuyển giao
+
+- Viết [[CHUYEN_GIAO]]: điểm vào duy nhất cho trợ lý mới tiếp nhận dự án, theo yêu cầu người dùng muốn chuyển sang làm với trợ lý khác.
+- Ghi lại những thứ trước nay chỉ nằm trong hội thoại: kỷ luật giữ hash, quy ước cờ `enable_v2_X`, năm phần bắt buộc của mỗi lát cắt, bảng 17 hash hiện hành, họ lỗi "đọc trạng thái cũ rồi ghi đè" đã trúng hai lần, cấu hình máy (Dart 3.10.7, Flutter 3.38.7, chưa có Android SDK và VS C++), và cách làm việc người dùng yêu cầu.
+- Nối [[CHUYEN_GIAO]] từ README và STATE.
+
 ## 2026-09-09 — K5.19: V2.12 người ốm được nghỉ thật
 
 - Đóng chỗ hở lớn nhất của V2.11: bệnh nâng ngưỡng nhận việc mới nhưng không hủy cam kết cũ, nên người vừa được chăm lại đi làm mười tiếng rồi ốm lại sau hai ngày.

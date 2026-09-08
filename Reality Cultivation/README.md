@@ -15,6 +15,7 @@ Game text mô phỏng thế giới tu tiên liên tục, ưu tiên chiều sâu 
 
 | Tài liệu | Công dụng |
 | --- | --- |
+| [Chuyển giao cho trợ lý khác](docs/CHUYEN_GIAO.md) | Đọc đầu tiên khi có người/trợ lý mới tiếp nhận dự án |
 | [Trạng thái hiện tại](docs/STATE.md) | Đang làm gì, đã xong gì, tiếp theo làm gì |
 | [Kế hoạch tổng thể](docs/MASTER_PLAN.md) | Tầm nhìn, hệ thống, phạm vi đề xuất và lộ trình |
 | [Quyết định và câu hỏi mở](docs/DECISIONS.md) | Yêu cầu của người dùng, đề xuất chưa chốt |
