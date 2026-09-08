@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v1-infancy",
+  "conditions": [
+    {
+      "id": "V1-AGE-001",
+      "title": "Nhân vật người chơi bắt đầu đúng lúc sinh",
+      "status": "automated",
+      "runner": "tool/verify_v1_infancy.dart",
+      "oracle": "P00 exists at age zero with InfantState"
+    },
+    {
+      "id": "V1-INTENT-001",
+      "title": "Mục tiêu người lớn bị từ chối ở giai đoạn sơ sinh",
+      "status": "automated",
+      "runner": "tool/verify_v1_infancy.dart",
+      "oracle": "Free-text cultivation goal is rejected"
+    },
+    {
+      "id": "V1-INTENT-002",
+      "title": "Ý định mở theo tuổi",
+      "status": "automated",
+      "runner": "tool/verify_v1_infancy.dart",
+      "oracle": "Reach is unavailable at day zero and available by day thirty"
+    },
+    {
+      "id": "V1-DEVELOPMENT-001",
+      "title": "Giác quan thay đổi theo ngày tuổi",
+      "status": "automated",
+      "runner": "tool/verify_v1_infancy.dart",
+      "oracle": "Near vision range at day thirty exceeds day zero"
+    },
+    {
+      "id": "V1-NEED-001",
+      "title": "Nhu cầu tạo tiếng khóc có nguyên nhân",
+      "status": "automated",
+      "runner": "tool/verify_v1_infancy.dart",
+      "oracle": "Daily need pressure produces infant_cry fact"
+    },
+    {
+      "id": "V1-CARE-001",
+      "title": "Khóc không tạo chăm sóc tức thì",
+      "status": "automated",
+      "runner": "tool/verify_v1_care_chain.dart",
+      "oracle": "Care interaction count remains zero immediately after crying"
+    },
+    {
+      "id": "V1-CARE-002",
+      "title": "Âm thanh phải được người chăm sóc nhận biết",
+      "status": "automated",
+      "runner": "tool/verify_v1_care_chain.dart",
+      "oracle": "Audible signal creates cry_heard before movement"
+    },
+    {
+      "id": "V1-CARE-003",
+      "title": "Người chăm sóc tạm ngắt rồi trở lại công việc",
+      "status": "automated",
+      "runner": "tool/verify_v1_care_chain.dart",
+      "oracle": "Activity changes to respond_to_infant and resumes after care"
+    },
+    {
+      "id": "V1-CARE-004",
+      "title": "Khoảng cách và tốc độ tạo thời gian di chuyển",
+      "status": "automated",
+      "runner": "tool/verify_v1_care_chain.dart",
+      "oracle": "Caregiver position changes only at scheduled arrival"
+    },
+    {
+      "id": "V1-CARE-005",
+      "title": "Thao tác chăm sóc cần thời gian riêng",
+      "status": "automated",
+      "runner": "tool/verify_v1_care_chain.dart",
+      "oracle": "Arrival precedes care completion by sixty game seconds"
+    },
+    {
+      "id": "V1-ITEM-001",
+      "title": "Phần ăn bị tiêu thụ khi chăm sóc",
+      "status": "automated",
+      "runner": "tool/verify_v1_care_chain.dart",
+      "oracle": "Oral function limits a sixty milliliter offer to forty-eight milliliters"
+    },
+    {
+      "id": "V1-ITEM-002",
+      "title": "Khăn bị hao mòn khi sử dụng",
+      "status": "automated",
+      "runner": "tool/verify_v1_care_chain.dart",
+      "oracle": "Swaddling cloth condition decreases by five"
+    },
+    {
+      "id": "V1-FAILURE-001",
+      "title": "Tín hiệu quá yếu không bị nghe toàn tri",
+      "status": "automated",
+      "runner": "tool/verify_v1_care_chain.dart",
+      "oracle": "Distant cry creates cry_not_heard and an unmet care episode"
+    },
+    {
+      "id": "V1-FAILURE-002",
+      "title": "Nghe thấy nhưng không di chuyển được vẫn thất bại",
+      "status": "automated",
+      "runner": "tool/verify_v1_care_chain.dart",
+      "oracle": "Zero movement speed creates caregiver_cannot_reach"
+    },
+    {
+      "id": "V1-FAILURE-003",
+      "title": "Thiếu vật dụng không được tính là đã chăm sóc",
+      "status": "automated",
+      "runner": "tool/verify_v1_care_chain.dart",
+      "oracle": "Missing supplies creates failure with zero care interactions"
+    },
+    {
+      "id": "V1-SAVE-001",
+      "title": "Lưu giữa chuỗi nhân quả giữ kết quả tiếp diễn",
+      "status": "automated",
+      "runner": "tool/verify_v1_care_chain.dart",
+      "oracle": "Mid-chain restore reaches the same semantic hash"
+    },
+    {
+      "id": "V1-SAVE-002",
+      "title": "Lưu ngày 10 tiếp tục đúng đến ngày 30",
+      "status": "automated",
+      "runner": "tool/verify_v1_infancy.dart",
+      "oracle": "Continuous and restored day-thirty hashes match"
+    },
+    {
+      "id": "V1-UI-001",
+      "title": "Giao diện hẹp và rộng hiển thị điều khiển sơ sinh",
+      "status": "automated",
+      "runner": "../client/test/widget_test.dart",
+      "oracle": "Mobile and desktop expose age-appropriate intent controls"
+    },
+    {
+      "id": "V1-UI-002",
+      "title": "Giao diện hiển thị phản ứng chăm sóc đang chờ và vật tư",
+      "status": "automated",
+      "runner": "../client/test/widget_test.dart",
+      "oracle": "Pending response marker and feed quantity are projected"
+    },
+    {
+      "id": "V1-BODY-001",
+      "title": "Cơ thể sơ sinh có trạng thái vật chất ban đầu",
+      "status": "automated",
+      "runner": "tool/verify_v1_body.dart",
+      "oracle": "Newborn starts with mass, body water, energy, temperature and organ contents"
+    },
+    {
+      "id": "V1-BODY-002",
+      "title": "Trao đổi chất tiêu năng lượng và nước theo giờ",
+      "status": "automated",
+      "runner": "tool/verify_v1_body.dart",
+      "oracle": "One awake hour consumes twenty-five kilojoules and three insensible milliliters before elimination"
+    },
+    {
+      "id": "V1-BODY-003",
+      "title": "Dung tích dạ dày suy từ khối lượng",
+      "status": "automated",
+      "runner": "tool/verify_v1_body.dart",
+      "oracle": "A 3400 gram newborn has a seventy-four milliliter fixture capacity"
+    },
+    {
+      "id": "V1-BODY-004",
+      "title": "Khả năng bú nuốt giới hạn lượng thực nhận",
+      "status": "automated",
+      "runner": "tool/verify_v1_body.dart",
+      "oracle": "Sixty offered milliliters produce forty-eight consumed milliliters"
+    },
+    {
+      "id": "V1-BODY-005",
+      "title": "Dịch ăn vào mang năng lượng và nước theo lượng thực nhận",
+      "status": "automated",
+      "runner": "tool/verify_v1_body.dart",
+      "oracle": "Consumed volume determines energy and water gains and enters the stomach"
+    },
+    {
+      "id": "V1-BODY-006",
+      "title": "Chu kỳ thức ngủ phát sinh từ áp lực ngủ",
+      "status": "automated",
+      "runner": "tool/verify_v1_body.dart",
+      "oracle": "A forty-eight hour run accumulates sleep time"
+    },
+    {
+      "id": "V1-BODY-007",
+      "title": "Tiêu hóa tạo bài tiết có lượng",
+      "status": "automated",
+      "runner": "tool/verify_v1_body.dart",
+      "oracle": "Feeding and gastric emptying produce urine and stool totals"
+    },
+    {
+      "id": "V1-BODY-008",
+      "title": "Điều nhiệt không chạy mất kiểm soát trong fixture",
+      "status": "automated",
+      "runner": "tool/verify_v1_body.dart",
+      "oracle": "Body temperature remains within the configured stable range"
+    },
+    {
+      "id": "V1-GROWTH-001",
+      "title": "Tăng trưởng phụ thuộc dự trữ và nước",
+      "status": "automated",
+      "runner": "tool/verify_v1_body.dart",
+      "oracle": "Supported and deprived bodies gain different daily mass"
+    },
+    {
+      "id": "V1-CONSERVATION-001",
+      "title": "Dịch mất khỏi vật phẩm bằng tổng lượng cơ thể nhận",
+      "status": "automated",
+      "runner": "tool/verify_v1_body.dart",
+      "oracle": "Initial minus remaining feed equals cumulative consumed milliliters"
+    },
+    {
+      "id": "V1-SAVE-003",
+      "title": "Lưu giữa hai tick sinh lý giữ kết quả tiếp diễn",
+      "status": "automated",
+      "runner": "tool/verify_v1_body.dart",
+      "oracle": "Twelve-hour checkpoint and continuous run reach the same hash"
+    },
+    {
+      "id": "V1-UI-003",
+      "title": "Giao diện chiếu trạng thái cơ thể sơ sinh",
+      "status": "automated",
+      "runner": "../client/test/widget_test.dart",
+      "oracle": "Mobile and desktop project body mass, reserves, stomach, temperature and totals"
+    }
+  ]
+}

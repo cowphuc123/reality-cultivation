@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#9fbd82">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <title>Reality Cultivation — PWA spike</title>
+</head>
+<body>
+  <header><h1>Reality Cultivation</h1><button id="pause-toggle">Tạm dừng</button></header>
+  <main>
+    <section>
+      <h2 id="world-day">Ngày 0</h2>
+      <p id="player-name">Vô Danh</p>
+      <p id="active-goal">Mục tiêu hiện tại: Chưa có</p>
+    </section>
+    <section>
+      <h2>Giao mục tiêu</h2>
+      <label for="goal-input">Ý định của nhân vật</label>
+      <input id="goal-input" placeholder="Lắng nghe người chăm sóc">
+      <button id="goal-submit">Giao mục tiêu</button>
+    </section>
+    <section>
+      <h2>Bản lưu</h2>
+      <button id="save-world">Lưu</button>
+      <button id="load-world">Tải lại</button>
+    </section>
+    <section><h2>Lịch sử đã xảy ra</h2><ol id="history"></ol></section>
+  </main>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>

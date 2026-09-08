@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-1-household-health",
+  "conditions": [
+    {"id":"V21-SPACE-001","title":"Hộ có ba phòng với danh tính và vị trí riêng","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Sleeping room, kitchen and yard persist through save"},
+    {"id":"V21-SPACE-002","title":"Nhân vật có phòng hiện tại ngoài tọa độ","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"P00 stays in ROOM-SLEEP and caregiver moves there"},
+    {"id":"V21-ILL-001","title":"Bệnh có thời điểm khởi phát riêng","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Mild respiratory infection begins on day 3 at 09:00"},
+    {"id":"V21-ILL-002","title":"Bệnh lưu triệu chứng mức nặng và thân nhiệt","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Onset severity is 420 and temperature is 37800 milli-C"},
+    {"id":"V21-KNOW-001","title":"Phát hiện bệnh xảy ra sau khởi phát","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Illness remains undetected at the onset instant"},
+    {"id":"V21-SCHEDULE-001","title":"Người chăm sóc tạm dừng công việc vì bệnh","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Schedule change fact preserves suspended activity"},
+    {"id":"V21-MOVE-001","title":"Người chăm sóc phải đi tới phòng của trẻ","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"N01 reaches ROOM-SLEEP before care"},
+    {"id":"V21-CARE-001","title":"Chăm bệnh dùng vật chất thật có quyền","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Care consumes exactly 100 ml of authorized clean water"},
+    {"id":"V21-CARE-002","title":"Chăm sóc làm giảm mức bệnh","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Severity falls from 420 to 300"},
+    {"id":"V21-LABOR-001","title":"Đổi lịch vì bệnh được ghi vào sổ lao động","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Illness care adds 600 to 605 interrupted seconds"},
+    {"id":"V21-RECOVERY-001","title":"Bệnh nhẹ diễn tiến theo bước sáu giờ","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Detected illness decreases deterministically"},
+    {"id":"V21-RECOVERY-002","title":"Bệnh nhẹ có thể lui thay vì tồn tại vĩnh viễn","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Episode reaches resolved stage before day 6"},
+    {"id":"V21-SUPPLY-001","title":"Tiếp tế bổ sung ba kho vật chất thật","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"One delivery is recorded by day 6"},
+    {"id":"V21-PROD-001","title":"Lao động thành viên tạo thêm củi","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Five production runs are recorded by day 6"},
+    {"id":"V21-SAVE-001","title":"Lưu giữa lúc bệnh tái hiện đúng đến ngày mười","status":"automated","runner":"tool/verify_v2_1_household_health.dart","oracle":"Continuous and restored hashes both equal 3d83fc8e0cc7b77f"},
+    {"id":"V21-REGRESSION-001","title":"V0 V1 và V2.0 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart; tool/verify_v1_infancy.dart; tool/verify_v1_care_chain.dart; tool/verify_v1_body.dart; tool/verify_v2_household.dart","oracle":"All five existing runners pass with unchanged hashes"},
+    {"id":"V21-UI-001","title":"GUI chiếu phòng bệnh tiếp tế và sản xuất","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Day-four UI test exposes room and active illness"},
+    {"id":"V21-UI-002","title":"Người chơi có thể tạo thế giới V2.1 mới thay save cũ","status":"automated","runner":"../client/test/widget_test.dart","oracle":"New-world action opens a cancellable confirmation dialog"}
+  ]
+}

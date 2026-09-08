@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-2-transport-substitution",
+  "conditions": [
+    {"id":"V22-CARE-001","title":"Người chăm sóc chính có trạng thái sẵn sàng","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"N01 becomes unavailable during the illness window"},
+    {"id":"V22-CARE-002","title":"Hệ thống chọn người thay đủ kỹ năng trong cùng hộ","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"N02 replaces unavailable N01"},
+    {"id":"V22-CARE-003","title":"Người thay phải có quyền dùng vật chăm sóc","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"N02 uses authorized clean water"},
+    {"id":"V22-CARE-004","title":"Lần thay người được ghi vào sổ hộ","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"Household substitution count is positive by day four"},
+    {"id":"V22-KNOW-001","title":"Bệnh được ghi nhận bởi đúng người trực tiếp quan sát","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"Illness detector is N02"},
+    {"id":"V22-BODY-001","title":"Bệnh tiêu hao năng lượng cơ thể","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"Cumulative illness energy cost is positive"},
+    {"id":"V22-BODY-002","title":"Bệnh làm mất nước cơ thể","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"Cumulative illness water loss is positive"},
+    {"id":"V22-BODY-003","title":"Bệnh làm gián đoạn giấc ngủ","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"Cumulative illness sleep disruption is positive"},
+    {"id":"V22-BODY-004","title":"Bệnh kéo thân nhiệt về mức sốt của episode","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"Physiology tick receives active illness fever target"},
+    {"id":"V22-TRANSIT-001","title":"Tiếp tế tạo chuyến đi có người vận chuyển và hàng","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"SUP-H01-0 has carrier N04 and three cargo quantities"},
+    {"id":"V22-TRANSIT-002","title":"Chuyến đi lưu giờ khởi hành và giờ dự kiến","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"First journey expects arrival twelve hours after departure"},
+    {"id":"V22-TRANSIT-003","title":"Sự cố làm đổi trạng thái chuyến đi sang trễ","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"First journey is delayed by six hours"},
+    {"id":"V22-TRANSIT-004","title":"Hàng chưa vào kho khi chuyến đi còn trễ","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"No delivery is booked at expected arrival"},
+    {"id":"V22-TRANSIT-005","title":"Hàng chỉ vào kho tại giờ đến thật","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"One delivery is booked exactly six hours late"},
+    {"id":"V22-TRANSIT-006","title":"Chuyến kế tiếp có thể đến đúng giờ","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"Second journey arrives without delay"},
+    {"id":"V22-LEDGER-001","title":"Lương thực tuân theo tiêu thụ và số chuyến đã đến","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"Food inventory equation balances"},
+    {"id":"V22-LEDGER-002","title":"Nước tính cả bữa ăn chăm bệnh và tiếp tế","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"Water inventory equation balances"},
+    {"id":"V22-LEDGER-003","title":"Củi tính cả bữa ăn sản xuất và tiếp tế","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"Fuel inventory equation balances"},
+    {"id":"V22-SAVE-001","title":"Lưu giữa lúc chuyến đi trễ tái hiện đúng","status":"automated","runner":"tool/verify_v2_2_transport_substitution.dart","oracle":"Continuous and restored day-eleven hashes both equal d0b87de633a4765a"},
+    {"id":"V22-REGRESSION-001","title":"V0 đến V2.1 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart; tool/verify_v1_infancy.dart; tool/verify_v1_care_chain.dart; tool/verify_v1_body.dart; tool/verify_v2_household.dart; tool/verify_v2_1_household_health.dart","oracle":"All earlier runners pass with unchanged hashes"},
+    {"id":"V22-UI-001","title":"GUI chiếu tác động sinh lý và số lần thay người","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Day-four widget test exposes both views"},
+    {"id":"V22-UI-002","title":"GUI chiếu hành trình trễ trước khi hàng đến","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Day-five widget test exposes journey status and six-hour delay"}
+  ]
+}

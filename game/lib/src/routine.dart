@@ -1,0 +1,330 @@
+/// Nhịp sống hằng ngày của một người và các xung đột lịch có thật.
+///
+/// Một khối nhịp sống là cam kết thời gian có địa điểm. Khi một nghĩa vụ khác
+/// chen vào đúng lúc khối đang chạy, thời gian mất đi được ghi lại thành
+/// [ScheduleConflict] thay vì biến mất im lặng.
+class RoutineBlock {
+  const RoutineBlock({
+    required this.id,
+    required this.activity,
+    required this.startSecondOfDay,
+    required this.durationSeconds,
+    this.roomId,
+    this.priority = 50,
+    this.blocking = false,
+  });
+
+  final String id;
+  final String activity;
+  final int startSecondOfDay;
+  final int durationSeconds;
+
+  /// Phòng người này phải có mặt trong suốt khối, nếu có.
+  final String? roomId;
+
+  /// Ưu tiên khi hai cam kết trùng giờ; số lớn hơn được giữ.
+  final int priority;
+
+  /// Khối khiến người này không thể nhận nghĩa vụ khác của hộ.
+  final bool blocking;
+
+  int get endSecondOfDay => startSecondOfDay + durationSeconds;
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'id': id,
+    'activity': activity,
+    'start_second_of_day': startSecondOfDay,
+    'duration_seconds': durationSeconds,
+    if (roomId != null) 'room_id': roomId,
+    if (priority != 50) 'priority': priority,
+    if (blocking) 'blocking': true,
+  };
+
+  factory RoutineBlock.fromJson(Map<String, Object?> json) => RoutineBlock(
+    id: json['id']! as String,
+    activity: json['activity']! as String,
+    startSecondOfDay: json['start_second_of_day']! as int,
+    durationSeconds: json['duration_seconds']! as int,
+    roomId: json['room_id'] as String?,
+    priority: json['priority'] as int? ?? 50,
+    blocking: json['blocking'] as bool? ?? false,
+  );
+}
+
+/// Một lần hai cam kết cùng đòi thời gian của một người.
+class ScheduleConflict {
+  const ScheduleConflict({
+    required this.atSeconds,
+    required this.plannedActivity,
+    required this.competingActivity,
+    required this.resolution,
+    this.blockId,
+    this.lostSeconds = 0,
+  });
+
+  final int atSeconds;
+  final String plannedActivity;
+  final String competingActivity;
+
+  /// `preempted` việc đang làm bị cắt, `deferred` việc phải lùi giờ,
+  /// `dropped` việc mất hẳn trong ngày.
+  final String resolution;
+  final String? blockId;
+  final int lostSeconds;
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'at_seconds': atSeconds,
+    'planned_activity': plannedActivity,
+    'competing_activity': competingActivity,
+    'resolution': resolution,
+    if (blockId != null) 'block_id': blockId,
+    if (lostSeconds > 0) 'lost_seconds': lostSeconds,
+  };
+
+  factory ScheduleConflict.fromJson(Map<String, Object?> json) =>
+      ScheduleConflict(
+        atSeconds: json['at_seconds']! as int,
+        plannedActivity: json['planned_activity']! as String,
+        competingActivity: json['competing_activity']! as String,
+        resolution: json['resolution']! as String,
+        blockId: json['block_id'] as String?,
+        lostSeconds: json['lost_seconds'] as int? ?? 0,
+      );
+}
+
+class RoutineState {
+  const RoutineState({
+    required this.blocks,
+    this.activeBlockId,
+    this.activeSinceSeconds,
+    this.preemptedBy,
+    this.preemptedAtSeconds,
+    this.completedBlocks = 0,
+    this.deferredStarts = 0,
+    this.droppedBlocks = 0,
+    this.lostSeconds = 0,
+    this.conflictCount = 0,
+    this.conflicts = const <ScheduleConflict>[],
+  });
+
+  /// Số xung đột gần nhất còn giữ chi tiết trong bản lưu.
+  static const int retainedConflicts = 24;
+
+  final List<RoutineBlock> blocks;
+  final String? activeBlockId;
+  final int? activeSinceSeconds;
+  final String? preemptedBy;
+  final int? preemptedAtSeconds;
+  final int completedBlocks;
+  final int deferredStarts;
+  final int droppedBlocks;
+  final int lostSeconds;
+  final int conflictCount;
+  final List<ScheduleConflict> conflicts;
+
+  bool get preempted => preemptedBy != null;
+
+  RoutineBlock? blockById(String id) =>
+      blocks.where((RoutineBlock block) => block.id == id).firstOrNull;
+
+  RoutineBlock? get activeBlock =>
+      activeBlockId == null ? null : blockById(activeBlockId!);
+
+  /// Hoạt động đang khiến người này không nhận được nghĩa vụ khác.
+  String? get blockingActivity {
+    final RoutineBlock? block = activeBlock;
+    if (block == null || !block.blocking) return null;
+    return block.activity;
+  }
+
+  /// Điều đang chiếm thời gian của người này, nếu có.
+  String? get currentActivity => preemptedBy ?? activeBlock?.activity;
+
+  RoutineState startBlock(String blockId, int nowSeconds) => _copy(
+    activeBlockId: blockId,
+    activeSinceSeconds: nowSeconds,
+    clearActive: false,
+  );
+
+  RoutineState endBlock(int nowSeconds) {
+    if (activeBlockId == null) return this;
+    if (preempted && preemptedAtSeconds != null) {
+      final int lost = (nowSeconds - preemptedAtSeconds!).clamp(0, 86400);
+      return _withConflict(
+        ScheduleConflict(
+          atSeconds: nowSeconds,
+          plannedActivity: activeBlock?.activity ?? activeBlockId!,
+          competingActivity: preemptedBy!,
+          resolution: 'preempted',
+          blockId: activeBlockId,
+          lostSeconds: lost,
+        ),
+      )._copy(
+        clearActive: true,
+        preemptedAtSeconds: nowSeconds,
+        completedBlocks: completedBlocks + 1,
+        lostSeconds: lostSeconds + lost,
+      );
+    }
+    return _copy(clearActive: true, completedBlocks: completedBlocks + 1);
+  }
+
+  /// Đánh dấu người này bị một nghĩa vụ khác chiếm chỗ.
+  RoutineState preempt({required int nowSeconds, required String by}) {
+    if (preempted) return this;
+    return _copy(
+      preemptedBy: by,
+      preemptedAtSeconds: nowSeconds,
+      clearActive: false,
+    );
+  }
+
+  /// Trả người này về khối đang dở và ghi lại thời gian đã mất.
+  RoutineState resume(int nowSeconds) {
+    if (!preempted) return this;
+    final String competing = preemptedBy!;
+    final int lost = preemptedAtSeconds == null
+        ? 0
+        : (nowSeconds - preemptedAtSeconds!).clamp(0, 86400);
+    final RoutineBlock? block = activeBlock;
+    if (block == null) {
+      return _copy(clearPreemption: true);
+    }
+    return _withConflict(
+      ScheduleConflict(
+        atSeconds: nowSeconds,
+        plannedActivity: block.activity,
+        competingActivity: competing,
+        resolution: 'preempted',
+        blockId: block.id,
+        lostSeconds: lost,
+      ),
+    )._copy(clearPreemption: true, lostSeconds: lostSeconds + lost);
+  }
+
+  /// Khối phải lùi giờ vì người này còn vướng việc khác.
+  RoutineState deferStart({
+    required int nowSeconds,
+    required String blockId,
+    required String competingActivity,
+  }) => _withConflict(
+    ScheduleConflict(
+      atSeconds: nowSeconds,
+      plannedActivity: blockById(blockId)?.activity ?? blockId,
+      competingActivity: competingActivity,
+      resolution: 'deferred',
+      blockId: blockId,
+    ),
+  )._copy(deferredStarts: deferredStarts + 1);
+
+  /// Khối mất hẳn trong ngày vì không còn giờ để bù.
+  RoutineState dropStart({
+    required int nowSeconds,
+    required String blockId,
+    required String competingActivity,
+  }) {
+    final RoutineBlock? block = blockById(blockId);
+    return _withConflict(
+      ScheduleConflict(
+        atSeconds: nowSeconds,
+        plannedActivity: block?.activity ?? blockId,
+        competingActivity: competingActivity,
+        resolution: 'dropped',
+        blockId: blockId,
+        lostSeconds: block?.durationSeconds ?? 0,
+      ),
+    )._copy(
+      droppedBlocks: droppedBlocks + 1,
+      lostSeconds: lostSeconds + (block?.durationSeconds ?? 0),
+    );
+  }
+
+  /// Ghi một xung đột do nghĩa vụ ngoài nhịp sống, ví dụ bữa ăn của hộ.
+  RoutineState recordConflict(ScheduleConflict conflict) =>
+      _withConflict(conflict);
+
+  RoutineState _withConflict(ScheduleConflict conflict) {
+    final List<ScheduleConflict> next = <ScheduleConflict>[
+      ...conflicts,
+      conflict,
+    ];
+    return _copy(
+      conflicts: next.length > retainedConflicts
+          ? next.sublist(next.length - retainedConflicts)
+          : next,
+      conflictCount: conflictCount + 1,
+    );
+  }
+
+  RoutineState _copy({
+    String? activeBlockId,
+    int? activeSinceSeconds,
+    String? preemptedBy,
+    int? preemptedAtSeconds,
+    int? completedBlocks,
+    int? deferredStarts,
+    int? droppedBlocks,
+    int? lostSeconds,
+    int? conflictCount,
+    List<ScheduleConflict>? conflicts,
+    bool clearActive = false,
+    bool clearPreemption = false,
+  }) => RoutineState(
+    blocks: blocks,
+    activeBlockId: clearActive ? null : (activeBlockId ?? this.activeBlockId),
+    activeSinceSeconds: clearActive
+        ? null
+        : (activeSinceSeconds ?? this.activeSinceSeconds),
+    preemptedBy: clearPreemption ? null : (preemptedBy ?? this.preemptedBy),
+    preemptedAtSeconds: clearPreemption
+        ? null
+        : (preemptedAtSeconds ?? this.preemptedAtSeconds),
+    completedBlocks: completedBlocks ?? this.completedBlocks,
+    deferredStarts: deferredStarts ?? this.deferredStarts,
+    droppedBlocks: droppedBlocks ?? this.droppedBlocks,
+    lostSeconds: lostSeconds ?? this.lostSeconds,
+    conflictCount: conflictCount ?? this.conflictCount,
+    conflicts: conflicts ?? this.conflicts,
+  );
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'blocks': <Map<String, Object?>>[
+      for (final RoutineBlock block in blocks) block.toJson(),
+    ],
+    if (activeBlockId != null) 'active_block_id': activeBlockId,
+    if (activeSinceSeconds != null) 'active_since_seconds': activeSinceSeconds,
+    if (preemptedBy != null) 'preempted_by': preemptedBy,
+    if (preemptedAtSeconds != null)
+      'preempted_at_seconds': preemptedAtSeconds,
+    if (completedBlocks > 0) 'completed_blocks': completedBlocks,
+    if (deferredStarts > 0) 'deferred_starts': deferredStarts,
+    if (droppedBlocks > 0) 'dropped_blocks': droppedBlocks,
+    if (lostSeconds > 0) 'lost_seconds': lostSeconds,
+    if (conflictCount > 0) 'conflict_count': conflictCount,
+    if (conflicts.isNotEmpty)
+      'conflicts': <Map<String, Object?>>[
+        for (final ScheduleConflict conflict in conflicts) conflict.toJson(),
+      ],
+  };
+
+  factory RoutineState.fromJson(Map<String, Object?> json) => RoutineState(
+    blocks: <RoutineBlock>[
+      for (final Object? block in json['blocks']! as List<Object?>)
+        RoutineBlock.fromJson((block! as Map).cast<String, Object?>()),
+    ],
+    activeBlockId: json['active_block_id'] as String?,
+    activeSinceSeconds: json['active_since_seconds'] as int?,
+    preemptedBy: json['preempted_by'] as String?,
+    preemptedAtSeconds: json['preempted_at_seconds'] as int?,
+    completedBlocks: json['completed_blocks'] as int? ?? 0,
+    deferredStarts: json['deferred_starts'] as int? ?? 0,
+    droppedBlocks: json['dropped_blocks'] as int? ?? 0,
+    lostSeconds: json['lost_seconds'] as int? ?? 0,
+    conflictCount: json['conflict_count'] as int? ?? 0,
+    conflicts: <ScheduleConflict>[
+      for (final Object? conflict
+          in (json['conflicts'] as List<Object?>? ?? const <Object?>[]))
+        ScheduleConflict.fromJson((conflict! as Map).cast<String, Object?>()),
+    ],
+  );
+}

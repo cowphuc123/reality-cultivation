@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "scenario_id": "SHARED-V1-CARE-01",
+  "status": "machine_ready_not_cross_stack_executed",
+  "seed": 20260907,
+  "description": "Nhánh sơ sinh ổn định: ý định khóc truyền thành tín hiệu, NPC nghe, ngắt việc, di chuyển và dùng vật tư.",
+  "command": {
+    "id": "shared-v1-care-command",
+    "person_id": "P00",
+    "intent": "cry_for_care"
+  },
+  "advance_to_seconds": 66,
+  "required_fact_kinds": [
+    "infant_intent",
+    "cry_heard",
+    "caregiver_arrived",
+    "caregiver_care"
+  ],
+  "expected_semantic_hash_s2": "69988c4593598846",
+  "cross_stack_oracle_pending": true
+}

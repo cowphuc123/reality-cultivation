@@ -1,0 +1,41 @@
+{
+  "evidence_schema_version": 1,
+  "captured_at": "2026-09-07",
+  "scenario_id": "SPIKE-V0-01",
+  "scope": "diagnostic core subset",
+  "fixture_sha256": "7C7033ED0F33C7A5798750A0EEEAC5698E1182C3638EEE6D97C35E9AE279F31A",
+  "expected_state_sha256": "BE2AB5B26E77E9F39314CF529EACCFC92537C651C7AA11E98F14FDA1D0CA3AB4",
+  "expected_semantic_hash": "5629ba88282991c6",
+  "results": [
+    {
+      "candidate": "S2-Dart-core",
+      "runtime": "Dart 3.10.7 JIT",
+      "iterations": 500,
+      "p50_microseconds": 140,
+      "p95_microseconds": 477,
+      "semantic_hash": "5629ba88282991c6",
+      "status": "pass"
+    },
+    {
+      "candidate": "S0-PWA-JavaScript",
+      "runtime": "Node v24.14.0 diagnostic runner",
+      "iterations": 500,
+      "p50_microseconds": 66,
+      "p95_microseconds": 99,
+      "semantic_hash": "5629ba88282991c6",
+      "status": "pass"
+    }
+  ],
+  "not_scorable_reasons": [
+    "SPIKE-V0-01 is smaller than the planned SPIKE-W0-01 workload",
+    "Both timing runs are JIT diagnostics rather than matched release builds",
+    "No Android or Windows native run is available",
+    "No 30-minute sustained, memory, thermal, accessibility, or bridge run"
+  ],
+  "toolchain_blockers": {
+    "S1-Rust-Tauri": "rustc and cargo are unavailable",
+    "S3-Kotlin-Compose": "Gradle and Android SDK are unavailable",
+    "S4-DotNet-MAUI": ".NET MAUI workload is unavailable"
+  },
+  "conclusion": "S2 may continue as the reversible V1 working stack; final stack acceptance remains open."
+}

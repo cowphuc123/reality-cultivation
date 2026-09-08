@@ -1,0 +1,21 @@
+{
+  "evidence_schema_version": 1,
+  "scenario_id": "SPIKE-V0-01",
+  "candidate": "S0-PWA-JavaScript",
+  "runtime": "Node v24.14.0 diagnostic runner",
+  "os": "win32 10.0.26200",
+  "architecture": "x64",
+  "iterations": 500,
+  "expected_hash": "5629ba88282991c6",
+  "actual_hash": "5629ba88282991c6",
+  "fact_kinds": [
+    "birth",
+    "goal_assigned",
+    "transfer",
+    "observe"
+  ],
+  "p50_microseconds": 66,
+  "p95_microseconds": 99,
+  "status": "pass",
+  "scope_note": "Diagnostic V0 subset; browser lifecycle and full SPIKE-W0-01 not tested."
+}

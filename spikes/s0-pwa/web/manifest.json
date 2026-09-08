@@ -1,0 +1,8 @@
+{
+  "name": "Reality Cultivation PWA Spike",
+  "short_name": "RC Spike",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#121712",
+  "theme_color": "#9fbd82"
+}

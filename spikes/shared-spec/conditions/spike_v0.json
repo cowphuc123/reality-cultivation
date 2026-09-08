@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "catalog_id": "technology-spike-v0",
+  "conditions": [
+    {"id": "SPV001", "status": "pass", "oracle": "Fixture and expected state have recorded SHA-256 fingerprints"},
+    {"id": "SPV002", "status": "pass", "oracle": "S2 Dart reaches expected semantic hash"},
+    {"id": "SPV003", "status": "pass", "oracle": "S0 JavaScript reaches expected semantic hash"},
+    {"id": "SPV004", "status": "pass", "oracle": "S2 and S0 produce the same ordered fact kinds"},
+    {"id": "SPV005", "status": "pass", "oracle": "Both candidates save before advance, reload, and continue"},
+    {"id": "SPV006", "status": "pass", "oracle": "Five hundred runs per candidate keep one end hash"},
+    {"id": "SPV007", "status": "pass", "oracle": "S0 static UI contains the same essential command and save controls"},
+    {"id": "SPV008", "status": "not_run", "oracle": "Full SPIKE-W0-01 and native Android/Windows parity"}
+  ]
+}

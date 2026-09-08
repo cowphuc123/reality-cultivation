@@ -1,0 +1,9 @@
+.dart_tool/
+.packages
+build/
+*.log
+game/saves/
+
+.tool-cache/
+client/_git_sites_backup/
+client/dist/

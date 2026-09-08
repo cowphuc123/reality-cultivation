@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-household",
+  "conditions": [
+    {"id":"V2-HOUSE-001","title":"Một hộ có bốn thành viên thật trong thế giới","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"H01 references N01, N02, N03 and P00"},
+    {"id":"V2-ITEM-001","title":"Lương thực tồn tại dưới dạng vật phẩm có gam","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"Food stock begins at 50000 grams"},
+    {"id":"V2-ITEM-002","title":"Nước tồn tại dưới dạng vật phẩm có mililit","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"Water stock begins at 200000 milliliters"},
+    {"id":"V2-ITEM-003","title":"Nhiên liệu tồn tại dưới dạng vật phẩm có gam","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"Fuel stock begins at 40000 grams"},
+    {"id":"V2-RIGHT-001","title":"Quyền dùng kho được kiểm tra theo người và vật","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"N03 meal attempt is rejected"},
+    {"id":"V2-RIGHT-002","title":"Bị từ chối quyền không làm hao vật chất","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"All three stocks remain unchanged"},
+    {"id":"V2-MEAL-001","title":"Một bữa tiêu cả thức ăn nước và nhiên liệu","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"One meal consumes 500g, 2000ml and 300g"},
+    {"id":"V2-MEAL-002","title":"Thiếu một thành phần làm cả giao dịch thất bại","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"Insufficient fuel consumes no food or water"},
+    {"id":"V2-MEAL-003","title":"Hộ thực hiện ba bữa mỗi ngày","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"Thirty days complete exactly ninety meals"},
+    {"id":"V2-CONSERVATION-001","title":"Tổng tiêu dùng tháng khớp độ giảm của kho","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"Remaining stock equals initial minus ninety meal costs"},
+    {"id":"V2-LABOR-001","title":"Chăm trẻ ghi thời gian gián đoạn lao động","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"First care chain records sixty-five seconds"},
+    {"id":"V2-LABOR-002","title":"Chốt sổ ngày trừ thời gian chăm khỏi công dự kiến","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"N01 completed work equals 28800 minus care interruption"},
+    {"id":"V2-SAVE-001","title":"Lưu ngày mười tiếp tục đúng đến hết tháng","status":"automated","runner":"tool/verify_v2_household.dart","oracle":"Continuous and restored month hashes match"},
+    {"id":"V2-UI-001","title":"Giao diện điện thoại và máy tính chiếu trạng thái hộ","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Household panel and physical stock quantities are visible"}
+  ]
+}

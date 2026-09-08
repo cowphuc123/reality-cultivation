@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "scenario_id": "SPIKE-V0-01",
+  "seed": 20260906,
+  "birth": {
+    "time_seconds": 0,
+    "person_id": "P00",
+    "name": "Vô Danh"
+  },
+  "command": {
+    "id": "command-goal-0",
+    "person_id": "P00",
+    "goal": "Lắng nghe người chăm sóc"
+  },
+  "events": [
+    {
+      "due_seconds": 5,
+      "phase": "observation",
+      "kind": "observe",
+      "payload": {"subject": "caregiver"}
+    },
+    {
+      "due_seconds": 5,
+      "phase": "transfer",
+      "kind": "transfer",
+      "payload": {"item": "warmth"}
+    }
+  ],
+  "save_before_advance": true,
+  "advance_to_seconds": 86400,
+  "expected_fact_kinds": ["birth", "goal_assigned", "transfer", "observe"]
+}

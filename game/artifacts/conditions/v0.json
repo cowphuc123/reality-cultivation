@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v0",
+  "conditions": [
+    {
+      "id": "V0-TIME-001",
+      "title": "Năm giây thật tạo đúng một ngày game",
+      "status": "automated",
+      "runner": "tool/verify_v0.dart",
+      "oracle": "Clock advances exactly one game day after 5000 ms"
+    },
+    {
+      "id": "V0-TIME-002",
+      "title": "Tạm dừng không làm thời gian game tiến",
+      "status": "automated",
+      "runner": "tool/verify_v0.dart",
+      "oracle": "Paused clock consumes no elapsed wall time"
+    },
+    {
+      "id": "V0-EVENT-001",
+      "title": "Sự kiện cùng mốc giữ thứ tự pha",
+      "status": "automated",
+      "runner": "tool/verify_v0.dart",
+      "oracle": "Transfer phase precedes observation phase"
+    },
+    {
+      "id": "V0-COMMAND-001",
+      "title": "Lệnh có ID không được thực thi lặp",
+      "status": "automated",
+      "runner": "tool/verify_v0.dart",
+      "oracle": "Second submission returns duplicate"
+    },
+    {
+      "id": "V0-QUERY-001",
+      "title": "Giao diện đọc world và person view qua query port",
+      "status": "automated",
+      "runner": "tool/verify_v0.dart",
+      "oracle": "Views expose current day, age and goal without mutation access"
+    },
+    {
+      "id": "V0-SAVE-001",
+      "title": "Lưu tải giữa lịch giữ kết quả tiếp diễn",
+      "status": "automated",
+      "runner": "tool/verify_v0.dart",
+      "oracle": "Continued semantic hashes are equal"
+    },
+    {
+      "id": "V0-REPLAY-001",
+      "title": "Cùng seed và chuỗi lệnh cho cùng trạng thái",
+      "status": "automated",
+      "runner": "tool/verify_v0.dart",
+      "oracle": "Replay semantic hashes are equal"
+    },
+    {
+      "id": "V0-ARTIFACT-001",
+      "title": "Catalog và schema artifact có trường bắt buộc",
+      "status": "automated",
+      "runner": "tool/verify_v0.dart",
+      "oracle": "Every catalog condition satisfies the catalog schema"
+    },
+    {
+      "id": "V0-UI-001",
+      "title": "Màn hình điện thoại dùng bố cục hẹp và giao được mục tiêu",
+      "status": "automated",
+      "runner": "../client/test/widget_test.dart",
+      "oracle": "390x844 layout exposes status, command and accepted goal"
+    },
+    {
+      "id": "V0-UI-002",
+      "title": "Màn hình máy tính có cùng thao tác thiết yếu",
+      "status": "automated",
+      "runner": "../client/test/widget_test.dart",
+      "oracle": "1280x800 layout exposes the same goal controls and history"
+    },
+    {
+      "id": "V0-PACKAGE-WEB-001",
+      "title": "Shell đóng gói thành bản web release",
+      "status": "automated",
+      "runner": "flutter build web --release",
+      "oracle": "Build command exits successfully and produces build/web"
+    },
+    {
+      "id": "V0-SAVE-UI-001",
+      "title": "Lưu rồi tải qua giao diện khôi phục đúng snapshot",
+      "status": "automated",
+      "runner": "../client/test/widget_test.dart",
+      "oracle": "Goal B returns to saved goal A after loading"
+    },
+    {
+      "id": "V0-LIFECYCLE-001",
+      "title": "Ứng dụng xuống nền tự lưu và lần mở sau tự khôi phục",
+      "status": "automated",
+      "runner": "../client/test/widget_test.dart",
+      "oracle": "Paused lifecycle snapshot restores the same infant goal"
+    },
+    {
+      "id": "V0-UI-003",
+      "title": "Cửa sổ desktop thấp không làm tràn cột điều khiển",
+      "status": "automated",
+      "runner": "../client/test/widget_test.dart",
+      "oracle": "Controls use a scrollable column at 800x600"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "reality-cultivation-s0-pwa-spike",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test.mjs",
+    "spike": "node run_spike.mjs"
+  }
+}

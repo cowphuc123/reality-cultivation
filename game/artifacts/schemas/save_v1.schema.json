@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "save_schema",
+  "required_fields": [
+    "schema_version",
+    "seed",
+    "now",
+    "revision",
+    "next_sequence",
+    "people",
+    "pending_events",
+    "facts",
+    "accepted_command_ids"
+  ],
+  "optional_fields": [
+    "items",
+    "people[].infancy",
+    "people[].infancy.body",
+    "people[].position_mm",
+    "people[].caregiver_agent",
+    "items[].energy_kj_per_100ml",
+    "items[].water_ml_per_100ml",
+    "people[].household_id",
+    "households",
+    "items[].unit",
+    "items[].owner_household_id",
+    "people[].caregiver_agent.interruption_started_seconds",
+    "people[].caregiver_agent.available",
+    "people[].caregiver_agent.care_skill",
+    "people[].room_id",
+    "items[].room_id",
+    "rooms",
+    "illnesses",
+    "illnesses[].physiology_coupled",
+    "people[].infancy.body.illness_energy_cost_kj",
+    "people[].infancy.body.illness_water_loss_ml",
+    "people[].infancy.body.illness_sleep_disruption_minutes",
+    "households[].supply_deliveries",
+    "households[].production_runs",
+    "households[].caregiver_substitutions",
+    "supply_journeys"
+  ]
+}

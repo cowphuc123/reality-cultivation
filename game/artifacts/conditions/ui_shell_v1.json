@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-ui-shell-v1",
+  "conditions": [
+    {"id":"UI-SHELL-001","title":"Điện thoại dùng thanh điều hướng năm khu vực","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"390x844 exposes mobile navigation and current page"},
+    {"id":"UI-SHELL-002","title":"Máy tính dùng thanh điều hướng bên","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"1280x800 exposes desktop layout and all destinations"},
+    {"id":"UI-SHELL-003","title":"Hai bố cục dùng cùng hành động sơ sinh","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"Infant intent controls are present in mobile and desktop overview"},
+    {"id":"UI-SHELL-004","title":"Trang Hiện tại nêu nhân vật trạng thái và mục tiêu","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"Overview updates the accepted infant intent"},
+    {"id":"UI-SHELL-005","title":"Trang Nhân vật chiếu cơ thể chi tiết","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"Mobile navigation reaches mass and stomach state"},
+    {"id":"UI-SHELL-006","title":"Trang Hộ chiếu thành viên và kho thật","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"Household page displays H01 physical food quantity"},
+    {"id":"UI-SHELL-007","title":"Trang Nhật ký có bộ lọc theo miền","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"Household filter keeps household facts and hides person creation facts"},
+    {"id":"UI-SHELL-008","title":"Trang Hồ sơ cho lưu và tải trên điện thoại","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"Mobile navigation reaches both save and load actions"},
+    {"id":"UI-SHELL-009","title":"Lưu tải giữ đúng ý định trước đó","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"Manual A to B to A restore succeeds through new navigation"},
+    {"id":"UI-SHELL-010","title":"Xuống nền vẫn tự lưu và phục hồi","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"Lifecycle save and next launch restore succeed"},
+    {"id":"UI-SHELL-011","title":"Kích thước 390 pixel không tràn bố cục","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"Mobile widget test completes without rendering exceptions"},
+    {"id":"UI-SHELL-012","title":"Kích thước 800 và 1280 pixel không tràn bố cục","status":"automated","runner":"../../client/test/widget_test.dart","oracle":"Compact and full desktop widget tests complete without rendering exceptions"}
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "evidence_schema_version": 1,
+  "scenario_id": "SPIKE-V0-01",
+  "candidate": "S2-Dart-core",
+  "runtime": "Dart 3.10.7 JIT",
+  "os": "windows \"Windows 11 Home Single Language\" 10.0 (Build 26200)",
+  "architecture": "x64",
+  "iterations": 500,
+  "expected_hash": "5629ba88282991c6",
+  "actual_hash": "5629ba88282991c6",
+  "fact_kinds": [
+    "birth",
+    "goal_assigned",
+    "transfer",
+    "observe"
+  ],
+  "p50_microseconds": 140,
+  "p95_microseconds": 477,
+  "status": "pass",
+  "scope_note": "Diagnostic V0 subset; not full SPIKE-W0-01 or release/AOT."
+}

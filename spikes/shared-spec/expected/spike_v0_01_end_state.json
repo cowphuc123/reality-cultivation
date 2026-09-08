@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "seed": 20260906,
+  "now": {"seconds": 86400},
+  "revision": 8,
+  "next_sequence": 3,
+  "people": [
+    {
+      "id": "P00",
+      "name": "Vô Danh",
+      "birth_time": {"seconds": 0},
+      "active_goal": "Lắng nghe người chăm sóc"
+    }
+  ],
+  "pending_events": [],
+  "facts": [
+    {
+      "id": "fact-2",
+      "time": {"seconds": 0},
+      "kind": "birth",
+      "subject_id": "P00",
+      "detail": "Vô Danh was born"
+    },
+    {
+      "id": "fact-3",
+      "time": {"seconds": 0},
+      "kind": "goal_assigned",
+      "subject_id": "P00",
+      "detail": "Lắng nghe người chăm sóc"
+    },
+    {
+      "id": "fact-6",
+      "time": {"seconds": 5},
+      "kind": "transfer",
+      "subject_id": "event-2",
+      "detail": "{\"item\":\"warmth\"}"
+    },
+    {
+      "id": "fact-7",
+      "time": {"seconds": 5},
+      "kind": "observe",
+      "subject_id": "event-1",
+      "detail": "{\"subject\":\"caregiver\"}"
+    }
+  ],
+  "accepted_command_ids": ["command-goal-0"]
+}

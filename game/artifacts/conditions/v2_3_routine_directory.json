@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-3-routine-directory",
+  "conditions": [
+    {"id":"V23-ROUTINE-001","title":"Khối nhịp sống bắt đầu đúng giờ trong ngày","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"N02 is inside R-N02-SANG at 06:30"},
+    {"id":"V23-ROUTINE-002","title":"Khối nhịp sống đưa người tới đúng phòng","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"N02 is in the kitchen and N03 stands at the yard anchor"},
+    {"id":"V23-ROUTINE-003","title":"Nhịp sống lặp lại hằng ngày","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"Completed blocks keep growing across four days"},
+    {"id":"V23-ROUTINE-004","title":"Khối đánh dấu chặn không nhận nghĩa vụ khác","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"R-N02-XA reports blockingActivity at noon"},
+    {"id":"V23-CONFLICT-001","title":"Bữa ăn bị lùi khi người nấu đang vướng khối chặn","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"household_meal_deferred names the competing activity"},
+    {"id":"V23-CONFLICT-002","title":"Bữa bị lùi vẫn được nấu chứ không mất","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"Lunch completes after two deferrals"},
+    {"id":"V23-CONFLICT-003","title":"Bữa muộn được ghi đúng số giây trễ","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"Meal fact carries late_seconds=3600 deferrals=2"},
+    {"id":"V23-CONFLICT-004","title":"Lùi một bữa không kéo trôi các bữa sau","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"Dinner still lands at 18:00 and three meals are booked"},
+    {"id":"V23-CONFLICT-005","title":"Chăm trẻ bệnh cắt ngang khối việc của người thay","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"N02 records a preempted conflict against giã gạo"},
+    {"id":"V23-CONFLICT-006","title":"Thời gian mất vì bị cắt ngang được cộng dồn","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"Routine lostSeconds covers the recorded conflict"},
+    {"id":"V23-CONFLICT-007","title":"Người nghỉ bệnh cũng mất khối việc đang dở","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"N01 records a conflict for may vá against the illness leave"},
+    {"id":"V23-DIRECTORY-001","title":"Danh bạ liệt kê đủ mọi người và mọi vật","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"Directory sizes match world state maps"},
+    {"id":"V23-DIRECTORY-002","title":"Người ngoài hộ được tách riêng nhưng vẫn có hồ sơ","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"N04 is the only person outside the household"},
+    {"id":"V23-DIRECTORY-003","title":"Người ngoài hộ vẫn có nhịp sống riêng","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"Carrier profile reports the route activity"},
+    {"id":"V23-DIRECTORY-004","title":"Vật ngoài sổ kho vẫn có chủ và quyền dùng","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"I-CLOTH has no resource key but keeps owner and authorized users"},
+    {"id":"V23-DIRECTORY-005","title":"Vật trong sổ kho mang đúng khóa nguồn lực","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"I-FOOD maps to the food ledger key with real quantity"},
+    {"id":"V23-DIRECTORY-006","title":"Trẻ sơ sinh không bị gán nhịp sống lao động","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"P00 profile has no routine"},
+    {"id":"V23-SAVE-001","title":"Lưu giữa lúc lịch đang xung đột tái hiện đúng","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"Continuous and restored day-four hashes both equal 8df759ae2a42eca0"},
+    {"id":"V23-REGRESSION-001","title":"V0 đến V2.2 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart; tool/verify_v1_infancy.dart; tool/verify_v1_care_chain.dart; tool/verify_v1_body.dart; tool/verify_v2_household.dart; tool/verify_v2_1_household_health.dart; tool/verify_v2_2_transport_substitution.dart","oracle":"All earlier runners pass with unchanged hashes"},
+    {"id":"V23-UI-001","title":"Trang Hồ sơ mở hồ sơ cho mọi người và mọi vật","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Directory widget test finds every person card and the out-of-ledger cloth"},
+    {"id":"V23-UI-002","title":"Trang Hồ sơ đọc được trên màn hình điện thoại","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Directory test renders at 390x844 without overflow"},
+    {"id":"V23-UI-003","title":"GUI chiếu xung đột lịch của hộ","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Household page shows the schedule-conflict metric after the deferred lunch"},
+    {"id":"V23-UI-004","title":"Nhật ký lọc riêng được các mốc nhịp sống","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Routine filter shows routine facts and hides meal facts"}
+  ]
+}

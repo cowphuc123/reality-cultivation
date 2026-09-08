@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "artifact_kind": "condition_catalog_schema",
+  "required_catalog_fields": ["schema_version", "catalog_id", "conditions"],
+  "required_condition_fields": [
+    "id",
+    "title",
+    "status",
+    "runner",
+    "oracle"
+  ],
+  "allowed_statuses": ["automated", "manual", "planned"]
+}
