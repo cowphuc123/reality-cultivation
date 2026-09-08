@@ -1,5 +1,17 @@
 # Nhật ký dự án
 
+## 2026-09-08 — K5.14: V2.7 cơ thể người lớn
+
+- Thêm `AdultBodyState` chạy ở độ phân giải ngày: khối lượng, dự trữ năng lượng, nước cơ thể, tổng đã ăn/đốt/sụt.
+- Bữa ăn nuôi thật: một bữa 500 g lương thực ở 1.400 kJ/100 g cho 7.000 kJ, chia đều cho người lớn trong hộ.
+- Lúc chốt sổ lao động 22:00, mỗi cơ thể đốt 5.500 kJ nền cộng 200 kJ mỗi giờ **thật sự đã lao động**; hết dự trữ thì thiếu 30 kJ sụt 1 g, dư dả thì 45 kJ mới lên 1 g.
+- Đói nay có hậu quả thể chất: sụt cân kéo sức làm việc xuống (đủ cân 1000, còn 85% cân thì 500, 70% thì kiệt), và sức làm việc nhân thẳng vào sản lượng dự kiến. Người giỏi nhưng đói vẫn làm ra ít.
+- Cơn đói trong hồ sơ nay suy từ dự trữ của cơ thể thay vì đếm bữa riêng, nên chỉ còn một nguồn sự thật.
+- Lượt chạy nhà đói sáu ngày: không ai đủ nghề kiếm lương thực → bữa hụt liên tiếp → N03 sụt 767 g còn 51.233 g → sức làm việc còn 950/1000.
+- Mười một runner V0–V2.6 giữ nguyên hash. Sổ giờ lao động ban đầu ghi cho mọi người có hồ sơ sức lực làm đổi hash V2.5/V2.6; đã sửa để chỉ ghi khi người đó thật sự có cơ thể cần nuôi.
+- Runner V2.7 đạt ngày 6 hash `e59171aea8e9867b`; catalog 22 điều kiện; 11/11 widget test đạt; GUI hiện cân nặng/dự trữ/sức làm việc và mốc Sụt cân vì thiếu ăn; web release đã đóng gói lại.
+- Thêm [[K5_14_V2_7_CO_THE_NGUOI_LON]].
+
 ## 2026-09-08 — K5.13: V2.6 lên tay nghề, đói và tâm trạng
 
 - Làm xong khối việc thì tay nghề lên theo số giây thật sự làm; người mới lên nhanh, người giỏi lên chậm (trọn tám giờ cho 45 điểm ở mức 100 nhưng 5 điểm ở mức 900), kịch trần 1000 thì dừng.

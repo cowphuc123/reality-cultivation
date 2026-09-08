@@ -172,6 +172,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'routine': _routineN01,
         'skills': <String, int>{'fetch_water': 700, 'gather_food': 300},
         'agenda': <String, Object?>{'fatigue': 0},
+        'adult_body': <String, Object?>{'mass_g': 52000},
       },
     )
     ..schedule(
@@ -196,6 +197,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           'gather_food': 400,
         },
         'agenda': <String, Object?>{'fatigue': 0},
+        'adult_body': <String, Object?>{'mass_g': 49000},
       },
     )
     ..schedule(
@@ -216,6 +218,10 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           'fetch_water': 600,
         },
         'agenda': <String, Object?>{'fatigue': 850},
+        'adult_body': <String, Object?>{
+          'mass_g': 55000,
+          'energy_reserve_kj': 30000,
+        },
       },
     )
     ..schedule(
@@ -1478,6 +1484,23 @@ class _PersonProfileCard extends StatelessWidget {
                       style: small,
                     ),
                 ],
+                if (person.body case final AdultBodyState body) ...<Widget>[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Cơ thể: ${body.massGrams} g'
+                    '${body.underweight ? ' (thiếu ${body.healthyMassGrams - body.massGrams} g so với lúc khỏe)' : ''}',
+                  ),
+                  Text(
+                    'Dự trữ ${body.energyReserveKj} kJ · '
+                    'sức làm việc ${body.capability}/1000',
+                    style: small,
+                  ),
+                  if (body.massLostGrams > 0)
+                    Text(
+                      'Đã sụt tổng cộng ${body.massLostGrams} g vì thiếu ăn',
+                      style: small,
+                    ),
+                ],
                 if (person.skills case final PersonSkills skills)
                   if (skills.levels.isNotEmpty) ...<Widget>[
                     const SizedBox(height: 8),
@@ -2568,7 +2591,8 @@ class _HistoryPanelState extends State<_HistoryPanel> {
 
   bool _matches(WorldFact fact) => switch (_filter) {
     'care' =>
-      fact.kind.contains('infant') ||
+      fact.kind.startsWith('body_') ||
+          fact.kind.contains('infant') ||
           fact.kind.contains('cry') ||
           fact.kind.contains('care') ||
           fact.kind.contains('illness'),
@@ -2789,6 +2813,9 @@ String _factDetail(WorldFact fact) {
           '${values['lost_seconds'] == '0' ? ' đúng kế hoạch' : ', hụt so với kế hoạch ${values['planned'] ?? '?'} vì mất giờ'}.',
     'routine_work_lost' =>
       'Công việc bị cắt ngang hết giờ nên không thu được gì.',
+    'body_mass_lost' =>
+      '${fact.subjectId} sụt ${values['lost_g'] ?? '?'} g, còn ${values['mass_g'] ?? '?'} g; '
+          'sức làm việc còn ${values['capability'] ?? '?'}/1000.',
     'skill_improved' =>
       '${fact.subjectId} khá lên ${values['gain'] ?? '?'} điểm nghề '
           '${_skillLabel(values['skill'] ?? '')}, nay ở mức ${values['level'] ?? '?'}.',
@@ -2888,6 +2915,7 @@ String _factLabel(String kind) => switch (kind) {
   'routine_work_lost' => 'Mất trắng công việc',
   'work_offer_refused' => 'Từ chối việc được giao',
   'skill_improved' => 'Lên tay nghề',
+  'body_mass_lost' => 'Sụt cân vì thiếu ăn',
   'routine_block_rescheduled' => 'Xếp lại việc sang giờ khác',
   'routine_block_started' => 'Bắt đầu một khối việc trong ngày',
   'routine_block_ended' => 'Kết thúc một khối việc',

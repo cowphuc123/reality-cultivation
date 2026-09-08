@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'adult_body.dart';
 import 'agenda.dart';
 import 'care.dart';
 import 'domestic.dart';
@@ -99,6 +100,7 @@ class PersonState {
     this.routine,
     this.skills,
     this.agenda,
+    this.body,
   });
 
   final String id;
@@ -117,6 +119,9 @@ class PersonState {
 
   /// Trạng thái riêng quyết định nhận hay từ chối việc được giao.
   final PersonAgenda? agenda;
+
+  /// Cơ thể người lớn ở độ phân giải ngày, nếu người này đã trưởng thành.
+  final AdultBodyState? body;
 
   PersonState withGoal(String goal) => _copy(activeGoal: goal);
 
@@ -137,6 +142,8 @@ class PersonState {
 
   PersonState withSkills(PersonSkills value) => _copy(skills: value);
 
+  PersonState withBody(AdultBodyState value) => _copy(body: value);
+
   PersonState _copy({
     String? activeGoal,
     InfantState? infancy,
@@ -146,6 +153,7 @@ class PersonState {
     RoutineState? routine,
     PersonSkills? skills,
     PersonAgenda? agenda,
+    AdultBodyState? body,
   }) => PersonState(
     id: id,
     name: name,
@@ -159,6 +167,7 @@ class PersonState {
     routine: routine ?? this.routine,
     skills: skills ?? this.skills,
     agenda: agenda ?? this.agenda,
+    body: body ?? this.body,
   );
 
   Map<String, Object?> toJson() {
@@ -178,6 +187,7 @@ class PersonState {
     if (routine != null) result['routine'] = routine!.toJson();
     if (skills != null) result['skills'] = skills!.toJson();
     if (agenda != null) result['agenda'] = agenda!.toJson();
+    if (body != null) result['adult_body'] = body!.toJson();
     return result;
   }
 
@@ -212,6 +222,11 @@ class PersonState {
     agenda: json['agenda'] == null
         ? null
         : PersonAgenda.fromJson((json['agenda']! as Map).cast<String, Object?>()),
+    body: json['adult_body'] == null
+        ? null
+        : AdultBodyState.fromJson(
+            (json['adult_body']! as Map).cast<String, Object?>(),
+          ),
   );
 }
 
@@ -653,6 +668,12 @@ class Simulation {
                   : PersonAgenda.fromJson(
                       (event.payload['agenda']! as Map).cast<String, Object?>(),
                     ),
+              body: event.payload['adult_body'] == null
+                  ? null
+                  : _adultBodyFromPayload(
+                      (event.payload['adult_body']! as Map)
+                          .cast<String, Object?>(),
+                    ),
             ),
           },
           facts: <WorldFact>[
@@ -846,6 +867,44 @@ class Simulation {
     }
   }
 
+  /// Một ngày trôi qua với cơ thể từng người lớn trong hộ.
+  ///
+  /// Đốt năng lượng theo số giờ đã lao động thật, hết dự trữ thì sụt cân,
+  /// dư dả thì hồi lại phần đã sụt. Cơn đói và sức làm việc đều suy từ đây.
+  void _settleAdultBodies(HouseholdState household) {
+    final Map<String, PersonState> updated = <String, PersonState>{
+      ..._state.people,
+    };
+    final List<WorldFact> facts = <WorldFact>[..._state.facts];
+    bool changed = false;
+    for (final String memberId in household.memberIds) {
+      final PersonState? member = updated[memberId];
+      final AdultBodyState? body = member?.body;
+      final PersonAgenda? agenda = member?.agenda;
+      if (member == null || body == null || agenda == null) continue;
+      final AdultBodyDayResult result = body.advanceDay(
+        workedSeconds: agenda.workedSecondsToday,
+      );
+      final AdultBodyState settled = result.body.recover();
+      updated[memberId] = member
+          .withBody(settled)
+          .withAgenda(agenda.withHunger(settled.hunger));
+      changed = true;
+      if (result.lostGrams > 0) {
+        facts.add(
+          _fact(
+            'body_mass_lost',
+            memberId,
+            'lost_g=${result.lostGrams} mass_g=${settled.massGrams} '
+                'capability=${settled.capability} '
+                'burned_kj=${result.burnedKj} work_hours=${result.workHours}',
+          ),
+        );
+      }
+    }
+    if (changed) _replace(people: updated, facts: facts);
+  }
+
   /// Hộ của người này có theo dõi tay nghề, cơn đói và tâm trạng hay không.
   bool _wellbeing(PersonState person) {
     final String? householdId = person.householdId;
@@ -861,6 +920,23 @@ class Simulation {
       return 'không đủ sức làm việc';
     }
     return null;
+  }
+
+  /// Năng lượng của một trăm gam lương thực khô trong fixture.
+  static const int _kjPerHundredGramsFood = 1400;
+
+  /// Dựng cơ thể người lớn từ payload; dự trữ để trống thì coi như đầy.
+  static AdultBodyState _adultBodyFromPayload(Map<String, Object?> payload) {
+    final int mass = payload['mass_g'] as int? ?? 52000;
+    final AdultBodyState base = AdultBodyState.healthy(massGrams: mass);
+    final int? reserve = payload['energy_reserve_kj'] as int?;
+    if (reserve == null) return base;
+    return AdultBodyState(
+      massGrams: mass,
+      healthyMassGrams: payload['healthy_mass_g'] as int? ?? mass,
+      energyReserveKj: reserve.clamp(0, AdultBodyState.reserveCapacityKj),
+      bodyWaterMl: base.bodyWaterMl,
+    );
   }
 
   /// Nhịp tiêu thụ mỗi ngày của hộ, dùng để suy ra số ngày còn dùng được.
@@ -1019,8 +1095,7 @@ class Simulation {
         priority: need.priority,
         needKind: need.kind,
         outputResource: need.resourceKey,
-        outputAmount:
-            worker.skills?.output(skillCode, work.$3) ?? work.$3,
+        outputAmount: _plannedOutput(worker, skillCode, work.$3),
         planDay: day,
       );
       planned[assignee]!.add(block);
@@ -1074,6 +1149,16 @@ class Simulation {
         );
       }
     }
+  }
+
+  /// Sản lượng dự kiến của một khối việc: tay nghề nhân với sức làm việc.
+  ///
+  /// Người sụt cân vì đói làm ra ít hơn dù tay nghề không đổi.
+  int _plannedOutput(PersonState worker, String skillCode, int base) {
+    final int bySkill = worker.skills?.output(skillCode, base) ?? base;
+    final AdultBodyState? body = worker.body;
+    if (body == null || body.capability >= 1000) return bySkill;
+    return bySkill * body.capability ~/ 1000;
   }
 
   /// Chào việc lần lượt cho người đủ quyền và đủ tay nghề, theo thứ tự
@@ -1447,13 +1532,11 @@ class Simulation {
         block.durationSeconds,
       );
       final bool wellbeing = _wellbeing(worker);
-      PersonState next = worker.withAgenda(
-        wellbeing
-            ? agenda
-                  .tire(worked)
-                  .afterWork(workedSeconds: worked, lostSeconds: lost)
-            : agenda.tire(worked),
-      );
+      PersonAgenda nextAgenda = wellbeing
+          ? agenda.tire(worked).afterWork(workedSeconds: worked, lostSeconds: lost)
+          : agenda.tire(worked);
+      if (worker.body != null) nextAgenda = nextAgenda.logWork(worked);
+      PersonState next = worker.withAgenda(nextAgenda);
       // Làm nghề nào thì lên tay nghề ấy, người mới lên nhanh hơn người giỏi.
       final String? skillCode = block.needKind == null
           ? null
@@ -2081,17 +2164,41 @@ class Simulation {
       final Map<String, PersonState> updated = <String, PersonState>{
         ..._state.people,
       };
+      // Suất ăn chia đều cho người lớn trong hộ.
+      final List<String> eaters = household.memberIds
+          .where(
+            (String memberId) =>
+                updated[memberId] != null &&
+                updated[memberId]!.infancy == null &&
+                updated[memberId]!.agenda != null,
+          )
+          .toList();
+      final int shareEnergyKj = fed && eaters.isNotEmpty
+          ? foodGrams * _kjPerHundredGramsFood ~/ 100 ~/ eaters.length
+          : 0;
+      final int shareWaterMl =
+          fed && eaters.isNotEmpty ? waterMl ~/ eaters.length : 0;
       bool changed = false;
-      for (final String memberId in household.memberIds) {
-        final PersonState? member = updated[memberId];
-        final PersonAgenda? memberAgenda = member?.agenda;
-        if (member == null || memberAgenda == null) continue;
-        final PersonAgenda after = memberAgenda.atMeal(fed: fed);
-        if (after.hunger == memberAgenda.hunger &&
+      for (final String memberId in eaters) {
+        final PersonState member = updated[memberId]!;
+        final PersonAgenda memberAgenda = member.agenda!;
+        PersonState nextMember = member;
+        PersonAgenda after = memberAgenda.atMeal(fed: fed);
+        // Có cơ thể thì bữa ăn vào thẳng dự trữ, và cơn đói do cơ thể quyết định.
+        final AdultBodyState? body = member.body;
+        if (body != null) {
+          final AdultBodyState nextBody = fed
+              ? body.eat(energyKj: shareEnergyKj, waterMl: shareWaterMl)
+              : body;
+          nextMember = nextMember.withBody(nextBody);
+          after = after.withHunger(nextBody.hunger);
+        }
+        if (identical(nextMember, member) &&
+            after.hunger == memberAgenda.hunger &&
             after.mood == memberAgenda.mood) {
           continue;
         }
-        updated[memberId] = member.withAgenda(after);
+        updated[memberId] = nextMember.withAgenda(after);
         changed = true;
       }
       if (changed) fedPeople = updated;
@@ -2134,7 +2241,8 @@ class Simulation {
     final String householdId = event.payload['household_id']! as String;
     final HouseholdState? household = _state.households[householdId];
     if (household == null) return;
-    final HouseholdState settled = household.settleWorkDay();
+    if (household.wellbeing) _settleAdultBodies(household);
+    final HouseholdState settled = _state.households[householdId]!.settleWorkDay();
     _replace(
       households: <String, HouseholdState>{
         ..._state.households,

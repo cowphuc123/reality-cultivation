@@ -456,4 +456,53 @@ void main() {
     await tester.pump();
     expect(find.text('Lên tay nghề'), findsWidgets);
   });
+  testWidgets('meals feed real adult bodies and weight reaches the profile', (
+    WidgetTester tester,
+  ) async {
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-world')));
+    await tester.pumpAndSettle();
+
+    final Simulation start = Simulation.fromSave(repository.value!);
+    // Ba người lớn có cơ thể riêng, trẻ sơ sinh thì không.
+    expect(start.state.people['N01']!.body, isNotNull);
+    expect(start.state.people['P00']!.body, isNull);
+    final int reserveStart = start.state.people['N01']!.body!.energyReserveKj;
+
+    final Simulation evening = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(23 * 3600));
+    final AdultBodyState body = evening.state.people['N01']!.body!;
+    // Bữa ăn đi vào cơ thể thật và một ngày trôi thì đốt năng lượng thật.
+    expect(body.totalIntakeKj, greaterThan(0));
+    expect(body.totalBurnedKj, greaterThanOrEqualTo(
+      AdultBodyState.basalKjPerDay,
+    ));
+    expect(body.energyReserveKj, isNot(equals(reserveStart)));
+    expect(body.capability, inInclusiveRange(0, 1000));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: evening,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('person-profile-N01')), findsOneWidget);
+    expect(find.byKey(const Key('person-profile-N03')), findsOneWidget);
+  });
 }

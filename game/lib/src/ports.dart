@@ -1,3 +1,4 @@
+import 'adult_body.dart';
 import 'agenda.dart';
 import 'care.dart';
 import 'domestic.dart';
@@ -253,6 +254,7 @@ class HouseholdMemberView {
     required this.careSkill,
     this.routine,
     this.agenda,
+    this.body,
   });
 
   final String id;
@@ -263,6 +265,7 @@ class HouseholdMemberView {
   final int? careSkill;
   final RoutineSummaryView? routine;
   final PersonAgenda? agenda;
+  final AdultBodyState? body;
 }
 
 /// Nhịp sống của một người và những lần lịch bị xung đột thật.
@@ -326,6 +329,7 @@ class PersonProfileView {
     required this.routine,
     required this.skills,
     required this.agenda,
+    required this.body,
   });
 
   final String id;
@@ -348,6 +352,9 @@ class PersonProfileView {
 
   /// Sức lực và thái độ nhận việc, nếu người này có tiếng nói riêng.
   final PersonAgenda? agenda;
+
+  /// Cơ thể người lớn, nếu đã được vật chất hóa.
+  final AdultBodyState? body;
 
   bool get inHousehold => householdId != null;
 }
@@ -651,6 +658,7 @@ class SimulationHost implements CommandPort, QueryPort {
                   : RoutineSummaryView.of(person.routine!),
               skills: person.skills,
               agenda: person.agenda,
+              body: person.body,
             );
           }(),
       ]),
@@ -764,6 +772,7 @@ class SimulationHost implements CommandPort, QueryPort {
                   ? null
                   : RoutineSummaryView.of(person.routine!),
               agenda: person.agenda,
+              body: person.body,
             ),
       ],
       needs: simulation.householdNeeds(id),

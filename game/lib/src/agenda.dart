@@ -50,6 +50,7 @@ class PersonAgenda {
     this.hunger = 0,
     this.mood = 1000,
     this.nightRecovery = 250,
+    this.workedSecondsToday = 0,
     this.acceptedOffers = 0,
     this.refusedOffers = 0,
     this.lastRefusalReason,
@@ -66,6 +67,9 @@ class PersonAgenda {
 
   /// Số điểm mệt hồi lại sau một đêm.
   final int nightRecovery;
+
+  /// Số giây đã lao động kể từ đầu ngày, dùng để tính tiêu hao của cơ thể.
+  final int workedSecondsToday;
 
   final int acceptedOffers;
   final int refusedOffers;
@@ -97,11 +101,20 @@ class PersonAgenda {
     return _copy(fatigue: (fatigue + added).clamp(0, 1000));
   }
 
-  /// Một đêm ngủ: bớt mệt và nguôi bớt bực.
+  /// Ghi giờ lao động vào sổ ngày; chỉ cần khi người này có cơ thể để nuôi.
+  PersonAgenda logWork(int workedSeconds) => workedSeconds <= 0
+      ? this
+      : _copy(workedSecondsToday: workedSecondsToday + workedSeconds);
+
+  /// Một đêm ngủ: bớt mệt, nguôi bớt bực và mở sổ lao động ngày mới.
   PersonAgenda rest() => _copy(
     fatigue: (fatigue - nightRecovery).clamp(0, 1000),
     mood: (mood + 50).clamp(0, 1000),
+    workedSecondsToday: 0,
   );
+
+  /// Cơn đói do cơ thể quyết định thay vì đếm bữa.
+  PersonAgenda withHunger(int value) => _copy(hunger: value.clamp(0, 1000));
 
   /// Thời gian trôi giữa hai bữa và phần được ăn nếu bữa nấu xong.
   PersonAgenda atMeal({required bool fed}) => _copy(
@@ -129,6 +142,7 @@ class PersonAgenda {
     int? fatigue,
     int? hunger,
     int? mood,
+    int? workedSecondsToday,
     int? acceptedOffers,
     int? refusedOffers,
     String? lastRefusalReason,
@@ -137,6 +151,7 @@ class PersonAgenda {
     hunger: hunger ?? this.hunger,
     mood: mood ?? this.mood,
     nightRecovery: nightRecovery,
+    workedSecondsToday: workedSecondsToday ?? this.workedSecondsToday,
     acceptedOffers: acceptedOffers ?? this.acceptedOffers,
     refusedOffers: refusedOffers ?? this.refusedOffers,
     lastRefusalReason: lastRefusalReason ?? this.lastRefusalReason,
@@ -147,6 +162,7 @@ class PersonAgenda {
     if (hunger > 0) 'hunger': hunger,
     if (mood != 1000) 'mood': mood,
     if (nightRecovery != 250) 'night_recovery': nightRecovery,
+    if (workedSecondsToday > 0) 'worked_seconds_today': workedSecondsToday,
     if (acceptedOffers > 0) 'accepted_offers': acceptedOffers,
     if (refusedOffers > 0) 'refused_offers': refusedOffers,
     if (lastRefusalReason != null) 'last_refusal_reason': lastRefusalReason,
@@ -157,6 +173,7 @@ class PersonAgenda {
     hunger: json['hunger'] as int? ?? 0,
     mood: json['mood'] as int? ?? 1000,
     nightRecovery: json['night_recovery'] as int? ?? 250,
+    workedSecondsToday: json['worked_seconds_today'] as int? ?? 0,
     acceptedOffers: json['accepted_offers'] as int? ?? 0,
     refusedOffers: json['refused_offers'] as int? ?? 0,
     lastRefusalReason: json['last_refusal_reason'] as String?,

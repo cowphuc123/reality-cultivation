@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-7-adult-body",
+  "conditions": [
+    {"id":"V27-BODY-001","title":"Sức làm việc suy từ cân nặng theo quy tắc số","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"Full mass gives 1000 and 85 percent of healthy mass gives 500"},
+    {"id":"V27-BODY-002","title":"Cơn đói suy từ dự trữ còn lại của cơ thể","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"Full reserve gives hunger zero and empty reserve gives 1000"},
+    {"id":"V27-BURN-001","title":"Đốt năng lượng theo số giờ lao động thật","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"Idle burns 5500 kJ and eight worked hours burn 7100 kJ"},
+    {"id":"V27-BURN-002","title":"Còn dự trữ thì chưa đụng tới khối lượng","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"A healthy body loses no mass after a full working day"},
+    {"id":"V27-BURN-003","title":"Hết dự trữ thì thiếu bao nhiêu sụt bấy nhiêu","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"An empty reserve loses 183 grams for a 5500 kJ basal day"},
+    {"id":"V27-MEAL-001","title":"Bữa ăn của hộ đi thẳng vào dự trữ từng người lớn","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"totalIntakeKj rises after the morning meal"},
+    {"id":"V27-MEAL-002","title":"Suất ăn chia đều cho người lớn trong hộ","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"A 500 g meal at 1400 kJ per 100 g splits across three adults"},
+    {"id":"V27-MEAL-003","title":"Trẻ sơ sinh dùng cơ thể riêng, không dùng cơ thể người lớn","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"P00 has no adult body and keeps its own infant body"},
+    {"id":"V27-DAY-001","title":"Chốt ngày thì cơ thể đốt ít nhất mức nền","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"totalBurnedKj reaches the basal rate by day end"},
+    {"id":"V27-DAY-002","title":"Dự trữ đổi sau một ngày ăn và làm","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"Reserve differs from its starting value at 23:00"},
+    {"id":"V27-STARVE-001","title":"Đói nhiều ngày thì sụt cân thật","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"N03 loses 767 g over six starving days"},
+    {"id":"V27-STARVE-002","title":"Lần sụt cân ghi kèm sức làm việc còn lại","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"body_mass_lost carries lost grams, mass, capability and burn"},
+    {"id":"V27-STARVE-003","title":"Sụt cân kéo sức làm việc xuống dưới mức đầy","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"Capability falls to 950 after the mass loss"},
+    {"id":"V27-STARVE-004","title":"Người yếu đi làm ra ít hơn mức tay nghề","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"Planned output never exceeds the skill-only figure once weakened"},
+    {"id":"V27-RECOVER-001","title":"Dư dả thì đổi dự trữ lấy cân đã sụt","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"recover raises mass and lowers reserve together"},
+    {"id":"V27-RECOVER-002","title":"Đã đủ cân thì không tự béo thêm","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"recover is a no-op at healthy mass"},
+    {"id":"V27-GATE-001","title":"Không khai báo cơ thể thì không tự sinh ra cơ thể","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"Legacy world keeps every adult body null"},
+    {"id":"V27-GATE-002","title":"Không có cơ thể thì không có chuyện sụt cân","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"Legacy world records no body_mass_lost fact"},
+    {"id":"V27-SAVE-001","title":"Lưu giữa lúc cơ thể đang sụt tái hiện đúng","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"Continuous and restored day-six hashes both equal e59171aea8e9867b"},
+    {"id":"V27-REGRESSION-001","title":"Mười một runner V0–V2.6 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart; tool/verify_v1_infancy.dart; tool/verify_v1_care_chain.dart; tool/verify_v1_body.dart; tool/verify_v2_household.dart; tool/verify_v2_1_household_health.dart; tool/verify_v2_2_transport_substitution.dart; tool/verify_v2_3_routine_directory.dart; tool/verify_v2_4_need_driven_plan.dart; tool/verify_v2_5_skills_and_refusal.dart; tool/verify_v2_6_growth_hunger_mood.dart","oracle":"All earlier runners pass with unchanged hashes"},
+    {"id":"V27-UI-001","title":"GUI chiếu cân nặng, dự trữ và sức làm việc","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Profile shows mass, reserve and capability for adults"},
+    {"id":"V27-UI-002","title":"Nhật ký có câu tiếng Việt cho lần sụt cân","status":"manual","runner":"../client/lib/main.dart","oracle":"body_mass_lost has a Vietnamese label and detail sentence"}
+  ]
+}
