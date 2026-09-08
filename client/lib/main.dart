@@ -345,6 +345,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'enable_v2_1': true,
         'enable_v2_2': true,
         'auto_plan': true,
+        'enable_v2_6': true,
         'infant_id': 'P00',
         'caregiver_id': 'N01',
         'production_actor_id': 'N03',
@@ -1459,8 +1460,12 @@ class _PersonProfileCard extends StatelessWidget {
                 if (person.agenda case final PersonAgenda agenda) ...<Widget>[
                   const SizedBox(height: 8),
                   Text(
-                    'Sức lực: mệt ${agenda.fatigue}/1000 · '
-                    'chỉ nhận việc từ mức ${agenda.acceptanceFloor}',
+                    'Sức lực: mệt ${agenda.fatigue} · đói ${agenda.hunger} · '
+                    'tâm trạng ${agenda.mood}',
+                  ),
+                  Text(
+                    'Chỉ nhận việc từ mức ${agenda.acceptanceFloor} '
+                    '(chủ yếu vì ${agenda.mainStrain})',
                   ),
                   Text(
                     'Việc được chào: nhận ${agenda.acceptedOffers}, '
@@ -2572,6 +2577,8 @@ class _HistoryPanelState extends State<_HistoryPanel> {
           fact.kind.startsWith('supply_journey'),
     'routine' =>
       fact.kind.startsWith('routine') ||
+          fact.kind == 'skill_improved' ||
+          fact.kind == 'work_offer_refused' ||
           fact.kind == 'household_plan_made' ||
           fact.kind.startsWith('household_need'),
     'world' =>
@@ -2782,6 +2789,9 @@ String _factDetail(WorldFact fact) {
           '${values['lost_seconds'] == '0' ? ' đúng kế hoạch' : ', hụt so với kế hoạch ${values['planned'] ?? '?'} vì mất giờ'}.',
     'routine_work_lost' =>
       'Công việc bị cắt ngang hết giờ nên không thu được gì.',
+    'skill_improved' =>
+      '${fact.subjectId} khá lên ${values['gain'] ?? '?'} điểm nghề '
+          '${_skillLabel(values['skill'] ?? '')}, nay ở mức ${values['level'] ?? '?'}.',
     'work_offer_refused' =>
       '${fact.subjectId} từ chối vì đang mệt ${values['fatigue'] ?? '?'}/1000, '
           'chỉ nhận việc từ mức ${values['floor'] ?? '?'} trở lên.',
@@ -2877,6 +2887,7 @@ String _factLabel(String kind) => switch (kind) {
   'routine_work_delivered' => 'Làm xong và nhập kho',
   'routine_work_lost' => 'Mất trắng công việc',
   'work_offer_refused' => 'Từ chối việc được giao',
+  'skill_improved' => 'Lên tay nghề',
   'routine_block_rescheduled' => 'Xếp lại việc sang giờ khác',
   'routine_block_started' => 'Bắt đầu một khối việc trong ngày',
   'routine_block_ended' => 'Kết thúc một khối việc',

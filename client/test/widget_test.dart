@@ -402,4 +402,58 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('person-profile-N03')), findsOneWidget);
   });
+  testWidgets('working raises the skill and hunger reaches the profile', (
+    WidgetTester tester,
+  ) async {
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-world')));
+    await tester.pumpAndSettle();
+
+    final Simulation start = Simulation.fromSave(repository.value!);
+    final int before = start.state.people['N03']!.skills!.level('gather_fuel');
+    final Simulation afterWork = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(11 * 3600));
+
+    // Làm xong khối việc thì tay nghề lên thật và có mốc ghi lại.
+    expect(
+      afterWork.state.people['N03']!.skills!.level('gather_fuel'),
+      greaterThan(before),
+    );
+    expect(
+      afterWork.state.facts.any(
+        (WorldFact fact) => fact.kind == 'skill_improved',
+      ),
+      isTrue,
+    );
+    // Ba trục sức lực đều là số thật trên hồ sơ.
+    final PersonAgenda agenda = afterWork.state.people['N03']!.agenda!;
+    expect(agenda.fatigue, greaterThan(0));
+    expect(agenda.acceptanceFloor, greaterThanOrEqualTo(agenda.fatigue ~/ 10));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: afterWork,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-3')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Nhịp sống'));
+    await tester.pump();
+    expect(find.text('Lên tay nghề'), findsWidgets);
+  });
 }

@@ -16,6 +16,25 @@ class PersonSkills {
   int output(String code, int base) =>
       (base * (600 + (400 * level(code)) ~/ 1000)) ~/ 1000;
 
+  /// Số điểm nghề lên được sau khi làm ngần này giây.
+  ///
+  /// Người mới lên nhanh, người đã giỏi lên chậm: trọn tám giờ cho 50 điểm
+  /// ở mức 0 nhưng chỉ 7 điểm ở mức 850.
+  int gainFrom(String code, int workedSeconds) {
+    if (workedSeconds <= 0) return 0;
+    final int current = level(code);
+    if (current >= 1000) return 0;
+    return (workedSeconds * (1000 - current)) ~/ 576000;
+  }
+
+  PersonSkills improve(String code, int gain) {
+    if (gain <= 0) return this;
+    return PersonSkills(<String, int>{
+      ...levels,
+      code: (level(code) + gain).clamp(0, 1000),
+    });
+  }
+
   Map<String, Object?> toJson() => <String, Object?>{
     for (final String key in levels.keys.toList()..sort()) key: levels[key],
   };
@@ -28,6 +47,8 @@ class PersonSkills {
 class PersonAgenda {
   const PersonAgenda({
     this.fatigue = 0,
+    this.hunger = 0,
+    this.mood = 1000,
     this.nightRecovery = 250,
     this.acceptedOffers = 0,
     this.refusedOffers = 0,
@@ -37,6 +58,12 @@ class PersonAgenda {
   /// Mệt mỏi tích lũy, thang 0–1000.
   final int fatigue;
 
+  /// Cơn đói tích lũy, thang 0–1000; ăn được bữa thì hạ xuống.
+  final int hunger;
+
+  /// Tâm trạng, thang 0–1000; 1000 là chưa có chuyện gì đáng bực.
+  final int mood;
+
   /// Số điểm mệt hồi lại sau một đêm.
   final int nightRecovery;
 
@@ -44,8 +71,22 @@ class PersonAgenda {
   final int refusedOffers;
   final String? lastRefusalReason;
 
-  /// Càng mệt thì càng chỉ nhận việc gấp: ngưỡng ưu tiên tối thiểu để đồng ý.
-  int get acceptanceFloor => fatigue ~/ 10;
+  /// Ngưỡng ưu tiên tối thiểu để đồng ý nhận việc.
+  ///
+  /// Mệt nặng nhất, đói bằng nửa mệt, tâm trạng xấu nhẹ hơn nữa. Người khỏe,
+  /// no và không bực thì ngưỡng bằng 0 và nhận mọi việc.
+  int get acceptanceFloor =>
+      fatigue ~/ 10 + hunger ~/ 20 + (1000 - mood) ~/ 25;
+
+  /// Lý do lớn nhất khiến người này khó nhận việc lúc này.
+  String get mainStrain {
+    final int byFatigue = fatigue ~/ 10;
+    final int byHunger = hunger ~/ 20;
+    final int byMood = (1000 - mood) ~/ 25;
+    if (byFatigue >= byHunger && byFatigue >= byMood) return 'mệt';
+    if (byHunger >= byMood) return 'đói';
+    return 'bực';
+  }
 
   bool accepts(int priority) => priority >= acceptanceFloor;
 
@@ -56,8 +97,27 @@ class PersonAgenda {
     return _copy(fatigue: (fatigue + added).clamp(0, 1000));
   }
 
-  PersonAgenda rest() =>
-      _copy(fatigue: (fatigue - nightRecovery).clamp(0, 1000));
+  /// Một đêm ngủ: bớt mệt và nguôi bớt bực.
+  PersonAgenda rest() => _copy(
+    fatigue: (fatigue - nightRecovery).clamp(0, 1000),
+    mood: (mood + 50).clamp(0, 1000),
+  );
+
+  /// Thời gian trôi giữa hai bữa và phần được ăn nếu bữa nấu xong.
+  PersonAgenda atMeal({required bool fed}) => _copy(
+    hunger: (hunger + 220 - (fed ? 400 : 0)).clamp(0, 1000),
+    mood: fed ? mood : (mood - 60).clamp(0, 1000),
+  );
+
+  /// Việc trôi chảy thì dễ chịu, bị cắt ngang thì bực theo phần giờ đã mất.
+  PersonAgenda afterWork({required int workedSeconds, required int lostSeconds}) {
+    final int total = workedSeconds + lostSeconds;
+    if (total <= 0) return this;
+    if (lostSeconds == 0) return _copy(mood: (mood + 20).clamp(0, 1000));
+    return _copy(
+      mood: (mood - (40 * lostSeconds) ~/ total).clamp(0, 1000),
+    );
+  }
 
   PersonAgenda recordOffer({required bool accepted, String? reason}) => _copy(
     acceptedOffers: accepted ? acceptedOffers + 1 : acceptedOffers,
@@ -67,11 +127,15 @@ class PersonAgenda {
 
   PersonAgenda _copy({
     int? fatigue,
+    int? hunger,
+    int? mood,
     int? acceptedOffers,
     int? refusedOffers,
     String? lastRefusalReason,
   }) => PersonAgenda(
     fatigue: fatigue ?? this.fatigue,
+    hunger: hunger ?? this.hunger,
+    mood: mood ?? this.mood,
     nightRecovery: nightRecovery,
     acceptedOffers: acceptedOffers ?? this.acceptedOffers,
     refusedOffers: refusedOffers ?? this.refusedOffers,
@@ -80,6 +144,8 @@ class PersonAgenda {
 
   Map<String, Object?> toJson() => <String, Object?>{
     if (fatigue > 0) 'fatigue': fatigue,
+    if (hunger > 0) 'hunger': hunger,
+    if (mood != 1000) 'mood': mood,
     if (nightRecovery != 250) 'night_recovery': nightRecovery,
     if (acceptedOffers > 0) 'accepted_offers': acceptedOffers,
     if (refusedOffers > 0) 'refused_offers': refusedOffers,
@@ -88,6 +154,8 @@ class PersonAgenda {
 
   factory PersonAgenda.fromJson(Map<String, Object?> json) => PersonAgenda(
     fatigue: json['fatigue'] as int? ?? 0,
+    hunger: json['hunger'] as int? ?? 0,
+    mood: json['mood'] as int? ?? 1000,
     nightRecovery: json['night_recovery'] as int? ?? 250,
     acceptedOffers: json['accepted_offers'] as int? ?? 0,
     refusedOffers: json['refused_offers'] as int? ?? 0,

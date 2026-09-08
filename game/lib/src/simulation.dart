@@ -135,6 +135,8 @@ class PersonState {
 
   PersonState withAgenda(PersonAgenda value) => _copy(agenda: value);
 
+  PersonState withSkills(PersonSkills value) => _copy(skills: value);
+
   PersonState _copy({
     String? activeGoal,
     InfantState? infancy,
@@ -142,6 +144,7 @@ class PersonState {
     CaregiverAgentState? caregiverAgent,
     String? roomId,
     RoutineState? routine,
+    PersonSkills? skills,
     PersonAgenda? agenda,
   }) => PersonState(
     id: id,
@@ -154,7 +157,7 @@ class PersonState {
     householdId: householdId,
     roomId: roomId ?? this.roomId,
     routine: routine ?? this.routine,
-    skills: skills,
+    skills: skills ?? this.skills,
     agenda: agenda ?? this.agenda,
   );
 
@@ -843,6 +846,13 @@ class Simulation {
     }
   }
 
+  /// Hộ của người này có theo dõi tay nghề, cơn đói và tâm trạng hay không.
+  bool _wellbeing(PersonState person) {
+    final String? householdId = person.householdId;
+    if (householdId == null) return false;
+    return _state.households[householdId]?.wellbeing ?? false;
+  }
+
   /// Điều đang giữ chân một người khỏi cam kết mới, nếu có.
   String? _competingObligation(PersonState person) {
     final RoutineState? routine = person.routine;
@@ -1112,9 +1122,13 @@ class Simulation {
       if (agenda.accepts(priority)) {
         return (personId, agenda.recordOffer(accepted: true));
       }
-      final String reason =
-          'mệt ${agenda.fatigue}/1000, chỉ nhận việc từ mức '
-          '${agenda.acceptanceFloor}';
+      // Hộ có theo dõi đói/tâm trạng thì lý do nói rõ cả ba trục.
+      final String reason = household.wellbeing
+          ? '${agenda.mainStrain} (mệt ${agenda.fatigue}, đói ${agenda.hunger}, '
+                'tâm trạng ${agenda.mood}), chỉ nhận việc từ mức '
+                '${agenda.acceptanceFloor}'
+          : 'mệt ${agenda.fatigue}/1000, chỉ nhận việc từ mức '
+                '${agenda.acceptanceFloor}';
       _replace(
         people: <String, PersonState>{
           ..._state.people,
@@ -1128,7 +1142,9 @@ class Simulation {
             'work_offer_refused',
             personId,
             'skill=$skillCode priority=$priority fatigue=${agenda.fatigue} '
-                'floor=${agenda.acceptanceFloor}',
+                '${household.wellbeing ? 'hunger=${agenda.hunger} mood=${agenda.mood} ' : ''}'
+                'floor=${agenda.acceptanceFloor}'
+                '${household.wellbeing ? ' strain=${agenda.mainStrain}' : ''}',
           ),
         ],
       );
@@ -1245,7 +1261,10 @@ class Simulation {
     final int today =
         (_state.now.seconds ~/ gameSecondsPerDay) * gameSecondsPerDay;
     final int plannedEnd = today + block.endSecondOfDay;
-    PersonState next = person.withRoutine(
+    // Đọc lại người sau bước đóng khối cũ: mệt mỏi và tay nghề vừa được
+    // cập nhật ở đó, không được dùng bản chụp cũ mà ghi đè mất.
+    final PersonState current = _state.people[personId] ?? person;
+    PersonState next = current.withRoutine(
       working.startBlock(
         blockId: blockId,
         nowSeconds: _state.now.seconds,
@@ -1263,9 +1282,9 @@ class Simulation {
         roomId: room.id,
       );
     }
-    if (person.caregiverAgent != null) {
+    if (current.caregiverAgent != null) {
       next = next.withCaregiverAgent(
-        person.caregiverAgent!.withActivity(block.activity),
+        current.caregiverAgent!.withActivity(block.activity),
       );
     }
     _replace(
@@ -1427,12 +1446,46 @@ class Simulation {
         0,
         block.durationSeconds,
       );
-      _replace(
-        people: <String, PersonState>{
-          ..._state.people,
-          personId: worker.withAgenda(agenda.tire(worked)),
-        },
+      final bool wellbeing = _wellbeing(worker);
+      PersonState next = worker.withAgenda(
+        wellbeing
+            ? agenda
+                  .tire(worked)
+                  .afterWork(workedSeconds: worked, lostSeconds: lost)
+            : agenda.tire(worked),
       );
+      // Làm nghề nào thì lên tay nghề ấy, người mới lên nhanh hơn người giỏi.
+      final String? skillCode = block.needKind == null
+          ? null
+          : _skillByResource[block.needKind];
+      final PersonSkills? skills = worker.skills;
+      if (wellbeing && skillCode != null && skills != null) {
+        final int gain = skills.gainFrom(skillCode, worked);
+        if (gain > 0) {
+          next = next.withSkills(skills.improve(skillCode, gain));
+          _replace(
+            people: <String, PersonState>{..._state.people, personId: next},
+            facts: <WorldFact>[
+              ..._state.facts,
+              _fact(
+                'skill_improved',
+                personId,
+                'skill=$skillCode gain=$gain '
+                    'level=${skills.level(skillCode) + gain} '
+                    'worked_seconds=$worked',
+              ),
+            ],
+          );
+        } else {
+          _replace(
+            people: <String, PersonState>{..._state.people, personId: next},
+          );
+        }
+      } else {
+        _replace(
+          people: <String, PersonState>{..._state.people, personId: next},
+        );
+      }
     }
     _deliverBlockOutput(personId, block, lost);
     _replace(
@@ -1816,6 +1869,7 @@ class Simulation {
       scheduledWorkSecondsByPerson:
           (event.payload['scheduled_work_seconds_by_person']! as Map)
               .cast<String, int>(),
+      wellbeing: event.payload['enable_v2_6'] == true,
     );
     _replace(
       households: <String, HouseholdState>{
@@ -2020,7 +2074,30 @@ class Simulation {
           '$detail late_seconds=${_state.now.seconds - plannedSeconds} '
           'deferrals=$deferrals';
     }
+    // Bữa ăn đi vào từng người: no thì hạ cơn đói, hụt bữa thì đói và bực thêm.
+    Map<String, PersonState>? fedPeople;
+    if (household.wellbeing) {
+      final bool fed = kind == 'household_meal_completed';
+      final Map<String, PersonState> updated = <String, PersonState>{
+        ..._state.people,
+      };
+      bool changed = false;
+      for (final String memberId in household.memberIds) {
+        final PersonState? member = updated[memberId];
+        final PersonAgenda? memberAgenda = member?.agenda;
+        if (member == null || memberAgenda == null) continue;
+        final PersonAgenda after = memberAgenda.atMeal(fed: fed);
+        if (after.hunger == memberAgenda.hunger &&
+            after.mood == memberAgenda.mood) {
+          continue;
+        }
+        updated[memberId] = member.withAgenda(after);
+        changed = true;
+      }
+      if (changed) fedPeople = updated;
+    }
     _replace(
+      people: fedPeople,
       households: <String, HouseholdState>{
         ..._state.households,
         householdId: nextHousehold,

@@ -28,7 +28,8 @@ Lịch sử đầy đủ từng lượt việc nằm trong [[CHANGELOG]]. Tóm t
 | V2.2 | Vận chuyển có trễ, bệnh nối sinh lý, người thay | [[K5_9_V2_2_VAN_CHUYEN_BENH_SINH_LY_NGUOI_THAY]] · `d0b87de633a4765a` |
 | V2.3 | Nhịp sống NPC, xung đột lịch, hồ sơ toàn thế giới | [[K5_10_V2_3_NHIP_SONG_NPC_VA_HO_SO_THE_GIOI]] · `ade0b8a4300276c9` |
 | V2.4 | Nhu cầu hộ sinh việc, ưu tiên phân xử, sản lượng theo giờ làm | [[K5_11_V2_4_NHU_CAU_SINH_VIEC_VA_UU_TIEN]] · `5b36f570a39e4bde` |
-| V2.5 | Kỹ năng nghề chọn người, quyền từ chối việc, xếp lại lịch | [[K5_12_V2_5_KY_NANG_NGHE_VA_QUYEN_TU_CHOI]] · `9d3521d32a5b66b6` |
+| V2.5 | Kỹ năng nghề chọn người, quyền từ chối việc, xếp lại lịch | [[K5_12_V2_5_KY_NANG_NGHE_VA_QUYEN_TU_CHOI]] · `29bf49642c71fb18` |
+| V2.6 | Tay nghề lên tay, đói và tâm trạng vào quyết định nhận việc | [[K5_13_V2_6_LEN_TAY_NGHE_DOI_VA_TAM_TRANG]] · `b9f0b0d8269b8653` |
 
 Web đang chạy: **https://cowphuc123.github.io/reality-cultivation/** — tự động build lại mỗi lần đẩy `client/` lên GitHub (`.github/workflows/deploy-web.yml`). Bản cũ trên Sites (`chatgpt.site`) vẫn còn, chưa gỡ.
 Mở tại máy: `MO_GAME.bat` ở gốc dự án; hướng dẫn tại [[HUONG_DAN_MO_BAN_TEST]].
@@ -37,12 +38,12 @@ Mở tại máy: `MO_GAME.bat` ở gốc dự án; hướng dẫn tại [[HUONG_
 
 - Chưa chọn công nghệ cuối cùng. S2 Dart/Flutter là working stack PROPOSED (ADR chưa ACCEPTED); S1/S3, full workload, APK/EXE chưa chạy.
 - Chưa chốt phạm vi bản đầu, quy tắc tạm dừng, mô phỏng khi đóng game hoặc hệ cảnh giới.
-- Chưa có: giải phẫu đa bộ phận, tay nghề tăng theo số giờ đã làm, đói/tâm trạng/quan hệ trong quyết định nhận việc, hậu quả xã hội của việc từ chối, mục tiêu cá nhân dài hạn, lây nhiễm/thuốc, tuyến vận tải theo địa hình, chuỗi game sau tháng đầu.
+- Chưa có: giải phẫu đa bộ phận, đói nối vào cơ thể người lớn (hiện chỉ cản nhận việc, chưa sụt cân hay yếu đi), khẩu phần riêng từng người, quan hệ giữa người với người, hậu quả xã hội của việc từ chối, mục tiêu cá nhân dài hạn, lây nhiễm/thuốc, tuyến vận tải theo địa hình, chuỗi game sau tháng đầu.
 - Kho git đã có commit đầu và đẩy lên `github.com/cowphuc123/reality-cultivation` (công khai); chưa thiết lập sao lưu tự động ngoài GitHub.
 
 ## Bước tiếp theo đề xuất
 
-Cho tay nghề tăng theo số giờ đã làm, thêm đói và tâm trạng vào quyết định nhận việc, rồi mở tuyến vận tải thật có vị trí trung gian.
+Nối đói vào cơ thể người lớn cho có hậu quả thể chất thật (như đã làm cho trẻ sơ sinh ở V1.2), rồi mở tuyến vận tải thật có vị trí trung gian.
 
 Shared fixture V1 chưa chạy parity PWA. TN01–TN08 ([[LUA_CHON_TRAI_NGHIEM]]) và ADR công nghệ ACCEPTED vẫn mở.
 

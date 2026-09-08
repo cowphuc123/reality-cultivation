@@ -58,7 +58,7 @@ Hồ sơ từng người nay hiện tay nghề theo nghề, mức mệt, ngưỡ
 ## Kiểm chứng đã chạy
 
 - `dart analyze` và `flutter analyze`: sạch.
-- Runner V2.5 đạt tới ngày 4; lưu lúc 09:00 sau khi đã có lần từ chối rồi chạy tiếp cho cùng hash `9d3521d32a5b66b6`.
+- Runner V2.5 đạt tới ngày 4; lưu lúc 09:00 sau khi đã có lần từ chối rồi chạy tiếp cho cùng hash. Hash ban đầu là `9d3521d32a5b66b6`; từ V2.6 đổi thành `29bf49642c71fb18` sau khi sửa lỗi ghi đè mất mệt mỏi, xem [[K5_13_V2_6_LEN_TAY_NGHE_DOI_VA_TAM_TRANG]]. Mọi điều kiện V2.5 vẫn đạt.
 - **Chín runner V0–V2.4 giữ nguyên hash** — mọi tính năng mới đều gắn với trường dữ liệu mới nên thế giới cũ không đổi hành vi.
 - Catalog `game/artifacts/conditions/v2_5_skills_and_refusal.json` có 22 điều kiện.
 - 9/9 widget test đạt, gồm bài mới cho việc chọn người theo nghề và lần từ chối.

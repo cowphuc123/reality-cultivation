@@ -1,5 +1,18 @@
 # Nhật ký dự án
 
+## 2026-09-08 — K5.13: V2.6 lên tay nghề, đói và tâm trạng
+
+- Làm xong khối việc thì tay nghề lên theo số giây thật sự làm; người mới lên nhanh, người giỏi lên chậm (trọn tám giờ cho 45 điểm ở mức 100 nhưng 5 điểm ở mức 900), kịch trần 1000 thì dừng.
+- Vòng lặp khép lại: tay nghề lên → sản lượng dự kiến hôm sau cao hơn. N03 kiếm củi 850 → 853 sau ngày đầu.
+- Ngưỡng nhận việc nay do ba trục hợp thành: `mệt/10 + đói/20 + (1000−tâm trạng)/25`. Hồ sơ chỉ rõ nguyên nhân chính đang cản.
+- Đói và tâm trạng là số thật: mỗi bữa trôi qua +220 đói, ăn được bữa −400; hụt bữa −60 tâm trạng, bị cắt ngang giữa việc thì bực theo phần giờ mất, ngủ một đêm hồi cả hai.
+- Biến thể kiểm chứng cảnh đói: kho chỉ đủ hai bữa và cả nhà không ai đủ nghề kiếm lương thực → nhu cầu ghi thiếu người mỗi sáng → bữa hụt liên tiếp → sau hai ngày đói 880, tâm trạng 830, ngưỡng nhận việc 138. Ở biến thể bình thường hệ thống tự cứu được vì có người đủ nghề.
+- **Sửa lỗi mất mệt mỏi và tay nghề**: khi khối kế tiếp bắt đầu đúng lúc khối trước kết thúc, hàm dùng lại bản chụp người từ trước khi đóng khối nên các cập nhật vừa ghi bị đè mất. Cùng họ lỗi với lần sửa ở V2.4.
+- Vì lỗi trên, hash runner V2.5 đổi `9d3521d32a5b66b6` → `29bf49642c71fb18`; V2.5 là fixture duy nhất có hồ sơ sức lực nên cũng là fixture duy nhất chịu ảnh hưởng, mọi điều kiện vẫn đạt.
+- Cả ba trục và việc lên tay nghề đều nằm sau cờ `enable_v2_6` của hộ, nên chín runner V0–V2.4 giữ nguyên hash.
+- Runner V2.6 đạt ngày 4 hash `b9f0b0d8269b8653`; catalog 22 điều kiện; 10/10 widget test đạt; GUI hiện đủ ba trục và mốc Lên tay nghề; web release đã đóng gói lại.
+- Thêm [[K5_13_V2_6_LEN_TAY_NGHE_DOI_VA_TAM_TRANG]].
+
 ## 2026-09-08 — K5.12: V2.5 kỹ năng nghề, quyền từ chối và xếp lại lịch
 
 - Thêm `PersonSkills`: mỗi người có tay nghề theo mã việc (0–1000). Phải vừa có quyền dùng kho vừa đủ nghề tối thiểu 200 mới được giao; xếp theo nghề cao trước rồi tới người rảnh hơn.

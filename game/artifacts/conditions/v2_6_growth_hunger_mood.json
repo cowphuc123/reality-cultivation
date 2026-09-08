@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-6-growth-hunger-mood",
+  "conditions": [
+    {"id":"V26-GROW-001","title":"Làm xong việc thì tay nghề tương ứng lên","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"gather_fuel 850 to 853 and fetch_water 700 to 702 after day zero"},
+    {"id":"V26-GROW-002","title":"Lần lên tay nghề được ghi thành sự kiện","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"skill_improved carries skill, gain, level and worked seconds"},
+    {"id":"V26-GROW-003","title":"Người mới lên nhanh hơn người đã giỏi","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"Eight hours yields 45 points at level 100 and 5 at level 900"},
+    {"id":"V26-GROW-004","title":"Kịch trần thì không lên thêm","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"gainFrom returns zero at level 1000"},
+    {"id":"V26-GROW-005","title":"Tay nghề lên thì sản lượng dự kiến hôm sau cao hơn","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"Day-one fuel block plans above the day-zero 2256"},
+    {"id":"V26-HUNGER-001","title":"Ăn đủ bữa thì không tích cơn đói","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"Fed member keeps hunger at zero"},
+    {"id":"V26-HUNGER-002","title":"Kho cạn thì bữa ăn hụt thật","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"mealShortfalls rises in the starving world"},
+    {"id":"V26-HUNGER-003","title":"Hụt bữa làm người ta vừa đói vừa bực","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"Hunger reaches 880 and mood falls to 830 after two days"},
+    {"id":"V26-HUNGER-004","title":"Không ai đủ nghề thì kho không tự đầy lại","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"household_need_unstaffed fires for food every planning day"},
+    {"id":"V26-FLOOR-001","title":"Đói đẩy ngưỡng nhận việc lên trên mức chỉ do mệt","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"acceptanceFloor exceeds fatigue divided by ten"},
+    {"id":"V26-FLOOR-002","title":"Đói đóng góp đáng kể chứ không chỉ là nhãn","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"Hunger contributes at least twenty points to the floor"},
+    {"id":"V26-FLOOR-003","title":"Người làm ít giờ thì đói là nguyên nhân chính","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"N02 reports mainStrain hunger while N01 still reports fatigue"},
+    {"id":"V26-FLOOR-004","title":"Lý do từ chối ghi đủ ba trục khi hộ có theo dõi","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"work_offer_refused carries hunger, mood and strain"},
+    {"id":"V26-MOOD-001","title":"Bị cắt ngang giữa việc thì tâm trạng xấu đi","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"Substitute caregiver mood falls below 1000 by day three"},
+    {"id":"V26-MOOD-002","title":"Ngủ một đêm thì nguôi bớt bực","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"rest raises mood by fifty within the clamp"},
+    {"id":"V26-GATE-001","title":"Hộ chưa bật theo dõi thì đói và tâm trạng đứng yên","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"Legacy world keeps hunger zero and mood 1000"},
+    {"id":"V26-GATE-002","title":"Hộ chưa bật theo dõi thì tay nghề không tự lên","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"Legacy world keeps gather_fuel at its starting level"},
+    {"id":"V26-SAVE-001","title":"Lưu giữa lúc đang đói tái hiện đúng","status":"automated","runner":"tool/verify_v2_6_growth_hunger_mood.dart","oracle":"Continuous and restored day-four hashes both equal b9f0b0d8269b8653"},
+    {"id":"V26-REGRESSION-001","title":"Chín runner V0–V2.4 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart; tool/verify_v1_infancy.dart; tool/verify_v1_care_chain.dart; tool/verify_v1_body.dart; tool/verify_v2_household.dart; tool/verify_v2_1_household_health.dart; tool/verify_v2_2_transport_substitution.dart; tool/verify_v2_3_routine_directory.dart; tool/verify_v2_4_need_driven_plan.dart","oracle":"All earlier runners pass with unchanged hashes"},
+    {"id":"V26-REGRESSION-002","title":"V2.5 đạt lại sau khi sửa lỗi mất mệt mỏi","status":"automated","runner":"tool/verify_v2_5_skills_and_refusal.dart","oracle":"All V2.5 assertions pass at the corrected hash 29bf49642c71fb18"},
+    {"id":"V26-UI-001","title":"GUI chiếu ba trục sức lực trên hồ sơ riêng","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Profile shows fatigue, hunger, mood and the acceptance floor"},
+    {"id":"V26-UI-002","title":"Nhật ký lọc được các mốc lên tay nghề","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Routine filter shows skill_improved entries"}
+  ]
+}
