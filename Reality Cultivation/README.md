@@ -38,6 +38,7 @@ Game text mô phỏng thế giới tu tiên liên tục, ưu tiên chiều sâu 
 - [[docs/K5_12_V2_5_KY_NANG_NGHE_VA_QUYEN_TU_CHOI|K5.12 — V2.5 kỹ năng nghề và quyền từ chối việc]]
 - [[docs/K5_13_V2_6_LEN_TAY_NGHE_DOI_VA_TAM_TRANG|K5.13 — V2.6 lên tay nghề, đói và tâm trạng]]
 - [[docs/K5_14_V2_7_CO_THE_NGUOI_LON|K5.14 — V2.7 cơ thể người lớn]]
+- [[docs/K5_15_V2_8_NUOC_VA_CON_KHAT|K5.15 — V2.8 nước và cơn khát]]
 - Mã chạy được nằm trong thư mục `game/` ở gốc dự án.
 - Shell Flutter responsive nằm trong `client/`; bản web release được tạo tại `client/build/web`.
 

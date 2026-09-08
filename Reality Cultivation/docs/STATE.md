@@ -30,7 +30,8 @@ Lịch sử đầy đủ từng lượt việc nằm trong [[CHANGELOG]]. Tóm t
 | V2.4 | Nhu cầu hộ sinh việc, ưu tiên phân xử, sản lượng theo giờ làm | [[K5_11_V2_4_NHU_CAU_SINH_VIEC_VA_UU_TIEN]] · `5b36f570a39e4bde` |
 | V2.5 | Kỹ năng nghề chọn người, quyền từ chối việc, xếp lại lịch | [[K5_12_V2_5_KY_NANG_NGHE_VA_QUYEN_TU_CHOI]] · `29bf49642c71fb18` |
 | V2.6 | Tay nghề lên tay, đói và tâm trạng vào quyết định nhận việc | [[K5_13_V2_6_LEN_TAY_NGHE_DOI_VA_TAM_TRANG]] · `b9f0b0d8269b8653` |
-| V2.7 | Cơ thể người lớn: bữa ăn nuôi thật, đói thì sụt cân và yếu đi | [[K5_14_V2_7_CO_THE_NGUOI_LON]] · `e59171aea8e9867b` |
+| V2.7 | Cơ thể người lớn: bữa ăn nuôi thật, đói thì sụt cân và yếu đi | [[K5_14_V2_7_CO_THE_NGUOI_LON]] · `dc54cde35203486a` |
+| V2.8 | Nước và cơn khát: uống từ kho hộ, thiếu nước thì kiệt sức nhanh | [[K5_15_V2_8_NUOC_VA_CON_KHAT]] · `469fab7582a4aa34` |
 
 Web đang chạy: **https://cowphuc123.github.io/reality-cultivation/** — tự động build lại mỗi lần đẩy `client/` lên GitHub (`.github/workflows/deploy-web.yml`). Bản cũ trên Sites (`chatgpt.site`) vẫn còn, chưa gỡ.
 Mở tại máy: `MO_GAME.bat` ở gốc dự án; hướng dẫn tại [[HUONG_DAN_MO_BAN_TEST]].
@@ -39,12 +40,13 @@ Mở tại máy: `MO_GAME.bat` ở gốc dự án; hướng dẫn tại [[HUONG_
 
 - Chưa chọn công nghệ cuối cùng. S2 Dart/Flutter là working stack PROPOSED (ADR chưa ACCEPTED); S1/S3, full workload, APK/EXE chưa chạy.
 - Chưa chốt phạm vi bản đầu, quy tắc tạm dừng, mô phỏng khi đóng game hoặc hệ cảnh giới.
-- Chưa có: giải phẫu đa bộ phận, hậu quả của mất nước và thân nhiệt ở người lớn, bệnh/thương tích/già đi/chết của người lớn, diễn biến cơ thể trong ngày (cơ thể người lớn chạy theo ngày), khẩu phần riêng từng người, quan hệ giữa người với người, hậu quả xã hội của việc từ chối, mục tiêu cá nhân dài hạn, lây nhiễm/thuốc, tuyến vận tải theo địa hình, chuỗi game sau tháng đầu.
+- Chưa có: giải phẫu đa bộ phận, bệnh/thương tích/già đi/chết của người lớn, diễn biến cơ thể trong ngày (cơ thể người lớn chạy theo ngày), nước bẩn và bệnh do nước, khẩu phần riêng từng người, quan hệ giữa người với người, hậu quả xã hội của việc từ chối, mục tiêu cá nhân dài hạn, lây nhiễm/thuốc, tuyến vận tải theo địa hình, chuỗi game sau tháng đầu.
+- Thân nhiệt người lớn **cố ý chưa làm**: chưa có mùa, thời tiết hay nhiệt độ môi trường để nó phản ứng lại; xem [[K5_15_V2_8_NUOC_VA_CON_KHAT]].
 - Kho git đã có commit đầu và đẩy lên `github.com/cowphuc123/reality-cultivation` (công khai); chưa thiết lập sao lưu tự động ngoài GitHub.
 
 ## Bước tiếp theo đề xuất
 
-Cho nước và thân nhiệt của người lớn có hậu quả như năng lượng đã có, rồi mở tuyến vận tải thật có vị trí trung gian.
+Mở tuyến vận tải thật có vị trí trung gian, hoặc cho người lớn ốm được như trẻ sơ sinh. Thân nhiệt nên chờ có mô hình môi trường trước.
 
 Shared fixture V1 chưa chạy parity PWA. TN01–TN08 ([[LUA_CHON_TRAI_NGHIEM]]) và ADR công nghệ ACCEPTED vẫn mở.
 

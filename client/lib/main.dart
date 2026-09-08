@@ -1467,7 +1467,7 @@ class _PersonProfileCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'Sức lực: mệt ${agenda.fatigue} · đói ${agenda.hunger} · '
-                    'tâm trạng ${agenda.mood}',
+                    'khát ${agenda.thirst} · tâm trạng ${agenda.mood}',
                   ),
                   Text(
                     'Chỉ nhận việc từ mức ${agenda.acceptanceFloor} '
@@ -1492,9 +1492,20 @@ class _PersonProfileCard extends StatelessWidget {
                   ),
                   Text(
                     'Dự trữ ${body.energyReserveKj} kJ · '
-                    'sức làm việc ${body.capability}/1000',
+                    'đủ nước ${body.hydration}/1000'
+                    '${body.dehydrated ? ' (đang thiếu nước)' : ''}',
                     style: small,
                   ),
+                  Text(
+                    'Sức làm việc ${body.capability}/1000 — '
+                    '${body.waterCapability < body.massCapability ? 'bị nước chặn' : 'bị cân nặng chặn'}',
+                    style: small,
+                  ),
+                  if (body.totalDrunkMl > 0)
+                    Text(
+                      'Đã uống tổng cộng ${body.totalDrunkMl} ml',
+                      style: small,
+                    ),
                   if (body.massLostGrams > 0)
                     Text(
                       'Đã sụt tổng cộng ${body.massLostGrams} g vì thiếu ăn',
@@ -2813,6 +2824,12 @@ String _factDetail(WorldFact fact) {
           '${values['lost_seconds'] == '0' ? ' đúng kế hoạch' : ', hụt so với kế hoạch ${values['planned'] ?? '?'} vì mất giờ'}.',
     'routine_work_lost' =>
       'Công việc bị cắt ngang hết giờ nên không thu được gì.',
+    'body_drank' =>
+      '${fact.subjectId} uống ${values['ml'] ?? '?'} ml trên ${values['wanted'] ?? '?'} ml cần; '
+          'đủ nước ${values['hydration'] ?? '?'}/1000.',
+    'body_dehydrated' =>
+      '${fact.subjectId} thiếu nước ở mức ${values['hydration'] ?? '?'}/1000; '
+          'sức làm việc còn ${values['capability'] ?? '?'}/1000.',
     'body_mass_lost' =>
       '${fact.subjectId} sụt ${values['lost_g'] ?? '?'} g, còn ${values['mass_g'] ?? '?'} g; '
           'sức làm việc còn ${values['capability'] ?? '?'}/1000.',
@@ -2916,6 +2933,8 @@ String _factLabel(String kind) => switch (kind) {
   'work_offer_refused' => 'Từ chối việc được giao',
   'skill_improved' => 'Lên tay nghề',
   'body_mass_lost' => 'Sụt cân vì thiếu ăn',
+  'body_drank' => 'Uống nước từ kho hộ',
+  'body_dehydrated' => 'Thiếu nước',
   'routine_block_rescheduled' => 'Xếp lại việc sang giờ khác',
   'routine_block_started' => 'Bắt đầu một khối việc trong ngày',
   'routine_block_ended' => 'Kết thúc một khối việc',

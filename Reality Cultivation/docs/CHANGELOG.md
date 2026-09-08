@@ -1,5 +1,19 @@
 # Nhật ký dự án
 
+## 2026-09-08 — K5.15: V2.8 nước và cơn khát của người lớn
+
+- Đóng chỗ hở của V2.7: nước từng được theo dõi mà không có hậu quả gì, nay có.
+- Người lớn uống nước **lấy từ kho hộ** mỗi ngày, đi qua đúng ba cửa: quyền dùng kho, tồn kho còn hay cạn, và trần 3.500 ml/ngày. Nước uống bị trừ thật.
+- Nhu cầu nước của hộ nay tính cả phần người uống: 6.000 → **13.500 ml/ngày** với ba người lớn, nên kế hoạch xếp việc gánh nước gấp hơn.
+- Sức làm việc nay là mức thấp hơn giữa hai trục: theo cân nặng (đủ 100%, nửa ở 85%, kiệt ở 70%) và theo lượng nước (đủ 100%, nửa ở **90%**, kiệt ở **80%**). Mất nước ăn vào sức nhanh hơn sụt cân nhiều.
+- Cơn khát vào ngưỡng nhận việc, nặng hơn đói: `mệt/10 + khát/15 + đói/20 + (1000−tâm trạng)/25`.
+- Hai lượt chạy đối chiếu: người bị chặn quyền dùng kho nước tụt xuống sức làm việc 0/1000 sau ba ngày; kho cạn mà không ai đủ nghề đi gánh thì nhiều người cùng khát. Ở lượt bình thường hệ thống tự cứu được.
+- **Cố ý không làm thân nhiệt người lớn**: chưa có mùa, thời tiết hay nhiệt độ trong nhà để thân nhiệt phản ứng lại, nên làm bây giờ là bịa số. Để chờ mô hình môi trường.
+- Runner V2.8 đạt ngày 5 hash `469fab7582a4aa34`; catalog 22 điều kiện; 12/12 widget test đạt.
+- Mười runner V0–V2.6 giữ nguyên hash. Hash V2.7 đổi `e59171aea8e9867b` → `dc54cde35203486a` vì đó là fixture duy nhất có cơ thể; đây là mở rộng mô hình có chủ đích, không phải sửa lỗi.
+- GUI hiện mức đủ nước, tổng nước đã uống và thứ đang chặn sức làm việc; web release đã đóng gói lại.
+- Thêm [[K5_15_V2_8_NUOC_VA_CON_KHAT]].
+
 ## 2026-09-08 — K5.14: V2.7 cơ thể người lớn
 
 - Thêm `AdultBodyState` chạy ở độ phân giải ngày: khối lượng, dự trữ năng lượng, nước cơ thể, tổng đã ăn/đốt/sụt.

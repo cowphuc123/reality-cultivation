@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-8-water-and-thirst",
+  "conditions": [
+    {"id":"V28-WATER-001","title":"Mức đủ nước suy từ khối lượng cơ thể","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"Sixty percent of mass is the full-water target"},
+    {"id":"V28-WATER-002","title":"Mất một phần mười nước thì sức làm việc còn nửa","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"Hydration 900 gives waterCapability 500"},
+    {"id":"V28-WATER-003","title":"Mốc thiếu nước bao gồm cả mức biên","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"dehydrated is true at exactly hydration 900"},
+    {"id":"V28-WATER-004","title":"Thiếu nước ăn vào sức nhanh hơn sụt cân","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"waterCapability binds before massCapability at ten percent loss"},
+    {"id":"V28-WATER-005","title":"Sức làm việc do thứ thiếu hơn quyết định","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"capability equals the minimum of mass and water capability"},
+    {"id":"V28-DRINK-001","title":"Người lớn uống nước thật lấy từ kho hộ","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"totalDrunkMl rises and body_drank is recorded"},
+    {"id":"V28-DRINK-002","title":"Nước uống bị trừ khỏi kho của hộ","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"Store falls across the settlement window"},
+    {"id":"V28-DRINK-003","title":"Không có quyền dùng kho thì không uống được","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"N03 without the water right drinks zero millilitres"},
+    {"id":"V28-DRINK-004","title":"Người có quyền vẫn uống bình thường","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"N01 keeps drinking while N03 is barred"},
+    {"id":"V28-DRINK-005","title":"Kho cạn thì nhiều người cùng thiếu nước","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"Two or more adults are dehydrated once the store empties"},
+    {"id":"V28-THIRST-001","title":"Không uống được thì thiếu nước thật","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"Barred worker reaches hydration 653 after three days"},
+    {"id":"V28-THIRST-002","title":"Khát đóng góp đáng kể vào ngưỡng nhận việc","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"Thirst adds at least twenty points to the floor"},
+    {"id":"V28-THIRST-003","title":"Ngưỡng cao hơn hẳn mức khi chưa tính khát","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"acceptanceFloor exceeds the fatigue, hunger and mood terms alone"},
+    {"id":"V28-THIRST-004","title":"Thiếu nước chặn sức làm việc","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"capability equals waterCapability for the barred worker"},
+    {"id":"V28-THIRST-005","title":"Lần thiếu nước được ghi thành sự kiện","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"body_dehydrated carries hydration, thirst and capability"},
+    {"id":"V28-NEED-001","title":"Nhu cầu nước của hộ tính cả phần người uống","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"Daily use reaches 13500 ml for three adults plus meals"},
+    {"id":"V28-GATE-001","title":"Không có cơ thể thì không có chuyện uống nước","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"Legacy world records no body_drank fact"},
+    {"id":"V28-SAVE-001","title":"Lưu giữa lúc đang khát tái hiện đúng","status":"automated","runner":"tool/verify_v2_8_water_and_thirst.dart","oracle":"Continuous and restored day-five hashes both equal 469fab7582a4aa34"},
+    {"id":"V28-REGRESSION-001","title":"Mười runner V0–V2.6 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart; tool/verify_v1_infancy.dart; tool/verify_v1_care_chain.dart; tool/verify_v1_body.dart; tool/verify_v2_household.dart; tool/verify_v2_1_household_health.dart; tool/verify_v2_2_transport_substitution.dart; tool/verify_v2_3_routine_directory.dart; tool/verify_v2_4_need_driven_plan.dart; tool/verify_v2_5_skills_and_refusal.dart; tool/verify_v2_6_growth_hunger_mood.dart","oracle":"All runners without adult bodies pass with unchanged hashes"},
+    {"id":"V28-REGRESSION-002","title":"V2.7 đạt lại sau khi nước có hậu quả","status":"automated","runner":"tool/verify_v2_7_adult_body.dart","oracle":"All V2.7 assertions pass at the updated hash dc54cde35203486a"},
+    {"id":"V28-UI-001","title":"GUI chiếu đủ nước, cơn khát và thứ đang chặn sức","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Profile shows hydration and which factor binds capability"},
+    {"id":"V28-UI-002","title":"Nhật ký có câu tiếng Việt cho uống nước và thiếu nước","status":"manual","runner":"../client/lib/main.dart","oracle":"body_drank and body_dehydrated have Vietnamese labels"}
+  ]
+}

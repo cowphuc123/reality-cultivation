@@ -57,7 +57,7 @@ Hồ sơ từng người lớn hiện cân nặng, phần thiếu so với lúc 
 ## Kiểm chứng đã chạy
 
 - `dart analyze` và `flutter analyze`: sạch.
-- Runner V2.7 đạt tới ngày 6; lưu lúc ngày 3 khi dự trữ đã vơi rồi chạy tiếp cho cùng hash `e59171aea8e9867b`.
+- Runner V2.7 đạt tới ngày 6; lưu lúc ngày 3 khi dự trữ đã vơi rồi chạy tiếp cho cùng hash. Hash ban đầu là `e59171aea8e9867b`; từ V2.8 đổi thành `dc54cde35203486a` khi nước có hậu quả, xem [[K5_15_V2_8_NUOC_VA_CON_KHAT]]. Mọi điều kiện V2.7 vẫn đạt.
 - **Mười một runner V0–V2.6 giữ nguyên hash.** Lần này cần một bước cẩn thận: sổ giờ lao động ban đầu ghi cho mọi người có hồ sơ sức lực, làm đổi hash V2.5/V2.6; đã sửa để chỉ ghi khi người đó thật sự có cơ thể cần nuôi.
 - Catalog `game/artifacts/conditions/v2_7_adult_body.json` có 22 điều kiện.
 - 11/11 widget test đạt, gồm bài mới cho bữa ăn nuôi cơ thể.

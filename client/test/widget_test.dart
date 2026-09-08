@@ -505,4 +505,64 @@ void main() {
     expect(find.byKey(const Key('person-profile-N01')), findsOneWidget);
     expect(find.byKey(const Key('person-profile-N03')), findsOneWidget);
   });
+  testWidgets('adults drink from the household store and thirst has teeth', (
+    WidgetTester tester,
+  ) async {
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-world')));
+    await tester.pumpAndSettle();
+
+    final Simulation evening = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(23 * 3600));
+    final AdultBodyState body = evening.state.people['N01']!.body!;
+
+    // Uống nước thật, lấy từ kho hộ, và được ghi lại.
+    expect(body.totalDrunkMl, greaterThan(0));
+    expect(
+      evening.state.facts.any((WorldFact fact) => fact.kind == 'body_drank'),
+      isTrue,
+    );
+    // Sức làm việc do thứ nào thiếu hơn quyết định.
+    expect(
+      body.capability,
+      equals(
+        body.massCapability < body.waterCapability
+            ? body.massCapability
+            : body.waterCapability,
+      ),
+    );
+    // Nhu cầu nước của hộ nay tính cả phần người uống.
+    expect(
+      SimulationHost(evening)
+          .household('H01')!
+          .needs
+          .firstWhere((HouseholdNeed need) => need.kind == 'water')
+          .dailyUse,
+      greaterThan(6000),
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: evening,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('person-profile-N01')), findsOneWidget);
+  });
 }

@@ -11,6 +11,7 @@ class AdultBodyState {
     required this.bodyWaterMl,
     this.totalIntakeKj = 0,
     this.totalBurnedKj = 0,
+    this.totalDrunkMl = 0,
     this.massLostGrams = 0,
   });
 
@@ -41,23 +42,67 @@ class AdultBodyState {
   /// Thừa ngần này kilojoule mới lên được một gam.
   static const int kjPerGramGained = 45;
 
+  /// Nước chiếm ngần này phần nghìn khối lượng khi đủ nước.
+  static const int waterPerMilleOfMass = 600;
+
+  /// Uống nhiều nhất ngần này mỗi ngày, dù thiếu bao nhiêu đi nữa.
+  static const int maxDailyDrinkMl = 3500;
+
   final int massGrams;
   final int healthyMassGrams;
   final int energyReserveKj;
   final int bodyWaterMl;
   final int totalIntakeKj;
   final int totalBurnedKj;
+  final int totalDrunkMl;
   final int massLostGrams;
 
-  /// Sức làm việc còn lại, thang 0–1000.
-  ///
-  /// Đủ cân thì 1000; sụt còn 85% cân nặng khỏe mạnh thì còn một nửa;
-  /// sụt tới 70% thì kiệt hẳn.
-  int get capability {
+  /// Lượng nước khi đủ nước, suy từ khối lượng hiện tại.
+  int get healthyWaterMl => massGrams * waterPerMilleOfMass ~/ 1000;
+
+  /// Mức đủ nước, thang 0–1000.
+  int get hydration {
+    final int target = healthyWaterMl;
+    if (target <= 0) return 1000;
+    return (bodyWaterMl * 1000 ~/ target).clamp(0, 1000);
+  }
+
+  /// Cơn khát suy từ mức đủ nước.
+  int get thirst => 1000 - hydration;
+
+  /// Sức làm việc theo cân nặng: đủ cân 1000, còn 85% thì một nửa, 70% thì kiệt.
+  int get massCapability {
     if (healthyMassGrams <= 0) return 1000;
     final int ratio = massGrams * 1000 ~/ healthyMassGrams;
     return ((ratio - 700) * 1000 ~/ 300).clamp(0, 1000);
   }
+
+  /// Sức làm việc theo nước: mất nước hạ sức nhanh hơn nhiều so với sụt cân.
+  ///
+  /// Đủ nước 1000; còn 90% thì một nửa; xuống 80% là kiệt.
+  int get waterCapability => ((hydration - 800) * 1000 ~/ 200).clamp(0, 1000);
+
+  /// Sức làm việc thật: thứ nào thiếu hơn thì thứ đó quyết định.
+  int get capability =>
+      massCapability < waterCapability ? massCapability : waterCapability;
+
+  /// Thiếu nước tới mức đã ăn vào sức làm việc.
+  ///
+  /// Mốc 900 là chỗ sức làm việc theo nước đã tụt còn một nửa, nên tính luôn
+  /// cả mức biên chứ không chờ thấp hơn nữa.
+  bool get dehydrated => hydration <= 900;
+
+  /// Số mililít cần uống để đủ nước trở lại, đã chặn theo mức uống mỗi ngày.
+  int get drinkNeedMl =>
+      (healthyWaterMl - bodyWaterMl).clamp(0, maxDailyDrinkMl);
+
+  /// Uống vào ngần này nước.
+  AdultBodyState drink(int ml) => ml <= 0
+      ? this
+      : _copy(
+          bodyWaterMl: (bodyWaterMl + ml).clamp(0, massGrams),
+          totalDrunkMl: totalDrunkMl + ml,
+        );
 
   /// Cơn đói suy từ dự trữ còn lại, để dùng chung thang với các trục khác.
   int get hunger =>
@@ -126,6 +171,7 @@ class AdultBodyState {
     int? bodyWaterMl,
     int? totalIntakeKj,
     int? totalBurnedKj,
+    int? totalDrunkMl,
     int? massLostGrams,
   }) => AdultBodyState(
     massGrams: massGrams ?? this.massGrams,
@@ -134,6 +180,7 @@ class AdultBodyState {
     bodyWaterMl: bodyWaterMl ?? this.bodyWaterMl,
     totalIntakeKj: totalIntakeKj ?? this.totalIntakeKj,
     totalBurnedKj: totalBurnedKj ?? this.totalBurnedKj,
+    totalDrunkMl: totalDrunkMl ?? this.totalDrunkMl,
     massLostGrams: massLostGrams ?? this.massLostGrams,
   );
 
@@ -144,6 +191,7 @@ class AdultBodyState {
     'body_water_ml': bodyWaterMl,
     if (totalIntakeKj > 0) 'total_intake_kj': totalIntakeKj,
     if (totalBurnedKj > 0) 'total_burned_kj': totalBurnedKj,
+    if (totalDrunkMl > 0) 'total_drunk_ml': totalDrunkMl,
     if (massLostGrams > 0) 'mass_lost_g': massLostGrams,
   };
 
@@ -154,6 +202,7 @@ class AdultBodyState {
     bodyWaterMl: json['body_water_ml']! as int,
     totalIntakeKj: json['total_intake_kj'] as int? ?? 0,
     totalBurnedKj: json['total_burned_kj'] as int? ?? 0,
+    totalDrunkMl: json['total_drunk_ml'] as int? ?? 0,
     massLostGrams: json['mass_lost_g'] as int? ?? 0,
   );
 }

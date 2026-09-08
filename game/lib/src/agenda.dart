@@ -48,6 +48,7 @@ class PersonAgenda {
   const PersonAgenda({
     this.fatigue = 0,
     this.hunger = 0,
+    this.thirst = 0,
     this.mood = 1000,
     this.nightRecovery = 250,
     this.workedSecondsToday = 0,
@@ -61,6 +62,9 @@ class PersonAgenda {
 
   /// Cơn đói tích lũy, thang 0–1000; ăn được bữa thì hạ xuống.
   final int hunger;
+
+  /// Cơn khát, thang 0–1000; do cơ thể quyết định khi người này có cơ thể.
+  final int thirst;
 
   /// Tâm trạng, thang 0–1000; 1000 là chưa có chuyện gì đáng bực.
   final int mood;
@@ -80,16 +84,21 @@ class PersonAgenda {
   /// Mệt nặng nhất, đói bằng nửa mệt, tâm trạng xấu nhẹ hơn nữa. Người khỏe,
   /// no và không bực thì ngưỡng bằng 0 và nhận mọi việc.
   int get acceptanceFloor =>
-      fatigue ~/ 10 + hunger ~/ 20 + (1000 - mood) ~/ 25;
+      fatigue ~/ 10 + hunger ~/ 20 + thirst ~/ 15 + (1000 - mood) ~/ 25;
 
   /// Lý do lớn nhất khiến người này khó nhận việc lúc này.
   String get mainStrain {
-    final int byFatigue = fatigue ~/ 10;
-    final int byHunger = hunger ~/ 20;
-    final int byMood = (1000 - mood) ~/ 25;
-    if (byFatigue >= byHunger && byFatigue >= byMood) return 'mệt';
-    if (byHunger >= byMood) return 'đói';
-    return 'bực';
+    final Map<String, int> strains = <String, int>{
+      'mệt': fatigue ~/ 10,
+      'khát': thirst ~/ 15,
+      'đói': hunger ~/ 20,
+      'bực': (1000 - mood) ~/ 25,
+    };
+    String worst = 'mệt';
+    for (final MapEntry<String, int> entry in strains.entries) {
+      if (entry.value > strains[worst]!) worst = entry.key;
+    }
+    return worst;
   }
 
   bool accepts(int priority) => priority >= acceptanceFloor;
@@ -116,6 +125,9 @@ class PersonAgenda {
   /// Cơn đói do cơ thể quyết định thay vì đếm bữa.
   PersonAgenda withHunger(int value) => _copy(hunger: value.clamp(0, 1000));
 
+  /// Cơn khát do cơ thể quyết định.
+  PersonAgenda withThirst(int value) => _copy(thirst: value.clamp(0, 1000));
+
   /// Thời gian trôi giữa hai bữa và phần được ăn nếu bữa nấu xong.
   PersonAgenda atMeal({required bool fed}) => _copy(
     hunger: (hunger + 220 - (fed ? 400 : 0)).clamp(0, 1000),
@@ -141,6 +153,7 @@ class PersonAgenda {
   PersonAgenda _copy({
     int? fatigue,
     int? hunger,
+    int? thirst,
     int? mood,
     int? workedSecondsToday,
     int? acceptedOffers,
@@ -149,6 +162,7 @@ class PersonAgenda {
   }) => PersonAgenda(
     fatigue: fatigue ?? this.fatigue,
     hunger: hunger ?? this.hunger,
+    thirst: thirst ?? this.thirst,
     mood: mood ?? this.mood,
     nightRecovery: nightRecovery,
     workedSecondsToday: workedSecondsToday ?? this.workedSecondsToday,
@@ -160,6 +174,7 @@ class PersonAgenda {
   Map<String, Object?> toJson() => <String, Object?>{
     if (fatigue > 0) 'fatigue': fatigue,
     if (hunger > 0) 'hunger': hunger,
+    if (thirst > 0) 'thirst': thirst,
     if (mood != 1000) 'mood': mood,
     if (nightRecovery != 250) 'night_recovery': nightRecovery,
     if (workedSecondsToday > 0) 'worked_seconds_today': workedSecondsToday,
@@ -171,6 +186,7 @@ class PersonAgenda {
   factory PersonAgenda.fromJson(Map<String, Object?> json) => PersonAgenda(
     fatigue: json['fatigue'] as int? ?? 0,
     hunger: json['hunger'] as int? ?? 0,
+    thirst: json['thirst'] as int? ?? 0,
     mood: json['mood'] as int? ?? 1000,
     nightRecovery: json['night_recovery'] as int? ?? 250,
     workedSecondsToday: json['worked_seconds_today'] as int? ?? 0,

@@ -885,10 +885,27 @@ class Simulation {
       final AdultBodyDayResult result = body.advanceDay(
         workedSeconds: agenda.workedSecondsToday,
       );
-      final AdultBodyState settled = result.body.recover();
+      AdultBodyState settled = result.body.recover();
+      // Uống nước lấy từ kho hộ, phải có quyền và kho phải còn.
+      final int wanted = settled.drinkNeedMl;
+      if (wanted > 0) {
+        final int drunk = _drawWater(household, memberId, wanted);
+        if (drunk > 0) {
+          settled = settled.drink(drunk);
+          facts.add(
+            _fact(
+              'body_drank',
+              memberId,
+              'ml=$drunk wanted=$wanted hydration=${settled.hydration}',
+            ),
+          );
+        }
+      }
       updated[memberId] = member
           .withBody(settled)
-          .withAgenda(agenda.withHunger(settled.hunger));
+          .withAgenda(
+            agenda.withHunger(settled.hunger).withThirst(settled.thirst),
+          );
       changed = true;
       if (result.lostGrams > 0) {
         facts.add(
@@ -901,8 +918,39 @@ class Simulation {
           ),
         );
       }
+      if (settled.dehydrated) {
+        facts.add(
+          _fact(
+            'body_dehydrated',
+            memberId,
+            'hydration=${settled.hydration} thirst=${settled.thirst} '
+                'capability=${settled.capability}',
+          ),
+        );
+      }
     }
     if (changed) _replace(people: updated, facts: facts);
+  }
+
+  /// Rút nước uống khỏi kho hộ, trả về số mililít thật sự lấy được.
+  ///
+  /// Không có quyền dùng kho hoặc kho đã cạn thì lấy được ít hơn mong muốn,
+  /// và người đó phải chịu khát.
+  int _drawWater(HouseholdState household, String personId, int wantedMl) {
+    final String? itemId = household.resourceItemIds['water'];
+    if (itemId == null) return 0;
+    if (!household.canUse(personId, itemId)) return 0;
+    final CareItemState? item = _state.items[itemId];
+    if (item == null || item.quantity <= 0) return 0;
+    final int drawn = wantedMl.clamp(0, item.quantity);
+    if (drawn <= 0) return 0;
+    _replace(
+      items: <String, CareItemState>{
+        ..._state.items,
+        itemId: item.consume(drawn),
+      },
+    );
+    return drawn;
   }
 
   /// Hộ của người này có theo dõi tay nghề, cơn đói và tâm trạng hay không.
@@ -967,6 +1015,19 @@ class Simulation {
         'food': ('kiếm lương thực', 5 * 3600, 3000, 'ROOM-YARD'),
       };
 
+  /// Người lớn có cơ thể uống chừng này nước mỗi ngày ngoài bữa ăn.
+  static const int _dailyDrinkMlPerAdult = 2500;
+
+  /// Nhịp tiêu thụ thật mỗi ngày, tính cả phần người trong hộ uống.
+  int _dailyUse(String key, HouseholdState household) {
+    final int base = _dailyUseByResource[key]!;
+    if (key != 'water') return base;
+    final int drinkers = household.memberIds
+        .where((String memberId) => _state.people[memberId]?.body != null)
+        .length;
+    return base + drinkers * _dailyDrinkMlPerAdult;
+  }
+
   /// Nhu cầu vật chất của hộ, suy từ tồn kho thật tại thời điểm gọi.
   List<HouseholdNeed> householdNeeds(String householdId) {
     final HouseholdState? household = _state.households[householdId];
@@ -981,7 +1042,7 @@ class Simulation {
           kind: key,
           resourceKey: key,
           quantity: item.quantity,
-          dailyUse: _dailyUseByResource[key]!,
+          dailyUse: _dailyUse(key, household),
           horizonDays: _supplyHorizonDays,
         ),
       );
