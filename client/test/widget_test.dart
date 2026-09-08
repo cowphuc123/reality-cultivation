@@ -42,7 +42,7 @@ void main() {
     await tester.tap(find.byKey(const Key('nav-2')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('household-panel')), findsOneWidget);
-    expect(find.text('50000 g'), findsWidgets);
+    expect(find.text('15000 g'), findsWidgets);
     expect(find.byKey(const Key('member-profile-N01')), findsOneWidget);
     expect(find.byKey(const Key('item-profile-I-FOOD-01')), findsOneWidget);
     await tester.tap(find.byKey(const Key('nav-4')));
@@ -280,7 +280,7 @@ void main() {
     expect(find.textContaining('1 người sống ngoài hộ'), findsOneWidget);
   });
 
-  testWidgets('a schedule conflict pushes lunch back and is visible', (
+  testWidgets('household needs generate work and priority settles clashes', (
     WidgetTester tester,
   ) async {
     final MemorySaveRepository repository = MemorySaveRepository();
@@ -295,17 +295,28 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('save-world')));
     await tester.pumpAndSettle();
-    final Simulation afternoon = Simulation.fromSave(repository.value!)
-      ..advanceTo(const SimTime(13 * 3600 + 30 * 60));
+
+    final Simulation morning = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(8 * 3600));
+
+    // Hộ tự rà tồn kho rồi giao việc, không có ai viết sẵn lịch này.
     expect(
-      afternoon.state.facts.any(
-        (WorldFact fact) => fact.kind == 'household_meal_deferred',
+      morning.state.facts.any(
+        (WorldFact fact) => fact.kind == 'household_plan_made',
       ),
       isTrue,
     );
+    // Việc gấp hơn giành chỗ của khối cố định ưu tiên thấp hơn.
     expect(
-      afternoon.state.people['N02']!.routine!.conflictCount,
-      greaterThan(0),
+      morning.state.people['N03']!.routine!.conflicts.any(
+        (ScheduleConflict value) => value.resolution == 'outranked',
+      ),
+      isTrue,
+    );
+    // Khối bị nhường chỗ vẫn là việc do nhu cầu thật sinh ra.
+    expect(
+      morning.state.people['N03']!.routine!.activeBlock?.needKind,
+      isNotNull,
     );
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -315,22 +326,23 @@ void main() {
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
-        initialSimulation: afternoon,
+        initialSimulation: morning,
       ),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('nav-2')));
     await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('plan-panel')), findsOneWidget);
+    expect(find.textContaining('ngày dùng'), findsWidgets);
+    expect(find.textContaining('vì thiếu'), findsWidgets);
     expect(find.text('Xung đột lịch'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav-3')));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ChoiceChip, 'Nhịp sống'));
     await tester.pump();
-    expect(
-      find.text('Bắt đầu một khối việc trong ngày'),
-      findsWidgets,
-    );
+    expect(find.text('Hộ lập kế hoạch trong ngày'), findsWidgets);
     expect(find.text('Hộ hoàn tất bữa ăn'), findsNothing);
   });
 }

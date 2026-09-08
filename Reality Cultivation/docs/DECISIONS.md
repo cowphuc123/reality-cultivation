@@ -44,6 +44,8 @@ Lịch sử đầy đủ từng lượt việc — tài liệu nào thêm gì, s
 
 ## Diễn biến gần nhất
 
+Ngày 2026-09-08: hoàn thành V2.4 tại [[K5_11_V2_4_NHU_CAU_SINH_VIEC_VA_UU_TIEN]]. Kế hoạch nay là của **hộ**, chưa phải của từng NPC: chưa có mục tiêu cá nhân, chưa thương lượng, chưa từ chối việc, và chưa có mô hình kỹ năng nghề nên người nấu ăn có thể bị giao đi kiếm củi nếu rảnh hơn. Ngưỡng 12 ngày dự trữ, nhịp tiêu thụ, thời lượng/sản lượng từng loại việc là fixture chưa duyệt. Đã sửa lỗi nuốt khối của V2.3 nên hash runner V2.3 đổi từ `8df759ae2a42eca0` sang `ade0b8a4300276c9`; đây là hệ quả sửa lỗi, mọi điều kiện V2.3 vẫn đạt.
+
 Ngày 2026-09-08: hoàn thành V2.3 tại [[K5_10_V2_3_NHIP_SONG_NPC_VA_HO_SO_THE_GIOI]]. Nhịp sống hiện là bảng giờ cố định, **không phải** kế hoạch NPC tự lập — không giảm tham vọng NPC tự trị của U004/K4.6. Trường `priority` có trong dữ liệu nhưng chưa dùng để phân xử. Việc mở hồ sơ toàn thế giới đáp ứng U015 ở phạm vi dữ liệu đã mô phỏng, không tạo số liệu cho hệ chưa có.
 
 Ngày 2026-09-08: đăng kho công khai `github.com/cowphuc123/reality-cultivation` và bản web tự động tại `cowphuc123.github.io/reality-cultivation` qua GitHub Actions. Đây là hạ tầng lưu trữ/phân phối, không phải quyết định thiết kế.

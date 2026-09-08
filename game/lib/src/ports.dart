@@ -191,6 +191,7 @@ class HouseholdView {
     required this.supplyJourneys,
     required this.members,
     required this.items,
+    required this.needs,
   });
 
   final String id;
@@ -209,6 +210,29 @@ class HouseholdView {
   final List<SupplyJourneyView> supplyJourneys;
   final List<HouseholdMemberView> members;
   final List<HouseholdItemView> items;
+
+  /// Nhu cầu vật chất suy từ tồn kho thật, đã xếp theo mức gấp.
+  final List<HouseholdNeed> needs;
+
+  /// Các khối việc do kế hoạch của hộ sinh ra cho hôm nay.
+  List<(String, RoutineBlock)> get plannedWork => <(String, RoutineBlock)>[
+    for (final HouseholdMemberView member in members)
+      for (final RoutineBlock block
+          in member.routine?.blocks.where(
+                (RoutineBlock block) => block.generated,
+              ) ??
+              const <RoutineBlock>[])
+        (member.name, block),
+  ]..sort(
+    ((String, RoutineBlock) a, (String, RoutineBlock) b) =>
+        a.$2.startSecondOfDay.compareTo(b.$2.startSecondOfDay),
+  );
+
+  int get scheduleConflicts => members.fold(
+    0,
+    (int total, HouseholdMemberView member) =>
+        total + (member.routine?.conflictCount ?? 0),
+  );
 }
 
 class HouseholdMemberView {
@@ -240,6 +264,7 @@ class RoutineSummaryView {
     required this.completedBlocks,
     required this.deferredStarts,
     required this.droppedBlocks,
+    required this.outrankedBlocks,
     required this.lostSeconds,
     required this.conflictCount,
     required this.conflicts,
@@ -252,6 +277,7 @@ class RoutineSummaryView {
     completedBlocks: state.completedBlocks,
     deferredStarts: state.deferredStarts,
     droppedBlocks: state.droppedBlocks,
+    outrankedBlocks: state.outrankedBlocks,
     lostSeconds: state.lostSeconds,
     conflictCount: state.conflictCount,
     conflicts: List<ScheduleConflict>.unmodifiable(state.conflicts),
@@ -263,6 +289,7 @@ class RoutineSummaryView {
   final int completedBlocks;
   final int deferredStarts;
   final int droppedBlocks;
+  final int outrankedBlocks;
   final int lostSeconds;
   final int conflictCount;
   final List<ScheduleConflict> conflicts;
@@ -718,6 +745,7 @@ class SimulationHost implements CommandPort, QueryPort {
                   : RoutineSummaryView.of(person.routine!),
             ),
       ],
+      needs: simulation.householdNeeds(id),
       items: <HouseholdItemView>[
         for (final String itemId in household.resourceItemIds.values)
           if (simulation.state.items[itemId] case final CareItemState item)

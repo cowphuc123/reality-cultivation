@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-4-need-driven-plan",
+  "conditions": [
+    {"id":"V24-NEED-001","title":"Nhu cầu suy từ tồn kho thật, không viết sẵn","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Fuel reports five days and water eight days from real quantities"},
+    {"id":"V24-NEED-002","title":"Thiếu nhiều hơn thì ưu tiên cao hơn","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Fuel outranks water and sorts first"},
+    {"id":"V24-NEED-003","title":"Kho còn đủ thì không sinh việc","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Needs above the horizon report urgency zero"},
+    {"id":"V24-PLAN-001","title":"Hộ lập kế hoạch mỗi ngày từ nhu cầu hiện tại","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"household_plan_made records three needs on day zero"},
+    {"id":"V24-PLAN-002","title":"Việc chia cho nhiều người theo quyền và giờ trống","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Fuel to N02, water to N01, food to N03"},
+    {"id":"V24-PLAN-003","title":"Khối sinh ra nhớ nhu cầu đã tạo ra nó","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Generated block carries needKind food"},
+    {"id":"V24-PLAN-004","title":"Kế hoạch tránh khối cố định có ưu tiên cao hơn","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Fuel work starts after the breakfast block instead of over it"},
+    {"id":"V24-PLAN-005","title":"Không ai đủ quyền thì ghi thiếu người, không bịa","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"household_need_unstaffed fires and no fuel block is assigned"},
+    {"id":"V24-PRIO-001","title":"Việc gấp giành chỗ của khối ưu tiên thấp hơn","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Roof repair is outranked by the food run"},
+    {"id":"V24-PRIO-002","title":"Lần giành chỗ được ghi thành xung đột có số giây mất","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Conflict resolution outranked carries lost seconds"},
+    {"id":"V24-PRIO-003","title":"Khối ưu tiên thấp bị lùi giờ chứ không bị nuốt","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"May va defers twice then actually starts"},
+    {"id":"V24-PRIO-004","title":"Khối cố định nối đuôi nhau đều được tính là xong","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Back-to-back blocks both count as completed"},
+    {"id":"V24-WORK-001","title":"Làm trọn khối thì giao đủ sản lượng vào kho","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Water run delivers the full 18000 ml"},
+    {"id":"V24-WORK-002","title":"Kho tăng thật sau khi việc hoàn tất","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Water item quantity rises beyond consumption"},
+    {"id":"V24-WORK-003","title":"Bị cắt ngang thì sản lượng giảm theo giờ đã mất","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Food run delivers 2898 of 3000 after 612 lost seconds"},
+    {"id":"V24-WORK-004","title":"Chính người bị cắt ngang là người đi chăm trẻ bệnh","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Substitute caregiver N02 is the interrupted worker"},
+    {"id":"V24-LOOP-001","title":"Làm xong thì số ngày dự trữ tăng lên","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Water days of supply grow after day zero"},
+    {"id":"V24-LOOP-002","title":"Bớt gấp thì ưu tiên hôm sau thấp hơn","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Day-one water priority is below day-zero priority"},
+    {"id":"V24-SAVE-001","title":"Lưu giữa lúc kế hoạch đang chạy tái hiện đúng","status":"automated","runner":"tool/verify_v2_4_need_driven_plan.dart","oracle":"Continuous and restored day-four hashes both equal 5b36f570a39e4bde"},
+    {"id":"V24-REGRESSION-001","title":"V0 đến V2.2 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart; tool/verify_v1_infancy.dart; tool/verify_v1_care_chain.dart; tool/verify_v1_body.dart; tool/verify_v2_household.dart; tool/verify_v2_1_household_health.dart; tool/verify_v2_2_transport_substitution.dart","oracle":"All seven earlier runners pass with unchanged hashes"},
+    {"id":"V24-REGRESSION-002","title":"V2.3 đạt lại sau khi sửa lỗi nuốt khối","status":"automated","runner":"tool/verify_v2_3_routine_directory.dart","oracle":"All V2.3 assertions pass at the corrected hash ade0b8a4300276c9"},
+    {"id":"V24-UI-001","title":"GUI chiếu nhu cầu và việc đã giao hôm nay","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Plan panel shows days of supply and the reason for each assignment"},
+    {"id":"V24-UI-002","title":"Nhật ký lọc được các mốc lập kế hoạch","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Routine filter shows household_plan_made and hides meal facts"}
+  ]
+}

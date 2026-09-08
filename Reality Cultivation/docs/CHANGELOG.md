@@ -1,5 +1,17 @@
 # Nhật ký dự án
 
+## 2026-09-08 — K5.11: V2.4 nhu cầu sinh việc và ưu tiên phân xử
+
+- Hộ tự tính số ngày dự trữ từ tồn kho thật rồi sinh nhu cầu; mức gấp thành ưu tiên của khối việc. Củi 5 ngày (ưu tiên 69), nước 8 ngày (56), lương thực 10 ngày (48).
+- Kế hoạch mỗi sáng 05:00 giao việc theo quyền dùng kho và giờ trống, chia cho ba người thay vì dồn một người; không ai đủ quyền thì ghi `household_need_unstaffed` chứ không bịa.
+- `priority` nay thật sự phân xử: việc gấp được xếp đè lên khối ưu tiên thấp hơn và giành chỗ khi chạy (`outranked`); khối yếu hơn lùi giờ tối đa ba lần.
+- Làm xong thì hàng vào kho thật; bị cắt ngang thì sản lượng chia theo số giây thật sự làm. Ngày 3 N02 bị điều đi chăm trẻ bệnh giữa khối kiếm lương thực, mất 612 giây nên chỉ giao 2.898/3.000 g.
+- **Sửa lỗi nuốt khối**: khối kế tiếp bắt đầu cùng giây khối trước kết thúc thì ghi đè `activeBlockId`, làm khối trước biến mất khỏi sổ. N01 ở V2.3 chỉ được ghi 7/12 khối. Nay đã xử lý rõ ràng; N01 được ghi 11 khối.
+- Vì lỗi trên, hash runner V2.3 đổi `8df759ae2a42eca0` → `ade0b8a4300276c9`. Mọi điều kiện V2.3 vẫn đạt; bảy runner V0–V2.2 giữ nguyên hash.
+- Runner V2.4 đạt ngày 4 hash `5b36f570a39e4bde`; lưu giữa lúc kế hoạch đang chạy tái hiện đúng. Catalog 23 điều kiện.
+- GUI thêm khu vực Nhu cầu & kế hoạch hôm nay trên trang Hộ, bảy nhãn sự kiện tiếng Việt mới; 8/8 widget test đạt; web release đã đóng gói lại.
+- Thêm [[K5_11_V2_4_NHU_CAU_SINH_VIEC_VA_UU_TIEN]].
+
 ## 2026-09-08 — Rút gọn STATE.md và DECISIONS.md
 
 - STATE.md: thay danh sách tường thuật 30+ mục bằng một bảng bản K5 (V0–V2.3) kèm hash, cộng tóm tắt một dòng cho K0–K4 (1.860 điều kiện/41 họ). 186 dòng → 51 dòng.

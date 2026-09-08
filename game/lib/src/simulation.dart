@@ -668,6 +668,8 @@ class Simulation {
         _applyCaregiverArrives(event);
       case 'caregiver_uses_supplies':
         _applyCaregiverUsesSupplies(event);
+      case 'household_planning':
+        _applyHouseholdPlanning(event);
       case 'routine_block_started':
         _applyRoutineBlockStarted(event);
       case 'routine_block_ended':
@@ -784,12 +786,12 @@ class Simulation {
 
   RoutineState? _routineFromPayload(Object? payload) {
     if (payload is! List) return null;
-    final List<RoutineBlock> blocks = <RoutineBlock>[
-      for (final Object? raw in payload)
-        RoutineBlock.fromJson((raw! as Map).cast<String, Object?>()),
-    ];
-    if (blocks.isEmpty) return null;
-    return RoutineState(blocks: blocks);
+    return RoutineState(
+      blocks: <RoutineBlock>[
+        for (final Object? raw in payload)
+          RoutineBlock.fromJson((raw! as Map).cast<String, Object?>()),
+      ],
+    );
   }
 
   void _scheduleRoutineStarts(String personId) {
@@ -819,6 +821,244 @@ class Simulation {
     return null;
   }
 
+  /// Nhịp tiêu thụ mỗi ngày của hộ, dùng để suy ra số ngày còn dùng được.
+  static const Map<String, int> _dailyUseByResource = <String, int>{
+    'food': 1500,
+    'water': 6000,
+    'fuel': 900,
+  };
+
+  /// Còn dưới ngần này ngày dự trữ thì nhu cầu bắt đầu sinh việc.
+  static const int _supplyHorizonDays = 12;
+
+  /// Việc do kế hoạch sinh ra: thời lượng, phòng và sản lượng nếu làm trọn.
+  static const Map<String, (String, int, int, String)> _workByResource =
+      <String, (String, int, int, String)>{
+        'fuel': ('kiếm củi', 4 * 3600, 2400, 'ROOM-YARD'),
+        'water': ('gánh nước', 5400, 18000, 'ROOM-YARD'),
+        'food': ('kiếm lương thực', 5 * 3600, 3000, 'ROOM-YARD'),
+      };
+
+  /// Nhu cầu vật chất của hộ, suy từ tồn kho thật tại thời điểm gọi.
+  List<HouseholdNeed> householdNeeds(String householdId) {
+    final HouseholdState? household = _state.households[householdId];
+    if (household == null) return const <HouseholdNeed>[];
+    final List<HouseholdNeed> needs = <HouseholdNeed>[];
+    for (final String key in _dailyUseByResource.keys.toList()..sort()) {
+      final String? itemId = household.resourceItemIds[key];
+      final CareItemState? item = itemId == null ? null : _state.items[itemId];
+      if (item == null) continue;
+      needs.add(
+        HouseholdNeed(
+          kind: key,
+          resourceKey: key,
+          quantity: item.quantity,
+          dailyUse: _dailyUseByResource[key]!,
+          horizonDays: _supplyHorizonDays,
+        ),
+      );
+    }
+    needs.sort((HouseholdNeed a, HouseholdNeed b) {
+      final int byUrgency = b.urgency.compareTo(a.urgency);
+      return byUrgency != 0 ? byUrgency : a.kind.compareTo(b.kind);
+    });
+    return List<HouseholdNeed>.unmodifiable(needs);
+  }
+
+  void _applyHouseholdPlanning(ScheduledEvent event) {
+    final String householdId = event.payload['household_id']! as String;
+    final HouseholdState? household = _state.households[householdId];
+    if (household == null) return;
+    final int day = _state.now.day;
+    final SimTime tomorrow = event.due.addDays(1);
+    if (tomorrow.seconds < 30 * gameSecondsPerDay) {
+      schedule(
+        due: tomorrow,
+        phase: EventPhase.intent,
+        kind: 'household_planning',
+        payload: event.payload,
+      );
+    }
+    final List<HouseholdNeed> needs = householdNeeds(
+      householdId,
+    ).where((HouseholdNeed need) => need.needed).toList();
+    // Xóa kế hoạch hôm trước trước khi lập kế hoạch mới.
+    final Map<String, PersonState> people = <String, PersonState>{
+      ..._state.people,
+    };
+    final Map<String, List<RoutineBlock>> planned =
+        <String, List<RoutineBlock>>{};
+    for (final String memberId in household.memberIds) {
+      final PersonState? member = people[memberId];
+      if (member?.routine == null) continue;
+      planned[memberId] = <RoutineBlock>[];
+    }
+    final List<String> lines = <String>[];
+    for (final HouseholdNeed need in needs) {
+      final (String, int, int, String)? work =
+          _workByResource[need.resourceKey];
+      if (work == null) continue;
+      final String? itemId = household.resourceItemIds[need.resourceKey];
+      if (itemId == null) continue;
+      final String? assignee = _chooseWorker(
+        household: household,
+        itemId: itemId,
+        planned: planned,
+        durationSeconds: work.$2,
+      );
+      if (assignee == null) {
+        lines.add('${need.kind}:khong-co-nguoi');
+        _replace(
+          facts: <WorldFact>[
+            ..._state.facts,
+            _fact(
+              'household_need_unstaffed',
+              householdId,
+              'need=${need.kind} days=${need.daysOfSupply} '
+                  'urgency=${need.urgency}',
+            ),
+          ],
+        );
+        continue;
+      }
+      final int? startSecond = _freeSlot(
+        person: people[assignee]!,
+        planned: planned[assignee]!,
+        durationSeconds: work.$2,
+        priority: need.priority,
+      );
+      if (startSecond == null) {
+        lines.add('${need.kind}:khong-con-gio');
+        _replace(
+          facts: <WorldFact>[
+            ..._state.facts,
+            _fact(
+              'household_need_unscheduled',
+              householdId,
+              'need=${need.kind} actor=$assignee urgency=${need.urgency}',
+            ),
+          ],
+        );
+        continue;
+      }
+      final RoutineBlock block = RoutineBlock(
+        id: 'GEN-${need.kind.toUpperCase()}-D$day',
+        activity: work.$1,
+        startSecondOfDay: startSecond,
+        durationSeconds: work.$2,
+        roomId: work.$4,
+        priority: need.priority,
+        needKind: need.kind,
+        outputResource: need.resourceKey,
+        outputAmount: work.$3,
+        planDay: day,
+      );
+      planned[assignee]!.add(block);
+      lines.add(
+        '${need.kind}:$assignee@${startSecond ~/ 3600}h/p${need.priority}',
+      );
+    }
+    for (final MapEntry<String, List<RoutineBlock>> entry in planned.entries) {
+      final PersonState? member = _state.people[entry.key];
+      final RoutineState? routine = member?.routine;
+      if (member == null || routine == null) continue;
+      people[entry.key] = member.withRoutine(
+        routine.withGeneratedBlocks(entry.value),
+      );
+    }
+    _replace(
+      people: people,
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'household_plan_made',
+          householdId,
+          'day=$day needs=${needs.length} '
+              'plan=${lines.isEmpty ? 'khong-co-viec' : lines.join(',')}',
+        ),
+      ],
+    );
+    for (final MapEntry<String, List<RoutineBlock>> entry in planned.entries) {
+      for (final RoutineBlock block in entry.value) {
+        final int due =
+            (_state.now.seconds ~/ gameSecondsPerDay) * gameSecondsPerDay +
+            block.startSecondOfDay;
+        if (due < _state.now.seconds) continue;
+        schedule(
+          due: SimTime(due),
+          phase: EventPhase.intent,
+          kind: 'routine_block_started',
+          payload: <String, Object?>{
+            'person_id': entry.key,
+            'block_id': block.id,
+          },
+        );
+      }
+    }
+  }
+
+  /// Người trong hộ có quyền chạm vào kho và còn ít giờ đã nhận nhất.
+  String? _chooseWorker({
+    required HouseholdState household,
+    required String itemId,
+    required Map<String, List<RoutineBlock>> planned,
+    required int durationSeconds,
+  }) {
+    final List<String> candidates =
+        planned.keys.where((String personId) {
+          final PersonState? person = _state.people[personId];
+          if (person == null || person.infancy != null) return false;
+          if (person.caregiverAgent?.available == false) return false;
+          return household.canUse(personId, itemId);
+        }).toList()..sort((String a, String b) {
+          final int loadA = planned[a]!.fold(
+            0,
+            (int total, RoutineBlock block) => total + block.durationSeconds,
+          );
+          final int loadB = planned[b]!.fold(
+            0,
+            (int total, RoutineBlock block) => total + block.durationSeconds,
+          );
+          final int byLoad = loadA.compareTo(loadB);
+          return byLoad != 0 ? byLoad : a.compareTo(b);
+        });
+    return candidates.firstOrNull;
+  }
+
+  /// Giờ trống sớm nhất trong ngày.
+  ///
+  /// Khối cố định có ưu tiên thấp hơn việc đang xếp không được coi là vướng:
+  /// việc gấp hơn được phép đè lên, và lúc chạy sẽ giành chỗ qua [RoutineState.outrank].
+  /// Việc đã xếp trong cùng kế hoạch thì luôn là vướng, không tự chồng lên nhau.
+  int? _freeSlot({
+    required PersonState person,
+    required List<RoutineBlock> planned,
+    required int durationSeconds,
+    required int priority,
+  }) {
+    const int earliest = 6 * 3600;
+    const int latest = 20 * 3600;
+    final List<RoutineBlock> taken = <RoutineBlock>[
+      ...person.routine!.fixedBlocks.where(
+        (RoutineBlock block) => block.priority >= priority,
+      ),
+      ...planned,
+    ];
+    for (int start = earliest; start + durationSeconds <= latest;
+        start += 1800) {
+      final RoutineBlock probe = RoutineBlock(
+        id: 'probe',
+        activity: 'probe',
+        startSecondOfDay: start,
+        durationSeconds: durationSeconds,
+      );
+      if (taken.every((RoutineBlock block) => !block.overlaps(probe))) {
+        return start;
+      }
+    }
+    return null;
+  }
+
   void _applyRoutineBlockStarted(ScheduledEvent event) {
     final String personId = event.payload['person_id']! as String;
     final String blockId = event.payload['block_id']! as String;
@@ -827,7 +1067,9 @@ class Simulation {
     final RoutineState? routine = person?.routine;
     final RoutineBlock? block = routine?.blockById(blockId);
     if (person == null || routine == null || block == null) return;
-    if (attempt == 0) {
+    // Khối do kế hoạch sinh ra chỉ có hiệu lực trong ngày đã lập.
+    if (block.planDay != null && block.planDay != _state.now.day) return;
+    if (attempt == 0 && block.planDay == null) {
       final SimTime tomorrow = event.due.addDays(1);
       if (tomorrow.seconds < 30 * gameSecondsPerDay) {
         schedule(
@@ -843,48 +1085,63 @@ class Simulation {
     }
     final String? competing = _competingObligation(person);
     if (competing != null) {
-      final bool canDefer = attempt < _routineMaxDeferrals;
-      final RoutineState next = canDefer
-          ? routine.deferStart(
-              nowSeconds: _state.now.seconds,
-              blockId: blockId,
-              competingActivity: competing,
-            )
-          : routine.dropStart(
-              nowSeconds: _state.now.seconds,
-              blockId: blockId,
-              competingActivity: competing,
-            );
-      _replace(
-        people: <String, PersonState>{
-          ..._state.people,
-          personId: person.withRoutine(next),
-        },
-        facts: <WorldFact>[
-          ..._state.facts,
-          _fact(
-            canDefer ? 'routine_block_deferred' : 'routine_block_dropped',
-            personId,
-            'block=$blockId planned=${block.activity} competing=$competing',
-          ),
-        ],
+      _deferOrDropBlock(
+        personId: personId,
+        blockId: blockId,
+        block: block,
+        attempt: attempt,
+        competing: competing,
       );
-      if (canDefer) {
-        schedule(
-          due: _state.now.addSeconds(_routineDeferSeconds),
-          phase: EventPhase.intent,
-          kind: 'routine_block_started',
-          payload: <String, Object?>{
-            'person_id': personId,
-            'block_id': blockId,
-            'attempt': attempt + 1,
-          },
-        );
-      }
       return;
     }
+    // Một khối khác đang chạy: phân xử bằng ưu tiên thay vì ghi đè im lặng.
+    RoutineState working = routine;
+    final RoutineBlock? active = routine.activeBlock;
+    if (active != null && active.id != blockId) {
+      final int plannedEnd =
+          routine.activePlannedEndSeconds ?? _state.now.seconds;
+      if (plannedEnd <= _state.now.seconds) {
+        // Khối cũ đã hết giờ, đóng bình thường rồi mới sang khối mới.
+        working = _finishBlock(personId, routine, active);
+      } else if (block.priority > active.priority) {
+        working = working.outrank(
+          nowSeconds: _state.now.seconds,
+          byActivity: block.activity,
+          lostSeconds: plannedEnd - _state.now.seconds,
+        );
+        _replace(
+          facts: <WorldFact>[
+            ..._state.facts,
+            _fact(
+              'routine_block_outranked',
+              personId,
+              'block=${active.id} priority=${active.priority} '
+                  'by=$blockId priority=${block.priority}',
+            ),
+          ],
+        );
+      } else {
+        _deferOrDropBlock(
+          personId: personId,
+          blockId: blockId,
+          block: block,
+          attempt: attempt,
+          competing: active.activity,
+        );
+        return;
+      }
+    }
+    final int today =
+        (_state.now.seconds ~/ gameSecondsPerDay) * gameSecondsPerDay;
+    final int plannedEnd = today + block.endSecondOfDay;
     PersonState next = person.withRoutine(
-      routine.startBlock(blockId, _state.now.seconds),
+      working.startBlock(
+        blockId: blockId,
+        nowSeconds: _state.now.seconds,
+        plannedEndSeconds: plannedEnd > _state.now.seconds
+            ? plannedEnd
+            : _state.now.seconds + 60,
+      ),
     );
     final RoomState? room = block.roomId == null
         ? null
@@ -909,13 +1166,11 @@ class Simulation {
           personId,
           'block=$blockId activity=${block.activity} '
               'room=${block.roomId ?? 'unspecified'}'
+              '${block.needKind != null ? ' need=${block.needKind}' : ''}'
               '${attempt > 0 ? ' late_attempt=$attempt' : ''}',
         ),
       ],
     );
-    final int today =
-        (_state.now.seconds ~/ gameSecondsPerDay) * gameSecondsPerDay;
-    final int plannedEnd = today + block.endSecondOfDay;
     schedule(
       due: SimTime(
         plannedEnd > _state.now.seconds ? plannedEnd : _state.now.seconds + 60,
@@ -926,6 +1181,131 @@ class Simulation {
     );
   }
 
+  void _deferOrDropBlock({
+    required String personId,
+    required String blockId,
+    required RoutineBlock block,
+    required int attempt,
+    required String competing,
+  }) {
+    final PersonState person = _state.people[personId]!;
+    final RoutineState routine = person.routine!;
+    final bool canDefer = attempt < _routineMaxDeferrals;
+    final RoutineState next = canDefer
+        ? routine.deferStart(
+            nowSeconds: _state.now.seconds,
+            blockId: blockId,
+            competingActivity: competing,
+          )
+        : routine.dropStart(
+            nowSeconds: _state.now.seconds,
+            blockId: blockId,
+            competingActivity: competing,
+          );
+    _replace(
+      people: <String, PersonState>{
+        ..._state.people,
+        personId: person.withRoutine(next),
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          canDefer ? 'routine_block_deferred' : 'routine_block_dropped',
+          personId,
+          'block=$blockId planned=${block.activity} competing=$competing',
+        ),
+      ],
+    );
+    if (canDefer) {
+      schedule(
+        due: _state.now.addSeconds(_routineDeferSeconds),
+        phase: EventPhase.intent,
+        kind: 'routine_block_started',
+        payload: <String, Object?>{
+          'person_id': personId,
+          'block_id': blockId,
+          'attempt': attempt + 1,
+        },
+      );
+    }
+  }
+
+  /// Đóng một khối đã hết giờ và giao sản lượng theo số giây thật sự làm.
+  RoutineState _finishBlock(
+    String personId,
+    RoutineState routine,
+    RoutineBlock block,
+  ) {
+    final int lost = routine.lostInActiveBlock(_state.now.seconds);
+    final RoutineState ended = routine.endBlock(_state.now.seconds);
+    _deliverBlockOutput(personId, block, lost);
+    _replace(
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'routine_block_ended',
+          personId,
+          'block=${block.id} lost_seconds=$lost',
+        ),
+      ],
+    );
+    return ended;
+  }
+
+  /// Sản lượng của khối việc đi thẳng vào kho hộ, trừ phần giờ đã mất.
+  void _deliverBlockOutput(String personId, RoutineBlock block, int lost) {
+    final String? resourceKey = block.outputResource;
+    if (resourceKey == null || block.outputAmount <= 0) return;
+    final PersonState? person = _state.people[personId];
+    final String? householdId = person?.householdId;
+    final HouseholdState? household = householdId == null
+        ? null
+        : _state.households[householdId];
+    if (household == null) return;
+    final String? itemId = household.resourceItemIds[resourceKey];
+    final CareItemState? item = itemId == null ? null : _state.items[itemId];
+    if (item == null) return;
+    final int worked = (block.durationSeconds - lost).clamp(
+      0,
+      block.durationSeconds,
+    );
+    final int delivered = block.durationSeconds <= 0
+        ? 0
+        : (block.outputAmount * worked) ~/ block.durationSeconds;
+    if (delivered <= 0) {
+      _replace(
+        facts: <WorldFact>[
+          ..._state.facts,
+          _fact(
+            'routine_work_lost',
+            personId,
+            'block=${block.id} resource=$resourceKey lost_seconds=$lost',
+          ),
+        ],
+      );
+      return;
+    }
+    _replace(
+      items: <String, CareItemState>{
+        ..._state.items,
+        item.id: item.replenish(delivered),
+      },
+      households: <String, HouseholdState>{
+        ..._state.households,
+        householdId!: household.recordProduction(),
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'routine_work_delivered',
+          personId,
+          'block=${block.id} resource=$resourceKey amount=$delivered '
+              'planned=${block.outputAmount} lost_seconds=$lost',
+        ),
+      ],
+    );
+  }
+
   void _applyRoutineBlockEnded(ScheduledEvent event) {
     final String personId = event.payload['person_id']! as String;
     final String blockId = event.payload['block_id']! as String;
@@ -933,24 +1313,17 @@ class Simulation {
     final RoutineState? routine = person?.routine;
     if (person == null || routine == null) return;
     if (routine.activeBlockId != blockId) return;
-    final RoutineState ended = routine.endBlock(_state.now.seconds);
-    PersonState next = person.withRoutine(ended);
-    if (person.caregiverAgent != null && !routine.preempted) {
+    final RoutineBlock? block = routine.blockById(blockId);
+    if (block == null) return;
+    final RoutineState ended = _finishBlock(personId, routine, block);
+    final PersonState current = _state.people[personId]!;
+    PersonState next = current.withRoutine(ended);
+    if (current.caregiverAgent != null && !routine.preempted) {
       next = next.withCaregiverAgent(
-        person.caregiverAgent!.withActivity('nghỉ giữa buổi'),
+        current.caregiverAgent!.withActivity('nghỉ giữa buổi'),
       );
     }
-    _replace(
-      people: <String, PersonState>{..._state.people, personId: next},
-      facts: <WorldFact>[
-        ..._state.facts,
-        _fact(
-          'routine_block_ended',
-          personId,
-          'block=$blockId lost_seconds=${ended.lostSeconds - routine.lostSeconds}',
-        ),
-      ],
-    );
+    _replace(people: <String, PersonState>{..._state.people, personId: next});
   }
 
   PersonState _preemptRoutine(PersonState person, String by) {
@@ -1274,6 +1647,14 @@ class Simulation {
       kind: 'household_work_settlement',
       payload: <String, Object?>{'household_id': householdId},
     );
+    if (event.payload['auto_plan'] == true) {
+      schedule(
+        due: const SimTime(5 * 3600),
+        phase: EventPhase.intent,
+        kind: 'household_planning',
+        payload: <String, Object?>{'household_id': householdId},
+      );
+    }
     if (event.payload['enable_v2_1'] == true) {
       schedule(
         due: const SimTime(1 * gameSecondsPerDay + 18 * 3600),

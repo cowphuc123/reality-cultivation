@@ -37,7 +37,7 @@ Trang Hồ sơ có hai danh bạ: người và vật. Mỗi thẻ mở ra tuổi
 ## Kiểm chứng đã chạy
 
 - `dart analyze` và `flutter analyze`: sạch.
-- Runner V2.3 đạt tới ngày 4; lưu lúc 12:10 khi bữa trưa đang bị lùi rồi chạy tiếp cho cùng hash `8df759ae2a42eca0`.
+- Runner V2.3 đạt tới ngày 4; lưu lúc 12:10 khi bữa trưa đang bị lùi rồi chạy tiếp cho cùng hash. Hash ban đầu là `8df759ae2a42eca0`; từ V2.4 đổi thành `ade0b8a4300276c9` sau khi sửa lỗi nuốt khối, xem [[K5_11_V2_4_NHU_CAU_SINH_VIEC_VA_UU_TIEN]]. Mọi điều kiện V2.3 vẫn đạt.
 - Sáu runner V0–V2.2 giữ nguyên hash: `5629ba88282991c6`, `69988c4593598846`, `5d418dc95af7118d`, `985a29eb4aaa240b`, `3d83fc8e0cc7b77f`, `d0b87de633a4765a`.
 - Catalog `game/artifacts/conditions/v2_3_routine_directory.json` có 23 điều kiện tự động.
 - 8/8 widget test đạt, gồm hai bài mới cho danh bạ ở kích thước điện thoại và cho bữa trưa bị lùi.

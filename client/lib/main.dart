@@ -195,7 +195,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       kind: 'person_created',
       payload: const <String, Object?>{
         'person_id': 'N03',
-        'name': 'Người kiếm củi',
+        'name': 'Người làm công',
         'birth_seconds': -28 * 365 * gameSecondsPerDay,
         'position_mm': 12000,
         'room_id': 'ROOM-YARD',
@@ -226,7 +226,6 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'name': 'Người vận chuyển',
         'birth_seconds': -34 * 365 * gameSecondsPerDay,
         'position_mm': 500000,
-        'routine': _routineN04,
       },
     )
     ..schedule(
@@ -268,7 +267,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'kind': 'staple_food',
         'position_mm': 0,
         'room_id': 'ROOM-SLEEP',
-        'quantity': 50000,
+        'quantity': 15000,
         'unit': 'g',
         'owner_household_id': 'H01',
       },
@@ -282,7 +281,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'kind': 'clean_water',
         'position_mm': 0,
         'room_id': 'ROOM-SLEEP',
-        'quantity': 200000,
+        'quantity': 48000,
         'unit': 'ml',
         'owner_household_id': 'H01',
       },
@@ -296,7 +295,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'kind': 'firewood',
         'position_mm': 0,
         'room_id': 'ROOM-SLEEP',
-        'quantity': 40000,
+        'quantity': 4500,
         'unit': 'g',
         'owner_household_id': 'H01',
       },
@@ -316,9 +315,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           'infant_feed': 'I-FEED-01',
         },
         'authorized_users_by_item_id': <String, List<String>>{
-          'I-FOOD-01': <String>['N02'],
-          'I-WATER-01': <String>['N01', 'N02'],
-          'I-FUEL-01': <String>['N02'],
+          'I-FOOD-01': <String>['N02', 'N03'],
+          'I-WATER-01': <String>['N01', 'N02', 'N03'],
+          'I-FUEL-01': <String>['N02', 'N03'],
           'I-FEED-01': <String>['N01', 'N02'],
           'I-CLOTH-01': <String>['N01', 'N02'],
         },
@@ -330,6 +329,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'meal_actor_id': 'N02',
         'enable_v2_1': true,
         'enable_v2_2': true,
+        'auto_plan': true,
         'infant_id': 'P00',
         'caregiver_id': 'N01',
         'production_actor_id': 'N03',
@@ -722,29 +722,16 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   }
 }
 
-/// Nhịp sống hằng ngày của hộ ven suối. Giờ giấc là fixture kỹ thuật để
-/// xung đột lịch có thể quan sát được, chưa phải cân bằng đã chốt.
+/// Nhịp sống hằng ngày của hộ ven suối. Giờ giấc và mức ưu tiên là fixture
+/// kỹ thuật để xung đột lịch quan sát được, chưa phải cân bằng đã chốt.
 const List<Map<String, Object?>> _routineN01 = <Map<String, Object?>>[
-  <String, Object?>{
-    'id': 'R-N01-NUOC',
-    'activity': 'gánh nước sáng',
-    'start_second_of_day': 19800,
-    'duration_seconds': 5400,
-    'room_id': 'ROOM-YARD',
-  },
   <String, Object?>{
     'id': 'R-N01-VA',
     'activity': 'may vá',
     'start_second_of_day': 25200,
-    'duration_seconds': 14400,
+    'duration_seconds': 35400,
     'room_id': 'ROOM-KITCHEN',
-  },
-  <String, Object?>{
-    'id': 'R-N01-VUON',
-    'activity': 'chăm vườn',
-    'start_second_of_day': 46800,
-    'duration_seconds': 14400,
-    'room_id': 'ROOM-YARD',
+    'priority': 30,
   },
 ];
 
@@ -758,21 +745,6 @@ const List<Map<String, Object?>> _routineN02 = <Map<String, Object?>>[
     'priority': 70,
   },
   <String, Object?>{
-    'id': 'R-N02-GAO',
-    'activity': 'giã gạo',
-    'start_second_of_day': 28800,
-    'duration_seconds': 10800,
-    'room_id': 'ROOM-KITCHEN',
-  },
-  <String, Object?>{
-    'id': 'R-N02-XA',
-    'activity': 'gánh nước suối xa',
-    'start_second_of_day': 41400,
-    'duration_seconds': 4200,
-    'room_id': 'ROOM-YARD',
-    'blocking': true,
-  },
-  <String, Object?>{
     'id': 'R-N02-TOI',
     'activity': 'nấu bữa tối',
     'start_second_of_day': 61200,
@@ -784,20 +756,12 @@ const List<Map<String, Object?>> _routineN02 = <Map<String, Object?>>[
 
 const List<Map<String, Object?>> _routineN03 = <Map<String, Object?>>[
   <String, Object?>{
-    'id': 'R-N03-CUI',
-    'activity': 'kiếm củi',
-    'start_second_of_day': 23400,
-    'duration_seconds': 32400,
-    'room_id': 'ROOM-YARD',
-  },
-];
-
-const List<Map<String, Object?>> _routineN04 = <Map<String, Object?>>[
-  <String, Object?>{
-    'id': 'R-N04-TUYEN',
-    'activity': 'đi tuyến An Khê',
-    'start_second_of_day': 18000,
+    'id': 'R-N03-MAI',
+    'activity': 'sửa mái',
+    'start_second_of_day': 21600,
     'duration_seconds': 43200,
+    'room_id': 'ROOM-YARD',
+    'priority': 25,
   },
 ];
 
@@ -2061,6 +2025,10 @@ class _HouseholdPanel extends StatelessWidget {
                       ),
                     ),
                   const Divider(height: 28),
+                  const _SectionLabel(label: 'NHU CẦU & KẾ HOẠCH HÔM NAY'),
+                  const SizedBox(height: 10),
+                  _PlanPanel(household: value),
+                  const Divider(height: 28),
                   const _SectionLabel(label: 'NHỊP SỐNG & LAO ĐỘNG'),
                   const SizedBox(height: 10),
                   Wrap(
@@ -2099,8 +2067,7 @@ class _HouseholdPanel extends StatelessWidget {
                       ),
                       _MetricTile(
                         label: 'Xung đột lịch',
-                        value:
-                            '${value.members.fold<int>(0, (int total, HouseholdMemberView member) => total + (member.routine?.conflictCount ?? 0))}',
+                        value: '${value.scheduleConflicts}',
                         icon: Icons.event_busy_outlined,
                       ),
                     ],
@@ -2151,6 +2118,92 @@ class _HouseholdPanel extends StatelessWidget {
   String _resourceValue(HouseholdView value, String key) =>
       '${value.resourceQuantities[key] ?? 0} ${value.resourceUnits[key] ?? ''}';
 }
+
+class _PlanPanel extends StatelessWidget {
+  const _PlanPanel({required this.household});
+
+  final HouseholdView household;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextStyle? small = Theme.of(context).textTheme.bodySmall;
+    final List<HouseholdNeed> pressing = household.needs
+        .where((HouseholdNeed need) => need.needed)
+        .toList();
+    final List<(String, RoutineBlock)> work = household.plannedWork;
+    return Container(
+      key: const Key('plan-panel'),
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: const Color(0xff111611),
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          for (final HouseholdNeed need in household.needs)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: <Widget>[
+                  Icon(
+                    need.needed
+                        ? Icons.trending_down
+                        : Icons.check_circle_outline,
+                    size: 15,
+                    color: need.needed
+                        ? const Color(0xffd49a68)
+                        : const Color(0xff83b993),
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      '${_needLabel(need.kind)}: còn ${need.daysOfSupply} ngày dùng'
+                      '${need.needed ? ' · cần bổ sung (ưu tiên ${need.priority})' : ' · còn đủ'}',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (pressing.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text('Hôm nay hộ chưa thiếu gì.', style: small),
+            ),
+          if (work.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 8),
+            Text('Việc đã giao', style: small),
+            const SizedBox(height: 4),
+            for (final (String, RoutineBlock) entry in work)
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Text(
+                  '${_clock(entry.$2.startSecondOfDay)}–'
+                  '${_clock(entry.$2.endSecondOfDay)} · ${entry.$1}: '
+                  '${entry.$2.activity}'
+                  '${entry.$2.needKind == null ? '' : ' (vì thiếu ${_needLabel(entry.$2.needKind!)})'}',
+                  style: small,
+                ),
+              ),
+          ] else ...<Widget>[
+            const SizedBox(height: 8),
+            Text(
+              'Chưa có việc nào được kế hoạch giao cho hôm nay.',
+              style: small,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+String _needLabel(String kind) => switch (kind) {
+  'food' => 'lương thực',
+  'water' => 'nước sạch',
+  'fuel' => 'củi',
+  _ => kind,
+};
 
 class _SupplyJourneyCard extends StatelessWidget {
   const _SupplyJourneyCard({required this.journey});
@@ -2456,7 +2509,10 @@ class _HistoryPanelState extends State<_HistoryPanel> {
     'household' =>
       fact.kind.startsWith('household') ||
           fact.kind.startsWith('supply_journey'),
-    'routine' => fact.kind.startsWith('routine'),
+    'routine' =>
+      fact.kind.startsWith('routine') ||
+          fact.kind == 'household_plan_made' ||
+          fact.kind.startsWith('household_need'),
     'world' =>
       fact.kind == 'birth' ||
           fact.kind == 'person_created' ||
@@ -2652,6 +2708,19 @@ String _factDetail(WorldFact fact) {
       'Đã chốt công lao động tích lũy của các thành viên.',
     'household_meal_deferred' =>
       'Bữa ăn phải chờ vì ${values['actor'] ?? 'người nấu'} đang vướng ${values['competing'] ?? 'việc khác'}.',
+    'household_plan_made' =>
+      'Hộ rà tồn kho và giao việc: ${values['plan'] ?? 'chưa có việc'}.',
+    'household_need_unstaffed' =>
+      'Thiếu ${_needLabel(values['need'] ?? '')} nhưng không ai có quyền nhận việc.',
+    'household_need_unscheduled' =>
+      'Thiếu ${_needLabel(values['need'] ?? '')} nhưng ${values['actor'] ?? 'người được giao'} không còn giờ trống.',
+    'routine_block_outranked' =>
+      'Việc đang làm bị nhường chỗ cho việc ưu tiên ${values['priority'] ?? 'cao hơn'}.',
+    'routine_work_delivered' =>
+      'Nhập kho ${values['amount'] ?? '0'} ${_needLabel(values['resource'] ?? '')}'
+          '${values['lost_seconds'] == '0' ? ' đúng kế hoạch' : ', hụt so với kế hoạch ${values['planned'] ?? '?'} vì mất giờ'}.',
+    'routine_work_lost' =>
+      'Công việc bị cắt ngang hết giờ nên không thu được gì.',
     'routine_block_started' =>
       '${fact.subjectId} bắt đầu ${values['activity'] ?? 'công việc'} tại ${values['room'] ?? 'chỗ làm'}.',
     'routine_block_ended' =>
@@ -2735,6 +2804,12 @@ String _factLabel(String kind) => switch (kind) {
   'household_created' => 'Hộ gia đình hình thành',
   'household_meal_completed' => 'Hộ hoàn tất bữa ăn',
   'household_meal_deferred' => 'Bữa ăn phải lùi giờ',
+  'household_plan_made' => 'Hộ lập kế hoạch trong ngày',
+  'household_need_unstaffed' => 'Không ai đủ quyền nhận việc',
+  'household_need_unscheduled' => 'Không còn giờ trống cho việc cần làm',
+  'routine_block_outranked' => 'Việc gấp hơn giành mất chỗ',
+  'routine_work_delivered' => 'Làm xong và nhập kho',
+  'routine_work_lost' => 'Mất trắng công việc',
   'routine_block_started' => 'Bắt đầu một khối việc trong ngày',
   'routine_block_ended' => 'Kết thúc một khối việc',
   'routine_block_deferred' => 'Khối việc bị lùi giờ',
