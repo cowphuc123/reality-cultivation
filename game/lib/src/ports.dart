@@ -4,6 +4,7 @@ import 'care.dart';
 import 'domestic.dart';
 import 'household.dart';
 import 'infancy.dart';
+import 'route.dart';
 import 'routine.dart';
 import 'simulation.dart';
 
@@ -429,6 +430,11 @@ class SupplyJourneyView {
     required this.delaySeconds,
     required this.delayReason,
     required this.cargo,
+    required this.route,
+    required this.legIndex,
+    required this.legCount,
+    required this.travelledMm,
+    required this.pathWaypointIds,
   });
 
   final String id;
@@ -440,6 +446,40 @@ class SupplyJourneyView {
   final int delaySeconds;
   final String? delayReason;
   final Map<String, int> cargo;
+
+  /// Tuyến đang đi, nếu chuyến này chạy trên tuyến thật.
+  final TradeRoute? route;
+
+  final int legIndex;
+  final int legCount;
+  final int travelledMm;
+
+  /// Dãy điểm mốc người chở đã chọn đi.
+  final List<String> pathWaypointIds;
+
+  bool get onRoute => route != null;
+
+  /// Tên các điểm mốc trên đường đã chọn, để hiện thành lộ trình đọc được.
+  List<String> get pathNames => <String>[
+    for (final String id in pathWaypointIds)
+      route?.waypoint(id)?.name ?? id,
+  ];
+
+  /// Tuyến này có ngã rẽ nên đường đã chọn là một quyết định thật.
+  bool get chosenAmongForks => route?.hasFork ?? false;
+
+  /// Phần đường đã đi, phần nghìn; dùng cho thanh tiến độ trên giao diện.
+  int get progressPerMille {
+    final int total = route?.pathDistanceMm(pathWaypointIds) ?? 0;
+    if (total <= 0) return 0;
+    return (travelledMm * 1000 ~/ total).clamp(0, 1000);
+  }
+
+  /// Tổng chiều dài đường đã chọn, không phải toàn bộ tuyến.
+  int get pathDistanceMm => route?.pathDistanceMm(pathWaypointIds) ?? 0;
+
+  /// Tên điểm mốc đang đứng, nếu đọc được từ tuyến.
+  String? get currentWaypointName => route?.waypoint(currentLeg)?.name;
 }
 
 abstract interface class QueryPort {
@@ -750,6 +790,15 @@ class SimulationHost implements CommandPort, QueryPort {
                 delaySeconds: journey.delaySeconds,
                 delayReason: journey.delayReason,
                 cargo: Map<String, int>.unmodifiable(journey.cargo),
+                route: journey.routeId == null
+                    ? null
+                    : simulation.state.routes[journey.routeId],
+                legIndex: journey.legIndex,
+                legCount: journey.legCount,
+                travelledMm: journey.travelledMm,
+                pathWaypointIds: List<String>.unmodifiable(
+                  journey.pathWaypointIds,
+                ),
               ),
           ]..sort(
             (SupplyJourneyView a, SupplyJourneyView b) => b.id.compareTo(a.id),

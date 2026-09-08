@@ -4,8 +4,10 @@ import 'adult_body.dart';
 import 'agenda.dart';
 import 'care.dart';
 import 'domestic.dart';
+import 'geometry.dart';
 import 'household.dart';
 import 'infancy.dart';
+import 'route.dart';
 import 'routine.dart';
 
 const int gameSecondsPerDay = 86400;
@@ -94,6 +96,7 @@ class PersonState {
     this.activeGoal,
     this.infancy,
     this.positionMm,
+    this.positionYMm = 0,
     this.caregiverAgent,
     this.householdId,
     this.roomId,
@@ -109,6 +112,10 @@ class PersonState {
   final String? activeGoal;
   final InfantState? infancy;
   final int? positionMm;
+
+  /// Trục thứ hai của vị trí; 0 nghĩa là vẫn nằm trên trục cũ.
+  final int positionYMm;
+
   final CaregiverAgentState? caregiverAgent;
   final String? householdId;
   final String? roomId;
@@ -128,13 +135,25 @@ class PersonState {
   PersonState withInfancy(InfantState value, {String? goal}) =>
       _copy(infancy: value, activeGoal: goal ?? activeGoal);
 
-  PersonState withPosition(int value) => _copy(positionMm: value);
+  PersonState withPosition(int value, [int? yValue]) =>
+      _copy(positionMm: value, positionYMm: yValue);
+
+  /// Vị trí hai chiều, nếu người này đã được đặt vào thế giới.
+  WorldPoint? get point =>
+      positionMm == null ? null : WorldPoint(positionMm!, positionYMm);
 
   PersonState withCaregiverAgent(CaregiverAgentState value) =>
       _copy(caregiverAgent: value);
 
-  PersonState withLocation({required int positionMm, required String roomId}) =>
-      _copy(positionMm: positionMm, roomId: roomId);
+  PersonState withLocation({
+    required int positionMm,
+    required String roomId,
+    int? positionYMm,
+  }) => _copy(
+    positionMm: positionMm,
+    positionYMm: positionYMm,
+    roomId: roomId,
+  );
 
   PersonState withRoutine(RoutineState value) => _copy(routine: value);
 
@@ -148,6 +167,7 @@ class PersonState {
     String? activeGoal,
     InfantState? infancy,
     int? positionMm,
+    int? positionYMm,
     CaregiverAgentState? caregiverAgent,
     String? roomId,
     RoutineState? routine,
@@ -161,6 +181,7 @@ class PersonState {
     activeGoal: activeGoal ?? this.activeGoal,
     infancy: infancy ?? this.infancy,
     positionMm: positionMm ?? this.positionMm,
+    positionYMm: positionYMm ?? this.positionYMm,
     caregiverAgent: caregiverAgent ?? this.caregiverAgent,
     householdId: householdId,
     roomId: roomId ?? this.roomId,
@@ -179,6 +200,7 @@ class PersonState {
     };
     if (infancy != null) result['infancy'] = infancy!.toJson();
     if (positionMm != null) result['position_mm'] = positionMm;
+    if (positionYMm != 0) result['position_y_mm'] = positionYMm;
     if (caregiverAgent != null) {
       result['caregiver_agent'] = caregiverAgent!.toJson();
     }
@@ -204,6 +226,7 @@ class PersonState {
             (json['infancy']! as Map).cast<String, Object?>(),
           ),
     positionMm: json['position_mm'] as int?,
+    positionYMm: json['position_y_mm'] as int? ?? 0,
     caregiverAgent: json['caregiver_agent'] == null
         ? null
         : CaregiverAgentState.fromJson(
@@ -277,6 +300,7 @@ class WorldState {
     required this.rooms,
     required this.illnesses,
     required this.supplyJourneys,
+    this.routes = const <String, TradeRoute>{},
   });
 
   factory WorldState.initial(int seed) => WorldState(
@@ -293,6 +317,7 @@ class WorldState {
     rooms: const <String, RoomState>{},
     illnesses: const <String, IllnessState>{},
     supplyJourneys: const <String, SupplyJourneyState>{},
+    routes: const <String, TradeRoute>{},
   );
 
   final int seed;
@@ -308,6 +333,9 @@ class WorldState {
   final Map<String, RoomState> rooms;
   final Map<String, IllnessState> illnesses;
   final Map<String, SupplyJourneyState> supplyJourneys;
+
+  /// Các tuyến đường đã được vật chất hóa trong thế giới này.
+  final Map<String, TradeRoute> routes;
 
   Map<String, Object?> toJson() {
     final List<PersonState> sortedPeople = people.values.toList()
@@ -364,6 +392,13 @@ class WorldState {
         );
       result['supply_journeys'] = sorted
           .map((SupplyJourneyState value) => value.toJson())
+          .toList();
+    }
+    if (routes.isNotEmpty) {
+      final List<TradeRoute> sorted = routes.values.toList()
+        ..sort((TradeRoute a, TradeRoute b) => a.id.compareTo(b.id));
+      result['routes'] = sorted
+          .map((TradeRoute value) => value.toJson())
           .toList();
     }
     return result;
@@ -434,6 +469,12 @@ class WorldState {
           ).id: SupplyJourneyState.fromJson(
             (item as Map).cast<String, Object?>(),
           ),
+      },
+      routes: <String, TradeRoute>{
+        for (final Object? item
+            in (json['routes'] as List<Object?>? ?? const <Object?>[]))
+          TradeRoute.fromJson((item! as Map).cast<String, Object?>()).id:
+              TradeRoute.fromJson((item as Map).cast<String, Object?>()),
       },
     );
   }
@@ -575,6 +616,7 @@ class Simulation {
         rooms: _state.rooms,
         illnesses: _state.illnesses,
         supplyJourneys: _state.supplyJourneys,
+        routes: _state.routes,
       );
       _applyEvent(event);
     }
@@ -599,6 +641,7 @@ class Simulation {
               birthTime: event.due,
               infancy: isInfant ? InfantState.initial(caregiverId) : null,
               positionMm: event.payload['position_mm'] as int?,
+              positionYMm: event.payload['position_y_mm'] as int? ?? 0,
               householdId: event.payload['household_id'] as String?,
               roomId: event.payload['room_id'] as String?,
             ),
@@ -639,6 +682,7 @@ class Simulation {
               name: name,
               birthTime: SimTime(birthSeconds),
               positionMm: event.payload['position_mm'] as int?,
+              positionYMm: event.payload['position_y_mm'] as int? ?? 0,
               caregiverAgent: event.payload['caregiver_agent'] == true
                   ? CaregiverAgentState(
                       hearingThreshold:
@@ -696,6 +740,10 @@ class Simulation {
         _applyHouseholdWorkSettlement(event);
       case 'room_created':
         _applyRoomCreated(event);
+      case 'route_created':
+        _applyRouteCreated(event);
+      case 'route_leg_arrived':
+        _applyRouteLegArrived(event);
       case 'infant_illness_onset':
         _applyInfantIllnessOnset(event);
       case 'illness_observed':
@@ -973,17 +1021,24 @@ class Simulation {
   /// Năng lượng của một trăm gam lương thực khô trong fixture.
   static const int _kjPerHundredGramsFood = 1400;
 
-  /// Dựng cơ thể người lớn từ payload; dự trữ để trống thì coi như đầy.
+  /// Dựng cơ thể người lớn từ payload.
+  ///
+  /// Dự trữ để trống thì coi như đầy; khối lượng lúc khỏe để trống thì lấy
+  /// bằng khối lượng hiện tại. Cả hai trường đều được đọc độc lập — trước đây
+  /// `healthy_mass_g` bị bỏ qua nếu không kèm `energy_reserve_kj`, nên người
+  /// khai báo là gầy vẫn được coi là đủ sức.
   static AdultBodyState _adultBodyFromPayload(Map<String, Object?> payload) {
     final int mass = payload['mass_g'] as int? ?? 52000;
-    final AdultBodyState base = AdultBodyState.healthy(massGrams: mass);
-    final int? reserve = payload['energy_reserve_kj'] as int?;
-    if (reserve == null) return base;
+    final int healthy = payload['healthy_mass_g'] as int? ?? mass;
+    final int reserve =
+        (payload['energy_reserve_kj'] as int? ??
+                AdultBodyState.reserveCapacityKj)
+            .clamp(0, AdultBodyState.reserveCapacityKj);
     return AdultBodyState(
       massGrams: mass,
-      healthyMassGrams: payload['healthy_mass_g'] as int? ?? mass,
-      energyReserveKj: reserve.clamp(0, AdultBodyState.reserveCapacityKj),
-      bodyWaterMl: base.bodyWaterMl,
+      healthyMassGrams: healthy,
+      energyReserveKj: reserve,
+      bodyWaterMl: mass * AdultBodyState.waterPerMilleOfMass ~/ 1000,
     );
   }
 
@@ -1768,7 +1823,7 @@ class Simulation {
         personId: infant.withInfancy(waiting),
       },
     );
-    final int distance = (caregiver.positionMm! - infant.positionMm!).abs();
+    final int distance = caregiver.point!.distanceTo(infant.point!);
     final int travelSeconds = (distance ~/ 340000).clamp(1, 60);
     schedule(
       due: _state.now.addSeconds(travelSeconds),
@@ -1778,6 +1833,7 @@ class Simulation {
         'person_id': personId,
         'caregiver_id': caregiver.id,
         'origin_position_mm': infant.positionMm,
+        if (infant.positionYMm != 0) 'origin_y_mm': infant.positionYMm,
         'loudness': 900,
       },
     );
@@ -1799,7 +1855,9 @@ class Simulation {
       return;
     }
     final int originPosition = event.payload['origin_position_mm']! as int;
-    final int soundDistance = (caregiver.positionMm! - originPosition).abs();
+    final int soundDistance = caregiver.point!.distanceTo(
+      WorldPoint(originPosition, event.payload['origin_y_mm'] as int? ?? 0),
+    );
     final int perceived =
         (event.payload['loudness']! as int) - soundDistance ~/ 10;
     if (perceived < agent.hearingThreshold) {
@@ -1834,7 +1892,7 @@ class Simulation {
         ),
       ],
     );
-    final int walkDistance = (caregiver.positionMm! - infant.positionMm!).abs();
+    final int walkDistance = caregiver.point!.distanceTo(infant.point!);
     final int walkSeconds =
         (walkDistance + agent.movementSpeedMmPerSecond - 1) ~/
         agent.movementSpeedMmPerSecond;
@@ -1864,9 +1922,10 @@ class Simulation {
       people: <String, PersonState>{
         ..._state.people,
         caregiverId: infant.roomId == null
-            ? caregiver!.withPosition(infant.positionMm!)
+            ? caregiver!.withPosition(infant.positionMm!, infant.positionYMm)
             : caregiver!.withLocation(
                 positionMm: infant.positionMm!,
+                positionYMm: infant.positionYMm,
                 roomId: infant.roomId!,
               ),
       },
@@ -2101,7 +2160,11 @@ class Simulation {
             'carrier_id':
                 event.payload['supply_carrier_id'] as String? ?? 'N04',
             'journey_index': 0,
-            'delay_seconds': 6 * 3600,
+            // Có tuyến thật thì đi tuyến; không thì giữ nhánh cũ với độ trễ fixture.
+            if (event.payload['supply_route_id'] case final String routeId)
+              'route_id': routeId
+            else
+              'delay_seconds': 6 * 3600,
           },
         );
       } else {
@@ -2450,8 +2513,9 @@ class Simulation {
         ),
       ],
     );
-    final int distance =
-        ((caregiver.positionMm ?? 0) - (infant.positionMm ?? 0)).abs();
+    final int distance = (caregiver.point ?? const WorldPoint(0)).distanceTo(
+      infant.point ?? const WorldPoint(0),
+    );
     final int travelSeconds = agent.movementSpeedMmPerSecond <= 0
         ? gameSecondsPerDay
         : ((distance + agent.movementSpeedMmPerSecond - 1) ~/
@@ -2695,6 +2759,245 @@ class Simulation {
     );
   }
 
+  /// Khởi hành một chuyến trên tuyến thật.
+  void _startRoutedJourney({
+    required String journeyId,
+    required String householdId,
+    required String carrierId,
+    required TradeRoute route,
+  }) {
+    const Map<String, int> cargo = <String, int>{
+      'food': 7500,
+      'water': 30000,
+      'infant_feed': 1500,
+    };
+    final PersonState carrier = _state.people[carrierId]!;
+    final int capability = _carrierCapability(carrier);
+    // Người chở tự chọn đường nhanh nhất cho mình: chặng nào không đủ sức qua
+    // thì bị loại, nên người yếu có thể phải đi đường vòng.
+    final List<String> path = route.fastestPath(
+      from: route.origin,
+      to: route.destination,
+      cargo: cargo,
+      capabilityPerMille: capability,
+      baseSpeed: _carrierBaseSpeed(carrier),
+    );
+    if (path.length < 2) {
+      _replace(
+        facts: <WorldFact>[
+          ..._state.facts,
+          _fact(
+            'supply_route_impassable',
+            journeyId,
+            'carrier=$carrierId route=${route.id} capability=$capability',
+          ),
+        ],
+      );
+      return;
+    }
+    final RouteWaypoint? origin = route.waypoint(path.first);
+    // Giờ đến dự kiến tính theo đường bằng, người khỏe và tay không.
+    final int nominalTotal = CarrierPace.travelSeconds(
+      distanceMm: route.pathDistanceMm(path),
+      speedMmPerSecond: _carrierBaseSpeed(carrier),
+    );
+    final SupplyJourneyState journey = SupplyJourneyState(
+      id: journeyId,
+      householdId: householdId,
+      carrierId: carrierId,
+      departureSeconds: _state.now.seconds,
+      expectedArrivalSeconds: _state.now.seconds + nominalTotal,
+      status: SupplyJourneyStatus.traveling,
+      cargo: cargo,
+      currentLeg: origin?.id ?? route.id,
+      routeId: route.id,
+      legCount: path.length - 1,
+      pathWaypointIds: path,
+    );
+    _replace(
+      people: <String, PersonState>{
+        ..._state.people,
+        carrierId: origin == null
+            ? carrier
+            : carrier.withPosition(origin.positionMm, origin.positionYMm),
+      },
+      supplyJourneys: <String, SupplyJourneyState>{
+        ..._state.supplyJourneys,
+        journeyId: journey,
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'supply_journey_started',
+          journeyId,
+          'carrier=$carrierId route=${route.id} legs=${path.length - 1} '
+              'path=${path.join('>')} '
+              'distance_mm=${route.pathDistanceMm(path)} '
+              'expected_seconds=${journey.expectedArrivalSeconds} '
+              'load_g=${CarrierPace.cargoMassGrams(cargo)} '
+              'load_factor=${CarrierPace.loadFactorPerMille(cargo)} '
+              'capability=$capability',
+        ),
+      ],
+    );
+    _scheduleRouteLeg(journey: journey, route: route, legIndex: 0);
+  }
+
+  void _applyRouteCreated(ScheduledEvent event) {
+    final TradeRoute route = TradeRoute.fromJson(
+      (event.payload['route']! as Map).cast<String, Object?>(),
+    );
+    if (_state.routes.containsKey(route.id)) return;
+    _replace(
+      routes: <String, TradeRoute>{..._state.routes, route.id: route},
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'route_created',
+          route.id,
+          '${route.name} legs=${route.legs.length} '
+              'distance_mm=${route.totalDistanceMm}',
+        ),
+      ],
+    );
+  }
+
+  /// Sức lực của người chở, phần nghìn; chưa có cơ thể thì coi như đủ sức.
+  int _carrierCapability(PersonState carrier) =>
+      carrier.body?.capability ?? 1000;
+
+  /// Tốc độ đi trên đường bằng của người này.
+  int _carrierBaseSpeed(PersonState carrier) =>
+      carrier.caregiverAgent?.movementSpeedMmPerSecond ??
+      CarrierPace.baseSpeedMmPerSecond;
+
+  /// Xếp lịch cho người chở đi hết một chặng của tuyến.
+  ///
+  /// Thời gian đi ra từ quãng đường chia cho tốc độ thật, chứ không phải một
+  /// giờ đến viết sẵn. Chặng nào chậm hơn dự kiến thì chuyến hàng trễ thêm.
+  void _scheduleRouteLeg({
+    required SupplyJourneyState journey,
+    required TradeRoute route,
+    required int legIndex,
+  }) {
+    final List<String> path = journey.pathWaypointIds;
+    if (legIndex + 1 >= path.length) return;
+    final RouteLeg? leg = route.legBetween(path[legIndex], path[legIndex + 1]);
+    final PersonState? carrier = _state.people[journey.carrierId];
+    if (leg == null || carrier == null) return;
+    final int distance = route.legDistanceMm(leg);
+    final int speed = CarrierPace.speedMmPerSecond(
+      terrainSpeedPerMille: leg.terrainSpeedPerMille,
+      cargo: journey.cargo,
+      capabilityPerMille: _carrierCapability(carrier),
+      baseSpeed: _carrierBaseSpeed(carrier),
+    );
+    final int seconds = CarrierPace.travelSeconds(
+      distanceMm: distance,
+      speedMmPerSecond: speed,
+    );
+    // Giờ đi nếu đường bằng, người khỏe và tay không: dùng để đo phần trễ.
+    final int nominalSeconds = CarrierPace.travelSeconds(
+      distanceMm: distance,
+      speedMmPerSecond: _carrierBaseSpeed(carrier),
+    );
+    _replace(
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'route_leg_started',
+          journey.id,
+          'leg=${leg.fromId}->${leg.toId} terrain=${leg.terrain} '
+              'distance_mm=$distance speed_mm_s=$speed '
+              'seconds=$seconds nominal_seconds=$nominalSeconds',
+        ),
+      ],
+    );
+    schedule(
+      due: _state.now.addSeconds(seconds < 1 ? 1 : seconds),
+      phase: EventPhase.movement,
+      kind: 'route_leg_arrived',
+      payload: <String, Object?>{
+        'journey_id': journey.id,
+        'leg_index': legIndex,
+        'nominal_seconds': nominalSeconds,
+        'actual_seconds': seconds,
+      },
+    );
+  }
+
+  void _applyRouteLegArrived(ScheduledEvent event) {
+    final String journeyId = event.payload['journey_id']! as String;
+    final int legIndex = event.payload['leg_index']! as int;
+    final SupplyJourneyState? journey = _state.supplyJourneys[journeyId];
+    if (journey == null || journey.status == SupplyJourneyStatus.delivered) {
+      return;
+    }
+    final TradeRoute? route = _state.routes[journey.routeId];
+    final List<String> path = journey.pathWaypointIds;
+    if (route == null || legIndex + 1 >= path.length) return;
+    final RouteLeg? leg = route.legBetween(path[legIndex], path[legIndex + 1]);
+    final RouteWaypoint? arrivedAt = route.waypoint(path[legIndex + 1]);
+    final PersonState? carrier = _state.people[journey.carrierId];
+    if (leg == null || arrivedAt == null || carrier == null) return;
+
+    // Chặng đi lâu hơn mức đường bằng thì chuyến hàng trễ thêm bấy nhiêu.
+    final int nominal = event.payload['nominal_seconds'] as int? ?? 0;
+    final int actual = event.payload['actual_seconds'] as int? ?? 0;
+    final int lost = (actual - nominal).clamp(0, gameSecondsPerDay);
+    SupplyJourneyState next = journey.advanceLeg(
+      legIndex: legIndex + 1,
+      currentLeg: arrivedAt.id,
+      travelledMm: journey.travelledMm + route.legDistanceMm(leg),
+    );
+    if (lost > 0) {
+      next = next.slowedBy(seconds: lost, reason: leg.terrain);
+    }
+    _replace(
+      people: <String, PersonState>{
+        ..._state.people,
+        journey.carrierId: carrier.withPosition(
+          arrivedAt.positionMm,
+          arrivedAt.positionYMm,
+        ),
+      },
+      supplyJourneys: <String, SupplyJourneyState>{
+        ..._state.supplyJourneys,
+        journeyId: next,
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'route_leg_arrived',
+          journeyId,
+          'waypoint=${arrivedAt.id} name=${arrivedAt.name} '
+              'position_mm=${arrivedAt.positionMm} '
+              'travelled_mm=${next.travelledMm} late_seconds=$lost',
+        ),
+      ],
+    );
+    if (legIndex + 2 < path.length) {
+      _scheduleRouteLeg(
+        journey: next,
+        route: route,
+        legIndex: legIndex + 1,
+      );
+      return;
+    }
+    // Hết chặng cuối thì giao hàng.
+    schedule(
+      due: _state.now,
+      phase: EventPhase.transfer,
+      kind: 'supply_journey_arrived',
+      payload: <String, Object?>{
+        'journey_id': journeyId,
+        'household_id': journey.householdId,
+        'carrier_id': journey.carrierId,
+        'journey_index': 0,
+      },
+    );
+  }
+
   void _applySupplyJourneyStarted(ScheduledEvent event) {
     final String householdId = event.payload['household_id']! as String;
     final String carrierId = event.payload['carrier_id']! as String;
@@ -2704,6 +3007,18 @@ class Simulation {
       return;
     }
     final String journeyId = 'SUP-$householdId-$index';
+    final String? routeId = event.payload['route_id'] as String?;
+    final TradeRoute? route = routeId == null ? null : _state.routes[routeId];
+    if (route != null) {
+      _startRoutedJourney(
+        journeyId: journeyId,
+        householdId: householdId,
+        carrierId: carrierId,
+        route: route,
+      );
+      _scheduleNextJourney(event);
+      return;
+    }
     final int expectedArrival = _state.now.seconds + 12 * 3600;
     final SupplyJourneyState journey = SupplyJourneyState(
       id: journeyId,
@@ -2841,10 +3156,28 @@ class Simulation {
           'household_id': journey.householdId,
           'carrier_id': journey.carrierId,
           'journey_index': nextIndex,
-          'delay_seconds': nextIndex.isEven ? 6 * 3600 : 0,
+          if (journey.routeId != null) 'route_id': journey.routeId,
+          if (journey.routeId == null)
+            'delay_seconds': nextIndex.isEven ? 6 * 3600 : 0,
         },
       );
     }
+  }
+
+  /// Xếp chuyến kế tiếp cho tuyến thật, năm ngày một lần như nhánh cũ.
+  void _scheduleNextJourney(ScheduledEvent event) {
+    final int nextIndex = (event.payload['journey_index']! as int) + 1;
+    final SimTime nextDeparture = _state.now.addDays(5);
+    if (nextDeparture.seconds >= 30 * gameSecondsPerDay) return;
+    schedule(
+      due: nextDeparture,
+      phase: EventPhase.movement,
+      kind: 'supply_journey_started',
+      payload: <String, Object?>{
+        ...event.payload,
+        'journey_index': nextIndex,
+      },
+    );
   }
 
   PersonState? _selectAvailableCaregiver(
@@ -2973,6 +3306,7 @@ class Simulation {
     Map<String, RoomState>? rooms,
     Map<String, IllnessState>? illnesses,
     Map<String, SupplyJourneyState>? supplyJourneys,
+    Map<String, TradeRoute>? routes,
   }) {
     _state = WorldState(
       seed: _state.seed,
@@ -2998,6 +3332,7 @@ class Simulation {
       supplyJourneys: Map<String, SupplyJourneyState>.unmodifiable(
         supplyJourneys ?? _state.supplyJourneys,
       ),
+      routes: Map<String, TradeRoute>.unmodifiable(routes ?? _state.routes),
     );
   }
 }

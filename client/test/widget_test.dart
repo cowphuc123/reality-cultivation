@@ -223,7 +223,7 @@ void main() {
     await tester.pumpAndSettle();
     final Simulation delayedJourney = Simulation.fromSave(
       repository.value!,
-    )..advanceTo(const SimTime(5 * gameSecondsPerDay + gameSecondsPerDay ~/ 3));
+    )..advanceTo(const SimTime(4 * gameSecondsPerDay + 22 * 3600));
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
@@ -239,8 +239,9 @@ void main() {
     await tester.tap(find.byKey(const Key('nav-2')));
     await tester.pumpAndSettle();
     expect(find.textContaining('SUP-H01-0'), findsOneWidget);
-    expect(find.textContaining('đang bị trễ'), findsOneWidget);
-    expect(find.textContaining('trễ 6 giờ'), findsOneWidget);
+    // Chuyến chạy trên tuyến thật: hiện tên tuyến, chặng và quãng đã đi.
+    expect(find.textContaining('Tuyến chợ An Khê'), findsOneWidget);
+    expect(find.textContaining('km'), findsWidgets);
   });
 
   testWidgets('directory opens a profile for everyone and every item', (
@@ -564,5 +565,166 @@ void main() {
     await tester.tap(find.byKey(const Key('nav-4')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('person-profile-N01')), findsOneWidget);
+  });
+  testWidgets('the carrier walks a real route through waypoints', (
+    WidgetTester tester,
+  ) async {
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-world')));
+    await tester.pumpAndSettle();
+
+    final Simulation start = Simulation.fromSave(repository.value!);
+    final TradeRoute route = start.state.routes['RT-ANKHE']!;
+    // Tuyến có ngã rẽ: từ chân đèo đi tiếp qua đèo hoặc vòng qua đồng ngoài.
+    expect(route.legs.length, 5);
+    expect(route.hasFork, isTrue);
+    expect(route.legsFrom('WP-DEO').length, 2);
+
+    // Đi được một chặng thì người chở phải đứng ở điểm mốc thật.
+    final Simulation midway = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(4 * gameSecondsPerDay + 22 * 3600));
+    final int carrierAt = midway.state.people['N04']!.positionMm!;
+    expect(
+      route.waypoints.map((RouteWaypoint w) => w.positionMm),
+      contains(carrierAt),
+    );
+    expect(
+      midway.state.facts.any(
+        (WorldFact fact) => fact.kind == 'route_leg_arrived',
+      ),
+      isTrue,
+    );
+
+    // Đi hết tuyến thì trễ giờ phải sinh ra từ địa hình, không phải hằng số.
+    final Simulation done = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(6 * gameSecondsPerDay));
+    final SupplyJourneyState trip = done.state.supplyJourneys['SUP-H01-0']!;
+    expect(trip.status, SupplyJourneyStatus.delivered);
+    // Người chở khỏe chọn đường vòng bằng phẳng nên không leo đèo nữa,
+    // và phần trễ còn lại đến từ 39 kg hàng trên lưng chứ không từ địa hình.
+    expect(trip.pathWaypointIds, contains('WP-DONG'));
+    expect(trip.pathWaypointIds, isNot(contains('WP-SUOI')));
+    expect(trip.travelledMm, route.pathDistanceMm(trip.pathWaypointIds));
+    expect(trip.delayReason, 'duong_bang');
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: midway,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-2')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('chặng'), findsWidgets);
+  });
+  testWidgets('two axes let a route fork, and the carrier picks a lane', (
+    WidgetTester tester,
+  ) async {
+    // Khoảng cách hai chiều là số nguyên, và thế giới một chiều cũ không đổi.
+    expect(
+      const WorldPoint(0, 0).distanceTo(const WorldPoint(3000, 4000)),
+      5000,
+    );
+    expect(const WorldPoint(12000).distanceTo(const WorldPoint(5000)), 7000);
+
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-world')));
+    await tester.pumpAndSettle();
+
+    final Simulation start = Simulation.fromSave(repository.value!);
+    final TradeRoute route = start.state.routes['RT-ANKHE']!;
+
+    // Điểm mốc lệch khỏi trục thì ngã rẽ mới có nghĩa.
+    final RouteWaypoint plain = route.waypoint('WP-DONG')!;
+    expect(plain.positionYMm, isNot(0));
+
+    // Đường vòng dài hơn về mét nhưng nhanh hơn về giờ.
+    const Map<String, int> cargo = <String, int>{
+      'food': 7500,
+      'water': 30000,
+      'infant_feed': 1500,
+    };
+    const List<String> viaPass = <String>[
+      'WP-CHO',
+      'WP-DEO',
+      'WP-SUOI',
+      'WP-SAN',
+    ];
+    const List<String> viaPlain = <String>[
+      'WP-CHO',
+      'WP-DEO',
+      'WP-DONG',
+      'WP-SAN',
+    ];
+    expect(
+      route.pathDistanceMm(viaPlain),
+      greaterThan(route.pathDistanceMm(viaPass)),
+    );
+    expect(
+      route.pathSeconds(
+        path: viaPlain,
+        cargo: cargo,
+        capabilityPerMille: 1000,
+      ),
+      lessThan(
+        route.pathSeconds(
+          path: viaPass,
+          cargo: cargo,
+          capabilityPerMille: 1000,
+        ),
+      ),
+    );
+
+    // Người chở tự chọn lối nhanh hơn cho mình.
+    expect(
+      route.fastestPath(
+        from: 'WP-CHO',
+        to: 'WP-SAN',
+        cargo: cargo,
+        capabilityPerMille: 1000,
+      ),
+      viaPlain,
+    );
+
+    final Simulation midway = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(4 * gameSecondsPerDay + 22 * 3600));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: midway,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-2')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Đã chọn lối'), findsOneWidget);
+    expect(find.textContaining('Đồng ngoài'), findsWidgets);
   });
 }

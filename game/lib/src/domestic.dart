@@ -4,6 +4,7 @@ class RoomState {
     required this.name,
     required this.householdId,
     required this.anchorPositionMm,
+    this.anchorPositionYMm = 0,
   });
 
   final String id;
@@ -11,11 +12,15 @@ class RoomState {
   final String householdId;
   final int anchorPositionMm;
 
+  /// Trục thứ hai của mốc phòng; 0 nghĩa là vẫn nằm trên trục cũ.
+  final int anchorPositionYMm;
+
   Map<String, Object> toJson() => <String, Object>{
     'id': id,
     'name': name,
     'household_id': householdId,
     'anchor_position_mm': anchorPositionMm,
+    if (anchorPositionYMm != 0) 'anchor_position_y_mm': anchorPositionYMm,
   };
 
   factory RoomState.fromJson(Map<String, Object?> json) => RoomState(
@@ -23,6 +28,7 @@ class RoomState {
     name: json['name']! as String,
     householdId: json['household_id']! as String,
     anchorPositionMm: json['anchor_position_mm']! as int,
+    anchorPositionYMm: json['anchor_position_y_mm'] as int? ?? 0,
   );
 }
 
@@ -41,6 +47,12 @@ class SupplyJourneyState {
     this.delaySeconds = 0,
     this.delayReason,
     this.actualArrivalSeconds,
+    this.routeId,
+    this.legIndex = 0,
+    this.legCount = 0,
+    this.travelledMm = 0,
+    this.worstLegLostSeconds = 0,
+    this.pathWaypointIds = const <String>[],
   });
 
   final String id;
@@ -54,6 +66,26 @@ class SupplyJourneyState {
   final int delaySeconds;
   final String? delayReason;
   final int? actualArrivalSeconds;
+
+  /// Tuyến đường đang đi, nếu chuyến này chạy trên tuyến thật.
+  final String? routeId;
+
+  /// Chặng thứ mấy trong tuyến, đếm từ 0.
+  final int legIndex;
+
+  /// Tổng số chặng của tuyến.
+  final int legCount;
+
+  /// Quãng đường đã đi được, tính bằng mm.
+  final int travelledMm;
+
+  /// Số giây mất thêm của chặng tốn giờ nhất, dùng để quy trách nhiệm đúng chỗ.
+  final int worstLegLostSeconds;
+
+  /// Dãy điểm mốc người chở đã chọn đi, từ nơi khởi hành tới đích.
+  final List<String> pathWaypointIds;
+
+  bool get onRoute => routeId != null;
 
   SupplyJourneyState delayed({required int seconds, required String reason}) =>
       _copy(
@@ -69,12 +101,40 @@ class SupplyJourneyState {
     actualArrivalSeconds: nowSeconds,
   );
 
+  /// Sang chặng kế tiếp của tuyến.
+  SupplyJourneyState advanceLeg({
+    required int legIndex,
+    required String currentLeg,
+    required int travelledMm,
+  }) => _copy(
+    currentLeg: currentLeg,
+    legIndex: legIndex,
+    travelledMm: travelledMm,
+  );
+
+  /// Ghi nhận chuyến đi lâu hơn dự kiến vì địa hình, tải hoặc sức người chở.
+  ///
+  /// Lý do luôn trỏ về chặng tốn giờ nhất, không phải chặng gần đây nhất.
+  SupplyJourneyState slowedBy({required int seconds, required String reason}) {
+    final bool worst = seconds > worstLegLostSeconds;
+    return _copy(
+      status: SupplyJourneyStatus.delayed,
+      delaySeconds: delaySeconds + seconds,
+      delayReason: worst ? reason : delayReason,
+      worstLegLostSeconds: worst ? seconds : worstLegLostSeconds,
+    );
+  }
+
   SupplyJourneyState _copy({
     SupplyJourneyStatus? status,
     String? currentLeg,
     int? delaySeconds,
     String? delayReason,
     int? actualArrivalSeconds,
+    int? legIndex,
+    int? travelledMm,
+    int? worstLegLostSeconds,
+    List<String>? pathWaypointIds,
   }) => SupplyJourneyState(
     id: id,
     householdId: householdId,
@@ -87,6 +147,12 @@ class SupplyJourneyState {
     delaySeconds: delaySeconds ?? this.delaySeconds,
     delayReason: delayReason ?? this.delayReason,
     actualArrivalSeconds: actualArrivalSeconds ?? this.actualArrivalSeconds,
+    routeId: routeId,
+    legIndex: legIndex ?? this.legIndex,
+    legCount: legCount,
+    travelledMm: travelledMm ?? this.travelledMm,
+    worstLegLostSeconds: worstLegLostSeconds ?? this.worstLegLostSeconds,
+    pathWaypointIds: pathWaypointIds ?? this.pathWaypointIds,
   );
 
   Map<String, Object?> toJson() => <String, Object?>{
@@ -104,6 +170,12 @@ class SupplyJourneyState {
     if (delayReason != null) 'delay_reason': delayReason,
     if (actualArrivalSeconds != null)
       'actual_arrival_seconds': actualArrivalSeconds,
+    if (routeId != null) 'route_id': routeId,
+    if (legIndex > 0) 'leg_index': legIndex,
+    if (legCount > 0) 'leg_count': legCount,
+    if (travelledMm > 0) 'travelled_mm': travelledMm,
+    if (worstLegLostSeconds > 0) 'worst_leg_lost_seconds': worstLegLostSeconds,
+    if (pathWaypointIds.isNotEmpty) 'path_waypoint_ids': pathWaypointIds,
   };
 
   factory SupplyJourneyState.fromJson(Map<String, Object?> json) =>
@@ -119,6 +191,14 @@ class SupplyJourneyState {
         delaySeconds: json['delay_seconds'] as int? ?? 0,
         delayReason: json['delay_reason'] as String?,
         actualArrivalSeconds: json['actual_arrival_seconds'] as int?,
+        routeId: json['route_id'] as String?,
+        legIndex: json['leg_index'] as int? ?? 0,
+        legCount: json['leg_count'] as int? ?? 0,
+        travelledMm: json['travelled_mm'] as int? ?? 0,
+        worstLegLostSeconds: json['worst_leg_lost_seconds'] as int? ?? 0,
+        pathWaypointIds:
+            (json['path_waypoint_ids'] as List<Object?>?)?.cast<String>() ??
+            const <String>[],
       );
 }
 

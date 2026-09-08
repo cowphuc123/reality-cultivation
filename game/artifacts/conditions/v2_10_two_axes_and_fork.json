@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-10-two-axes-and-fork",
+  "conditions": [
+    {"id":"V210-GEO-001","title":"Khoảng cách hai chiều đúng với tam giác 3-4-5","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"Distance from origin to (3000,4000) is exactly 5000"},
+    {"id":"V210-GEO-002","title":"Căn nguyên lấy đúng phần nguyên, không dùng số thực","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"integerSquareRoot matches at 0, 1, 15, 16 and 1000000"},
+    {"id":"V210-GEO-003","title":"Hai điểm trên trục cho khoảng cách bằng hiệu tuyệt đối","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"Axis-only points reduce to the old one-dimensional distance"},
+    {"id":"V210-GEO-004","title":"Chỉ điểm có trục thứ hai bằng 0 mới coi là trên trục","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"onAxis is false as soon as y is non-zero"},
+    {"id":"V210-GEO-005","title":"Mười bốn runner cũ giữ nguyên hash sau khi thêm trục","status":"automated","runner":"tool/verify_v0.dart; tool/verify_v1_infancy.dart; tool/verify_v1_care_chain.dart; tool/verify_v1_body.dart; tool/verify_v2_household.dart; tool/verify_v2_1_household_health.dart; tool/verify_v2_2_transport_substitution.dart; tool/verify_v2_3_routine_directory.dart; tool/verify_v2_4_need_driven_plan.dart; tool/verify_v2_5_skills_and_refusal.dart; tool/verify_v2_6_growth_hunger_mood.dart; tool/verify_v2_7_adult_body.dart; tool/verify_v2_8_water_and_thirst.dart","oracle":"Adding the optional y axis leaves every one-dimensional world unchanged"},
+    {"id":"V210-FORK-001","title":"Tuyến có ngã rẽ thật","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"hasFork is true and two legs leave the market"},
+    {"id":"V210-FORK-002","title":"Đường vòng dài hơn về mét","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"Plain detour is 15620 m against 12000 m over the pass"},
+    {"id":"V210-FORK-003","title":"Nhưng đường vòng nhanh hơn về giờ","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"Detour takes 7.9 hours against 11.4 over the pass"},
+    {"id":"V210-FORK-004","title":"Người khỏe chọn đường nhanh, không phải đường ngắn","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"fastestPath returns the plain detour at full capability"},
+    {"id":"V210-FORK-005","title":"Người yếu bị chặn ở suối nên phải leo đèo","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"Capability 500 fails the ford requirement of 600 and takes the pass"},
+    {"id":"V210-FORK-006","title":"Yếu quá thì không có đường nào đi được","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"Capability 200 fails every leg and fastestPath is empty"},
+    {"id":"V210-WALK-001","title":"Chuyến hàng ghi lại đúng đường đã chọn","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"pathWaypointIds records the plain detour"},
+    {"id":"V210-WALK-002","title":"Đi hết đường vòng thì giao được hàng","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"Journey delivers and travelledMm equals the chosen path length"},
+    {"id":"V210-WALK-003","title":"Người chở thật sự đi qua điểm mốc lệch trục","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"route_leg_arrived names WP-DONG"},
+    {"id":"V210-WALK-004","title":"Lúc khởi hành ghi rõ đường đã chọn","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"supply_journey_started carries path=WP-CHO>WP-DONG>WP-SAN"},
+    {"id":"V210-WALK-005","title":"Hai người khác sức đi hai đường khác nhau","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"The underweight carrier is routed over the pass instead"},
+    {"id":"V210-WALK-006","title":"Không có đường thì không tạo chuyến hàng","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"supply_route_impassable fires and no journey is created"},
+    {"id":"V210-SAVE-001","title":"Lưu giữa đường tái hiện đúng","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"Continuous and restored day-eight hashes both equal 2a87b934f03e0f29"},
+    {"id":"V210-FIX-001","title":"Khối lượng lúc khỏe được đọc độc lập khỏi dự trữ","status":"automated","runner":"tool/verify_v2_10_two_axes_and_fork.dart","oracle":"healthy_mass_g now takes effect without energy_reserve_kj, so a declared-thin carrier is actually weak"},
+    {"id":"V210-REGRESSION-001","title":"V2.9 đạt lại sau khi chuyến hàng lưu đường đã chọn","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"All V2.9 assertions pass at the updated hash a4830eb8844ec469"},
+    {"id":"V210-UI-001","title":"GUI chiếu lộ trình đã chọn khi tuyến có ngã rẽ","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Journey card shows the chosen lane through Đồng ngoài"},
+    {"id":"V210-UI-002","title":"GUI xác nhận điểm mốc lệch khỏi trục","status":"automated","runner":"../client/test/widget_test.dart","oracle":"WP-DONG has a non-zero y coordinate"},
+    {"id":"V210-UI-003","title":"Nhật ký có câu tiếng Việt cho tuyến không qua nổi","status":"manual","runner":"../client/lib/main.dart","oracle":"supply_route_impassable has a Vietnamese label and detail sentence"}
+  ]
+}

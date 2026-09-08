@@ -156,6 +156,81 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     ..schedule(
       due: const SimTime(0),
       phase: EventPhase.completion,
+      kind: 'route_created',
+      payload: const <String, Object?>{
+        'route': <String, Object?>{
+          'id': 'RT-ANKHE',
+          'name': 'Tuyến chợ An Khê',
+          'origin_id': 'WP-CHO',
+          'destination_id': 'WP-SAN',
+          'waypoints': <Map<String, Object?>>[
+            <String, Object?>{
+              'id': 'WP-CHO',
+              'name': 'Chợ An Khê',
+              'position_mm': 12012000,
+            },
+            <String, Object?>{
+              'id': 'WP-DEO',
+              'name': 'Chân đèo',
+              'position_mm': 8012000,
+            },
+            <String, Object?>{
+              'id': 'WP-SUOI',
+              'name': 'Khúc lội suối',
+              'position_mm': 4012000,
+            },
+            <String, Object?>{
+              'id': 'WP-DONG',
+              'name': 'Đồng ngoài',
+              'position_mm': 4012000,
+              'position_y_mm': 3000000,
+            },
+            <String, Object?>{
+              'id': 'WP-SAN',
+              'name': 'Sân hộ',
+              'position_mm': 12000,
+            },
+          ],
+          'legs': <Map<String, Object?>>[
+            <String, Object?>{
+              'from_id': 'WP-CHO',
+              'to_id': 'WP-DEO',
+              'terrain': 'duong_bang',
+              'terrain_speed_per_mille': 1000,
+            },
+            <String, Object?>{
+              'from_id': 'WP-DEO',
+              'to_id': 'WP-SUOI',
+              'terrain': 'duong_nui',
+              'terrain_speed_per_mille': 400,
+            },
+            <String, Object?>{
+              'from_id': 'WP-SUOI',
+              'to_id': 'WP-SAN',
+              'terrain': 'loi_suoi',
+              'terrain_speed_per_mille': 600,
+            },
+            // Ngã rẽ: từ chân đèo có thể đi vòng qua đồng ngoài, dài hơn
+            // nhưng bằng phẳng nên thường nhanh hơn.
+            <String, Object?>{
+              'from_id': 'WP-DEO',
+              'to_id': 'WP-DONG',
+              'terrain': 'duong_bang',
+              'terrain_speed_per_mille': 1000,
+            },
+            <String, Object?>{
+              'from_id': 'WP-DONG',
+              'to_id': 'WP-SAN',
+              'terrain': 'duong_bang',
+              'terrain_speed_per_mille': 1000,
+            },
+          ],
+        },
+      },
+    )
+    ..schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
       kind: 'person_created',
       payload: const <String, Object?>{
         'person_id': 'N01',
@@ -246,7 +321,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'person_id': 'N04',
         'name': 'Người vận chuyển',
         'birth_seconds': -34 * 365 * gameSecondsPerDay,
-        'position_mm': 500000,
+        'position_mm': 12012000,
+        'adult_body': <String, Object?>{'mass_g': 54000},
       },
     )
     ..schedule(
@@ -356,6 +432,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'caregiver_id': 'N01',
         'production_actor_id': 'N03',
         'supply_carrier_id': 'N04',
+        'supply_route_id': 'RT-ANKHE',
       },
     )
     ..advanceTo(const SimTime(0));
@@ -2305,6 +2382,13 @@ String _needLabel(String kind) => switch (kind) {
   _ => kind,
 };
 
+String _terrainLabel(String terrain) => switch (terrain) {
+  'duong_bang' => 'đường bằng',
+  'duong_nui' => 'đường núi',
+  'loi_suoi' => 'khúc lội suối',
+  _ => terrain,
+};
+
 class _SupplyJourneyCard extends StatelessWidget {
   const _SupplyJourneyCard({required this.journey});
 
@@ -2351,12 +2435,29 @@ class _SupplyJourneyCard extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 Text(
-                  '${journey.carrierName} · ${_journeyLegLabel(journey.currentLeg)}',
+                  journey.onRoute
+                      ? '${journey.carrierName} · ${journey.currentWaypointName ?? journey.currentLeg}'
+                      : '${journey.carrierName} · ${_journeyLegLabel(journey.currentLeg)}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                if (journey.onRoute) ...<Widget>[
+                  Text(
+                    'Tuyến ${journey.route!.name}: chặng '
+                    '${journey.legIndex.clamp(0, journey.legCount)}/${journey.legCount} · '
+                    'đã đi ${(journey.travelledMm / 1000000).toStringAsFixed(1)} '
+                    'trên ${(journey.pathDistanceMm / 1000000).toStringAsFixed(1)} km',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  if (journey.pathNames.length > 1)
+                    Text(
+                      '${journey.chosenAmongForks ? 'Đã chọn lối' : 'Lộ trình'}: '
+                      '${journey.pathNames.join(' → ')}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                ],
                 Text(
                   'Mốc đến: ngày $day lúc $time'
-                  '${journey.delaySeconds > 0 ? ' · trễ ${journey.delaySeconds ~/ 3600} giờ' : ''}',
+                  '${journey.delaySeconds > 0 ? ' · chậm ${(journey.delaySeconds / 3600).toStringAsFixed(1)} giờ vì ${_terrainLabel(journey.delayReason ?? '')}' : ''}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -2609,7 +2710,9 @@ class _HistoryPanelState extends State<_HistoryPanel> {
           fact.kind.contains('illness'),
     'household' =>
       fact.kind.startsWith('household') ||
-          fact.kind.startsWith('supply_journey'),
+          fact.kind.startsWith('supply_journey') ||
+          fact.kind.startsWith('route_') ||
+          fact.kind == 'supply_route_impassable',
     'routine' =>
       fact.kind.startsWith('routine') ||
           fact.kind == 'skill_improved' ||
@@ -2880,6 +2983,18 @@ String _factDetail(WorldFact fact) {
       '${values['carrier'] ?? 'Người vận chuyển'} khởi hành với lương thực, nước và dinh dưỡng cho hộ.',
     'supply_journey_delayed' =>
       'Chuyến hàng trễ ${((int.tryParse(values['delay_seconds'] ?? '') ?? 0) ~/ 3600)} giờ vì ${_reasonLabel(values['reason'])}.',
+    'supply_route_impassable' =>
+      'Không lối nào qua nổi với sức lực ${values['capability'] ?? '?'}/1000, '
+          'nên chuyến hàng không khởi hành.',
+    'route_created' =>
+      'Ghi nhận tuyến ${fact.detail.split(' legs=').first} dài '
+          '${((int.tryParse(values['distance_mm'] ?? '') ?? 0) / 1000000).toStringAsFixed(1)} km.',
+    'route_leg_started' =>
+      'Đi ${_terrainLabel(values['terrain'] ?? '')}, '
+          'dự tính ${((int.tryParse(values['seconds'] ?? '') ?? 0) / 3600).toStringAsFixed(1)} giờ.',
+    'route_leg_arrived' =>
+      'Tới ${values['name'] ?? 'điểm mốc'}'
+          '${values['late_seconds'] == '0' ? ' đúng nhịp' : ', chậm hơn đường bằng ${((int.tryParse(values['late_seconds'] ?? '') ?? 0) / 3600).toStringAsFixed(1)} giờ'}.',
     'supply_journey_arrived' =>
       'Chuyến hàng đã tới hộ${values['delay_seconds'] == '0' ? ' đúng lịch' : ' sau thời gian trễ'}.',
     'cry_heard' =>
@@ -2961,6 +3076,10 @@ String _factLabel(String kind) => switch (kind) {
   'supply_journey_started' => 'Chuyến tiếp tế khởi hành',
   'supply_journey_delayed' => 'Chuyến tiếp tế bị trễ',
   'supply_journey_arrived' => 'Chuyến tiếp tế đã tới',
+  'route_created' => 'Tuyến đường hình thành',
+  'route_leg_started' => 'Bắt đầu một chặng đường',
+  'route_leg_arrived' => 'Tới một điểm mốc',
+  'supply_route_impassable' => 'Không có đường nào đi được',
   _ => kind,
 };
 

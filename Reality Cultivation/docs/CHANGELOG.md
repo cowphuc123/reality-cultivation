@@ -1,5 +1,32 @@
 # Nhật ký dự án
 
+## 2026-09-09 — K5.17: V2.10 vị trí hai chiều và tuyến có ngã rẽ
+
+- Thêm `WorldPoint` và `integerSquareRoot`: vị trí có trục thứ hai, khoảng cách tính bằng số nguyên. Mở đường cho U013 (chọn nơi trên bản đồ) và K4.4 (địa lý).
+- Trục thứ hai là **tùy chọn, mặc định 0**, và `isqrt(dx²) = |dx|` đúng tuyệt đối, nên **cả 14 hash cũ giữ nguyên** sau khi đổi mô hình vị trí. Đây là điều kiện V210-GEO-005.
+- Tuyến đường thành đồ thị có ngã rẽ: `legsFrom`, `legBetween`, `hasFork`, và `fastestPath` chọn đường bằng Dijkstra **trên thời gian đi**, không phải trên quãng đường.
+- Fixture có hai lối từ chợ về nhà: qua đèo 12.000 m mất 11,4 giờ, hay vòng qua đồng ngoài 15.620 m mất 7,9 giờ. Đường vòng dài hơn 30% về mét nhưng nhanh hơn 30% về giờ, và người chở chọn đúng nó.
+- `RouteLeg.minCapabilityPerMille`: sức lực nay đổi **con đường đi được**, không chỉ tốc độ. Người khỏe qua suối đi đường vòng; người gầy (sức 486) bị chặn nên phải leo đèo; người kiệt sức (sức 230) không qua nổi lối nào nên chuyến hàng không khởi hành, ghi `supply_route_impassable`.
+- **Sửa lỗi từ V2.7**: hàm đọc payload cơ thể bỏ qua `healthy_mass_g` nếu không kèm `energy_reserve_kj`, nên người khai là gầy vẫn được coi là đủ sức. Nay hai trường đọc độc lập. Sửa lỗi này không làm đổi hash nào.
+- Runner V2.10 đạt ngày 8 hash `2a87b934f03e0f29`; catalog 23 điều kiện; 14/14 widget test đạt.
+- Mười ba runner V0–V2.8 giữ nguyên hash. Hash V2.9 đổi `a89dc7db61e7173d` → `a4830eb8844ec469` vì chuyến hàng nay lưu thêm đường đã chọn.
+- GUI hiện lộ trình đã chọn và nói rõ "Đã chọn lối" khi tuyến có ngã rẽ. Thế giới client cũng có ngã rẽ, nên người chở khỏe không leo đèo nữa.
+- Thêm [[K5_17_V2_10_HAI_CHIEU_VA_NGA_RE]].
+
+## 2026-09-08 — K5.16: V2.9 tuyến vận tải thật
+
+- Thay nhãn chặng ảo của V2.2 bằng tuyến thật: điểm mốc có vị trí, chặng có địa hình, quãng đường suy từ vị trí hai đầu. Tuyến fixture dài 12 km gồm đường bằng, đường núi (40% tốc độ) và khúc lội suối (60%).
+- Người chở đi từng chặng và **vị trí thật đổi theo** khi tới mỗi điểm mốc, không còn nhảy cóc.
+- Tốc độ = nền × địa hình × hệ số tải × sức lực người chở. Mang 39 kg còn 61% tốc độ; sức lực lấy thẳng từ cơ thể V2.7/V2.8.
+- **Trễ giờ nay là hệ quả, không phải hằng số**: chuyến đầu trễ 18.274 giây (~5 giờ) vì đoạn đường núi, và lý do trễ trỏ về chặng tốn giờ nhất chứ không phải chặng gần đây nhất.
+- Cơ thể nối vào vận tải: cho người chở gầy 44 kg và cạn dự trữ thì cùng tuyến ấy trễ 48.415 giây — **chậm thêm hơn 8 giờ** chỉ vì người vác hàng yếu.
+- Thêm `RouteWaypoint`/`RouteLeg`/`TradeRoute`/`CarrierPace`, `WorldState.routes`, và các trường tuyến/chặng trên `SupplyJourneyState`.
+- Sự kiện mới: `route_created`, `route_leg_started`, `route_leg_arrived`.
+- Runner V2.9 đạt ngày 8 hash `a89dc7db61e7173d`; catalog 23 điều kiện; 13/13 widget test đạt.
+- **Mười ba runner V0–V2.8 giữ nguyên hash** — thế giới không khai báo `supply_route_id` vẫn chạy nhánh cũ.
+- Bài test GUI cũ của V2.2 đã chỉnh lại: nó từng kiểm tra "trễ 6 giờ", con số hằng số nay không còn tồn tại.
+- Thêm [[K5_16_V2_9_TUYEN_VAN_TAI_THAT]].
+
 ## 2026-09-08 — K5.15: V2.8 nước và cơn khát của người lớn
 
 - Đóng chỗ hở của V2.7: nước từng được theo dõi mà không có hậu quả gì, nay có.

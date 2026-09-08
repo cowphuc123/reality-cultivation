@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-9-trade-route",
+  "conditions": [
+    {"id":"V29-PACE-001","title":"Mang nặng thì hệ số tải thấp hơn mang nhẹ","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"loadFactorPerMille falls as cargo mass rises"},
+    {"id":"V29-PACE-002","title":"Địa hình xấu làm tốc độ giảm đúng theo hệ số","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"Mountain terrain at 400 per mille is slower than flat"},
+    {"id":"V29-PACE-003","title":"Người yếu sức đi chậm đúng theo tỉ lệ","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"Capability 500 halves the walking speed"},
+    {"id":"V29-PACE-004","title":"Thời gian đi làm tròn lên, không về sớm hơn thực tế","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"1000 mm at 300 mm per second takes four seconds"},
+    {"id":"V29-ROUTE-001","title":"Tuyến có đủ điểm mốc và chặng","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"RT-ANKHE has four waypoints and three legs"},
+    {"id":"V29-ROUTE-002","title":"Tổng quãng đường suy từ vị trí các điểm mốc","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"Three four-kilometre legs total twelve kilometres"},
+    {"id":"V29-ROUTE-003","title":"Chặng chậm nhất được nhận ra đúng","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"slowestLeg reports the mountain road"},
+    {"id":"V29-WALK-001","title":"Chuyến hàng biết mình đang chạy trên tuyến nào","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"Journey carries routeId and a leg count of three"},
+    {"id":"V29-WALK-002","title":"Người chở tới được điểm mốc trung gian","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"route_leg_arrived fires before the destination"},
+    {"id":"V29-WALK-003","title":"Vị trí người chở đổi thật khi đi đường","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"Carrier position moves off the market waypoint"},
+    {"id":"V29-WALK-004","title":"Đủ ba lần tới điểm mốc được ghi lại","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"Three route_leg_arrived facts by the end of the trip"},
+    {"id":"V29-WALK-005","title":"Quãng đã đi bằng đúng chiều dài tuyến","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"travelledMm equals totalDistanceMm on arrival"},
+    {"id":"V29-DELAY-001","title":"Trễ giờ sinh ra từ địa hình, không phải hằng số","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"Delay of 18274 seconds is attributed to duong_nui"},
+    {"id":"V29-DELAY-002","title":"Lý do trễ trỏ về chặng tốn giờ nhất","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"delayReason keeps the mountain leg, not the last leg walked"},
+    {"id":"V29-DELAY-003","title":"Lúc khởi hành ghi rõ tải và sức lực đã tính","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"supply_journey_started carries load_factor and capability"},
+    {"id":"V29-DELAY-004","title":"Người chở yếu sức làm chuyến trễ nhiều hơn","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"An underweight carrier adds 30141 seconds of delay"},
+    {"id":"V29-DELIVER-001","title":"Đi hết tuyến thì hàng vào kho","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"Household supplyDeliveries rises after the last leg"},
+    {"id":"V29-GATE-001","title":"Không khai báo tuyến thì dùng nhánh cũ","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"Legacy world delivers without any route_leg_arrived fact"},
+    {"id":"V29-SAVE-001","title":"Lưu giữa đường tái hiện đúng","status":"automated","runner":"tool/verify_v2_9_trade_route.dart","oracle":"Continuous and restored day-eight hashes both equal a4830eb8844ec469 (was a89dc7db61e7173d before V2.10 stored the chosen path)"},
+    {"id":"V29-REGRESSION-001","title":"Mười ba runner V0–V2.8 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart; tool/verify_v1_infancy.dart; tool/verify_v1_care_chain.dart; tool/verify_v1_body.dart; tool/verify_v2_household.dart; tool/verify_v2_1_household_health.dart; tool/verify_v2_2_transport_substitution.dart; tool/verify_v2_3_routine_directory.dart; tool/verify_v2_4_need_driven_plan.dart; tool/verify_v2_5_skills_and_refusal.dart; tool/verify_v2_6_growth_hunger_mood.dart; tool/verify_v2_7_adult_body.dart; tool/verify_v2_8_water_and_thirst.dart","oracle":"All earlier runners pass with unchanged hashes"},
+    {"id":"V29-UI-001","title":"GUI chiếu tên tuyến, chặng và quãng đã đi","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Journey card shows the route name and kilometres walked"},
+    {"id":"V29-UI-002","title":"Người chở đứng đúng một điểm mốc của tuyến","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Carrier position matches one of the route waypoints midway"},
+    {"id":"V29-UI-003","title":"Nhật ký có câu tiếng Việt cho các mốc tuyến đường","status":"manual","runner":"../client/lib/main.dart","oracle":"route_created, route_leg_started and route_leg_arrived have Vietnamese labels"}
+  ]
+}
