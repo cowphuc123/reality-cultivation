@@ -132,6 +132,10 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     bool awaitBirthSelection = true,
   }) {
     final GeneratedWorld generated = WorldGenerator.generate(rootSeed: seed);
+    final GeneratedWorldHistory history = WorldHistoryGenerator.generate(
+      rootSeed: seed,
+      worldFingerprint: generated.fingerprint,
+    );
     final WorldSite home = generated.site('SITE-HOME');
     final WorldSite river = generated.site('SITE-RIVER');
     final WorldSite field = generated.site('SITE-FIELD');
@@ -459,6 +463,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'supply_route_id': 'RT-ANKHE',
       },
     )
+    ..simulatePrehistory(history)
     ..openWorldEntry();
 
     simulation.advanceTo(const SimTime(0));
@@ -751,6 +756,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         entry: entry!,
         world: world,
         worldMap: _host.worldMap(),
+        history: _host.worldHistory(),
         ready: _ready,
         onChoose: (String siteId) => unawaited(_chooseBirthSite(siteId)),
         onNewWorld: () => unawaited(_confirmNewWorld()),
@@ -814,6 +820,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         world: world,
         directory: _host.directory(),
         worldMap: _host.worldMap(),
+        history: _host.worldHistory(),
       ),
     ];
     final int secondsOfDay = world.time.seconds % gameSecondsPerDay;
@@ -1548,12 +1555,14 @@ class _ProfilePage extends StatelessWidget {
     required this.world,
     required this.directory,
     required this.worldMap,
+    required this.history,
   });
 
   final Widget saves;
   final WorldView world;
   final WorldDirectoryView directory;
   final WorldMapView worldMap;
+  final WorldHistoryView? history;
 
   @override
   Widget build(BuildContext context) => _PageFrame(
@@ -1590,6 +1599,13 @@ class _ProfilePage extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         _WorldMapPanel(worldMap: worldMap),
+        if (history != null) ...<Widget>[
+          const SizedBox(height: 14),
+          _WorldHistorySummary(
+            history: history!,
+            materializedPersonCount: world.personCount,
+          ),
+        ],
         const SizedBox(height: 14),
         Card(
           key: const Key('people-directory'),
@@ -1646,6 +1662,7 @@ class _BirthSelectionScreen extends StatelessWidget {
     required this.entry,
     required this.world,
     required this.worldMap,
+    required this.history,
     required this.ready,
     required this.onChoose,
     required this.onNewWorld,
@@ -1654,6 +1671,7 @@ class _BirthSelectionScreen extends StatelessWidget {
   final WorldEntryView entry;
   final WorldView world;
   final WorldMapView worldMap;
+  final WorldHistoryView? history;
   final bool ready;
   final ValueChanged<String> onChoose;
   final VoidCallback onNewWorld;
@@ -1770,6 +1788,13 @@ class _BirthSelectionScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 22),
+                      if (history != null) ...<Widget>[
+                        _WorldHistorySummary(
+                          history: history!,
+                          materializedPersonCount: world.personCount,
+                        ),
+                        const SizedBox(height: 22),
+                      ],
                       Wrap(
                         spacing: 16,
                         runSpacing: 16,
@@ -1794,6 +1819,165 @@ class _BirthSelectionScreen extends StatelessWidget {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _WorldHistorySummary extends StatelessWidget {
+  const _WorldHistorySummary({
+    required this.history,
+    required this.materializedPersonCount,
+  });
+
+  final WorldHistoryView history;
+  final int materializedPersonCount;
+
+  String _effectText(HistoricalEffect effect) {
+    final List<String> parts = <String>[];
+    if (effect.populationDelta != 0) {
+      parts.add('dân số ${effect.populationDelta > 0 ? '+' : ''}${effect.populationDelta}');
+    }
+    if (effect.cultivatedLandDelta != 0) {
+      parts.add(
+        'đất canh tác ${effect.cultivatedLandDelta > 0 ? '+' : ''}'
+        '${effect.cultivatedLandDelta}',
+      );
+    }
+    if (effect.tradeReachDelta != 0) {
+      parts.add('giao thương +${effect.tradeReachDelta}');
+    }
+    if (effect.resourcePressureDelta != 0) {
+      parts.add(
+        'áp lực tài nguyên ${effect.resourcePressureDelta > 0 ? '+' : ''}'
+        '${effect.resourcePressureDelta}',
+      );
+    }
+    return parts.join(' · ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final HistoricalMetrics? metrics = history.currentMetrics;
+    return Card(
+      key: const Key('world-history-summary'),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                const Icon(Icons.history, color: Color(0xffc6a56a)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '${history.state.totalYears} năm tiền sử đã được mô phỏng',
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${history.completedEpochCount}/${history.expectedEpochCount} epoch',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            LinearProgressIndicator(
+              value: history.expectedEpochCount == 0
+                  ? 0
+                  : history.completedEpochCount / history.expectedEpochCount,
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                for (final HistoricalEpochResult epoch in history.state.epochs)
+                  Chip(
+                    key: Key('history-epoch-${epoch.id}'),
+                    avatar: const Icon(Icons.check, size: 16),
+                    label: Text(
+                      '${epoch.name} · ${epoch.startYearsBeforePresent}–'
+                      '${epoch.endYearsBeforePresent} năm trước',
+                    ),
+                  ),
+              ],
+            ),
+            if (metrics != null) ...<Widget>[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 14,
+                runSpacing: 7,
+                children: <Widget>[
+                  Text('Dân số vùng ước tính ${metrics.populationEstimate}'),
+                  Text('Khoảng ${metrics.householdEstimate} hộ'),
+                  Text('Đất canh tác ${metrics.cultivatedLandMu} mẫu'),
+                  Text('Giao thương ${metrics.tradeReach}/1000'),
+                  Text('Áp lực tài nguyên ${metrics.resourcePressure}/1000'),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Dân số trên là cohort vĩ mô; $materializedPersonCount người '
+                'hiện đã có hồ sơ Person chi tiết.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            const SizedBox(height: 10),
+            const Divider(),
+            const SizedBox(height: 4),
+            Text(
+              'BIẾN CỐ NEO CÒN DẤU TRONG HIỆN TẠI',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                letterSpacing: 1.1,
+                color: const Color(0xffc6a56a),
+              ),
+            ),
+            const SizedBox(height: 8),
+            for (final HistoricalAnchor anchor in history.anchors)
+              Padding(
+                key: Key('history-anchor-${anchor.id}'),
+                padding: const EdgeInsets.symmetric(vertical: 7),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    SizedBox(
+                      width: 92,
+                      child: Text(
+                        '${anchor.yearsBeforePresent} năm trước',
+                        style: const TextStyle(
+                          color: Color(0xffc6a56a),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(anchor.summary),
+                          const SizedBox(height: 3),
+                          Text(
+                            '${anchor.subjectId} · ${_effectText(anchor.effect)}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 4),
+            Text(
+              'Dấu lịch sử ${history.state.planFingerprint}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
         ),
       ),
     );
@@ -3431,6 +3615,9 @@ Color _factColor(String kind) {
   }
   if (kind.startsWith('household')) return const Color(0xffc6a56a);
   if (kind.startsWith('supply_journey')) return const Color(0xff78a9b7);
+  if (kind.contains('history') || kind.contains('historical')) {
+    return const Color(0xff9a8fc3);
+  }
   if (kind.contains('illness')) return const Color(0xffd49a68);
   if (kind.contains('care') || kind.contains('infant')) {
     return const Color(0xff83b993);
@@ -3519,6 +3706,16 @@ String _factDetail(WorldFact fact) {
     'world_genesis_completed' =>
       'Bản đồ seed ${values['seed'] ?? ''} đã được sinh bằng '
           '${values['version'] ?? ''}; dấu vân tay ${values['fingerprint'] ?? ''}.',
+    'world_history_started' =>
+      'Bắt đầu mô phỏng ${values['years'] ?? '?'} năm tiền sử '
+          'qua ${values['epochs'] ?? '?'} epoch vĩ mô.',
+    'historical_epoch_simulated' =>
+      'Epoch ${fact.subjectId} hoàn tất sau ${values['steps'] ?? '?'} bước; '
+          'dân số vùng ước tính ${values['population'] ?? '?'}, '
+          '${values['households'] ?? '?'} hộ.',
+    'world_history_completed' =>
+      'Đã đi hết ${values['years'] ?? '?'} năm tiền sử và giữ '
+          '${values['anchors'] ?? '?'} biến cố neo.',
     'routine_block_rescheduled' =>
       'Việc bị lùi hết lượt được xếp lại sang ${values['moved_to'] ?? 'giờ khác'}.',
     'routine_block_started' =>
@@ -3631,6 +3828,9 @@ String _factLabel(String kind) => switch (kind) {
   'region_created' => 'Một vùng được tạo',
   'site_created' => 'Một địa điểm được tạo',
   'world_genesis_completed' => 'Hoàn tất sinh thế giới',
+  'world_history_started' => 'Bắt đầu mô phỏng tiền sử',
+  'historical_epoch_simulated' => 'Một epoch lịch sử hoàn tất',
+  'world_history_completed' => 'Tiền sử đi tới hiện tại',
   'skill_improved' => 'Lên tay nghề',
   'body_mass_lost' => 'Sụt cân vì thiếu ăn',
   'body_drank' => 'Uống nước từ kho hộ',

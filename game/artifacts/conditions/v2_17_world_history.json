@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-17-world-history",
+  "conditions": [
+    {"id":"V217-SEED-001","title":"Cùng seed và bản đồ sinh cùng lịch sử","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Repeated generation has identical age, epochs and history fingerprint"},
+    {"id":"V217-SEED-002","title":"Seed khác đổi tuổi hoặc nội dung lịch sử","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Seeds 20260907 and 20260908 do not share the same history result"},
+    {"id":"V217-SEED-003","title":"Stream lịch sử dùng số học nguyên an toàn trên web","status":"manual","runner":"lib/src/world_history.dart","oracle":"Park-Miller multiplication remains below the exact-integer limit of JavaScript"},
+    {"id":"V217-AGE-001","title":"Tuổi lịch sử nằm từ vài trăm tới vài vạn năm","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Generated age stays between 300 and 30000 years"},
+    {"id":"V217-AGE-002","title":"Seed phủ đủ ba dải trăm, nghìn và vạn năm","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Fixture seeds 1, 20 and 8 land in the three age tiers"},
+    {"id":"V217-EPOCH-001","title":"Ba epoch phủ liên tục tới hiện tại","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Epoch boundaries are contiguous from total age to zero BP"},
+    {"id":"V217-EPOCH-002","title":"Mỗi epoch chạy nhiều bước vĩ mô","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Each epoch executes 64 deterministic macro steps"},
+    {"id":"V217-METRIC-001","title":"Đại lượng vùng truyền qua các epoch","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Population and trade metrics change cumulatively across epoch results"},
+    {"id":"V217-ANCHOR-001","title":"Giữ sáu biến cố neo giải thích snapshot hiện tại","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Anchors reference home, field, river, market, pass and current trade route"},
+    {"id":"V217-ANCHOR-002","title":"Biến cố có tác động số lên trạng thái","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"The river flood causes a real negative population delta"},
+    {"id":"V217-ANCHOR-003","title":"Biến cố neo phải trỏ tới thực thể hiện còn tồn tại","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"History is rejected when the referenced current trade route is absent"},
+    {"id":"V217-ORDER-001","title":"P00 không tồn tại trong toàn bộ tiền sử","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"History completes while P00 remains absent"},
+    {"id":"V217-ORDER-002","title":"Chỉ mở nhập thế sau epoch cuối","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"world_history_completed fact precedes world_entry_opened"},
+    {"id":"V217-ORDER-003","title":"Xếp nhập thế trước lịch sử bị từ chối","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Pending history blocks an earlier world entry event"},
+    {"id":"V217-PROVENANCE-001","title":"Lịch sử bị buộc vào fingerprint bản đồ","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Mismatched map fingerprint is rejected before history events are scheduled"},
+    {"id":"V217-PROVENANCE-002","title":"Fingerprint kế hoạch giả bị từ chối sạch","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Forged plan fingerprint leaves no history event in the queue"},
+    {"id":"V217-IDEMPOTENCY-001","title":"Không chạy tiền sử hai lần","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"Second prehistory scheduling attempt throws StateError"},
+    {"id":"V217-SAVE-001","title":"Save và load giữ nguyên lịch sử","status":"automated","runner":"tool/verify_v2_17_world_history.dart","oracle":"History completion, fingerprint and semantic hash survive save/load"},
+    {"id":"V217-UI-001","title":"Màn nhập thế hiện tuổi và tiến độ epoch","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Default seed shows 741 years and a completed history summary before birth"},
+    {"id":"V217-UI-002","title":"Màn nhập thế hiện biến cố neo có nguồn gốc","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Founding and route-establishment anchors are visible before birth"},
+    {"id":"V217-UI-003","title":"Bản lưu sau sinh vẫn giữ tiền sử","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Saved world contains the V2.17 history fingerprint after P00 is born"},
+    {"id":"V217-REGRESSION-001","title":"Hai mươi mốt runner V0–V2.16 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart through tool/verify_v2_16_world_entry.dart","oracle":"All earlier runners pass with unchanged published hashes"}
+  ]
+}

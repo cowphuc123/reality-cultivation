@@ -45,6 +45,8 @@ Lịch sử đầy đủ từng lượt việc — tài liệu nào thêm gì, s
 
 ## Diễn biến gần nhất
 
+Ngày 2026-09-10: hoàn thành V2.17 tại [[K5_24_V2_17_EPOCH_TIEN_SU_VI_MO]]. Seed và fingerprint bản đồ nay sinh 300–30.000 năm lịch sử theo ba dải, chạy ba epoch với tổng 192 bước vĩ mô. Trạng thái vùng truyền dân số, số hộ, đất canh tác, giao thương và áp lực tài nguyên; sáu anchor có năm/chủ thể/delta được lưu. Seed mặc định có 741 năm, kết thúc ở 183 dân cohort và sáu mốc từ lập hộ tới tuyến chợ. P00 bị cấm tồn tại trong tiền sử, và nhập thế chỉ mở sau `world_history_completed`. Đây là cohort vùng, **không phải 183 Person chi tiết**; tác động chưa chảy vào kho/quyền snapshot. Hash `4854adc4af68e1ce`; 21 hash cũ giữ nguyên.
+
 Ngày 2026-09-10: hoàn thành V2.16 tại [[K5_23_V2_16_CHON_NOI_SINH_SAU_KHI_TAO_THE_GIOI]]. Thế giới, bốn NPC, phòng và kho nay tồn tại trước P00; đồng hồ dừng để người chơi xem năm địa điểm và chọn nơi sinh. Điều kiện không phải cờ dựng sẵn: hệ thống kiểm tra khu cư trú, phòng trong địa điểm, người chăm đang sẵn sàng, nguồn sữa còn và quyền dùng vật. Fixture chỉ mở `SITE-HOME`; chọn xong mới phát `birth_site_selected` rồi `birth`, thêm P00 vào hộ và lưu ngay. Đây mới là vòng đời nhập thế, **chưa phải tiền sử hàng trăm–hàng vạn năm**. Hash `de0313eb51f483ba`; 20 hash cũ giữ nguyên.
 
 Ngày 2026-09-09: hoàn thành V2.15 tại [[K5_22_V2_15_SINH_BAN_DO_TU_SEED]]. Seed 31-bit dương nay sinh kích thước vùng, tọa độ và bán kính năm địa điểm bằng stream xác định dùng chung Dart VM/web; save giữ seed, phiên bản, config và fingerprint. Client cho nhập seed và đặt người/phòng/vật/tuyến theo bản đồ vừa sinh. Đây mới là worldgen hình học một vùng, chưa có địa hình, lịch sử tiền game hay chọn nơi sinh. Hash `5595e41dd7f499bc`; 19 hash cũ giữ nguyên.

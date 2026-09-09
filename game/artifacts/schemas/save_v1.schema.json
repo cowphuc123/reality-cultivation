@@ -45,6 +45,7 @@
     "sites",
     "world_genesis",
     "world_entry",
+    "world_history",
     "people[].position_y_mm",
     "rooms[].anchor_position_y_mm",
     "supply_journeys"

@@ -116,6 +116,20 @@ void main() {
 
     expect(find.byKey(const Key('birth-site-selection')), findsOneWidget);
     expect(find.text('Chọn nơi bạn sẽ chào đời'), findsOneWidget);
+    expect(find.byKey(const Key('world-history-summary')), findsOneWidget);
+    expect(find.textContaining('741 năm tiền sử'), findsOneWidget);
+    expect(
+      find.byKey(const Key('history-epoch-EPOCH-FOUNDING')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('history-anchor-ANCHOR-HOME-FOUNDED')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('history-anchor-ANCHOR-ROUTE-ESTABLISHED')),
+      findsOneWidget,
+    );
     expect(find.textContaining('4 cư dân nền'), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-HOME')), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-RIVER')), findsOneWidget);
@@ -154,6 +168,11 @@ void main() {
     expect(find.text('Vô Danh'), findsOneWidget);
     expect(repository.value, contains('"status": "born"'));
     expect(repository.value, contains('"selected_site_id": "SITE-HOME"'));
+    expect(repository.value, contains('"world_history"'));
+    expect(repository.value, contains('"plan_fingerprint": "582235ed607d383c"'));
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('world-history-summary')), findsOneWidget);
   });
 
   testWidgets('new world seed regenerates and persists the map', (

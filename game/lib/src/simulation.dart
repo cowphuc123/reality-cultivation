@@ -12,6 +12,7 @@ import 'route.dart';
 import 'routine.dart';
 import 'world_generation.dart';
 import 'world_entry.dart';
+import 'world_history.dart';
 
 const int gameSecondsPerDay = 86400;
 const int realMillisecondsPerGameDay = 5000;
@@ -308,6 +309,7 @@ class WorldState {
     this.sites = const <String, WorldSite>{},
     this.worldGenesis,
     this.worldEntry,
+    this.worldHistory,
   });
 
   factory WorldState.initial(int seed) => WorldState(
@@ -329,6 +331,7 @@ class WorldState {
     sites: const <String, WorldSite>{},
     worldGenesis: null,
     worldEntry: null,
+    worldHistory: null,
   );
 
   final int seed;
@@ -357,6 +360,9 @@ class WorldState {
 
   /// Luồng chọn nơi sinh, chỉ có ở thế giới đã bật nhập thế V2.16.
   final WorldEntryState? worldEntry;
+
+  /// Lịch sử vĩ mô đã chạy trước khi nhân vật người chơi ra đời.
+  final WorldHistoryState? worldHistory;
 
   Map<String, Object?> toJson() {
     final List<PersonState> sortedPeople = people.values.toList()
@@ -441,6 +447,9 @@ class WorldState {
     }
     if (worldEntry != null) {
       result['world_entry'] = worldEntry!.toJson();
+    }
+    if (worldHistory != null) {
+      result['world_history'] = worldHistory!.toJson();
     }
     return result;
   }
@@ -538,6 +547,11 @@ class WorldState {
           ? null
           : WorldEntryState.fromJson(
               (json['world_entry']! as Map).cast<String, Object?>(),
+            ),
+      worldHistory: json['world_history'] == null
+          ? null
+          : WorldHistoryState.fromJson(
+              (json['world_history']! as Map).cast<String, Object?>(),
             ),
     );
   }
@@ -646,6 +660,68 @@ class Simulation {
       phase: EventPhase.completion,
       kind: 'world_genesis_completed',
       payload: generated.record.toJson(),
+    );
+  }
+
+  /// Chạy các epoch vĩ mô trước khi mở nhập thế cho người chơi.
+  void simulatePrehistory(GeneratedWorldHistory generated, {SimTime? due}) {
+    if (generated.rootSeed != _state.seed) {
+      throw StateError('World history seed does not match simulation seed.');
+    }
+    if (_state.worldHistory != null ||
+        _state.pendingEvents.any(
+          (ScheduledEvent event) =>
+              event.kind == 'world_history_started' ||
+              event.kind == 'historical_epoch_simulated' ||
+              event.kind == 'world_history_completed',
+        )) {
+      throw StateError('World history has already been scheduled.');
+    }
+    final String? scheduledWorldFingerprint =
+        _state.worldGenesis?.fingerprint ??
+        _state.pendingEvents
+            .where(
+              (ScheduledEvent event) => event.kind == 'world_genesis_completed',
+            )
+            .map(
+              (ScheduledEvent event) => event.payload['fingerprint'] as String?,
+            )
+            .firstOrNull;
+    if (scheduledWorldFingerprint == null ||
+        scheduledWorldFingerprint != generated.worldFingerprint) {
+      throw StateError('World history does not belong to this generated map.');
+    }
+    WorldHistoryState validation = WorldHistoryState.started(generated);
+    for (final HistoricalEpochResult epoch in generated.epochs) {
+      validation = validation.applyEpoch(epoch);
+    }
+    validation.markComplete();
+    final SimTime publishAt = due ?? _state.now;
+    schedule(
+      due: publishAt,
+      phase: EventPhase.completion,
+      kind: 'world_history_started',
+      payload: <String, Object?>{
+        'root_seed': generated.rootSeed,
+        'world_fingerprint': generated.worldFingerprint,
+        'generator_version': generated.generatorVersion,
+        'total_years': generated.totalYears,
+        'expected_epoch_count': generated.epochs.length,
+        'plan_fingerprint': generated.fingerprint,
+      },
+    );
+    for (final HistoricalEpochResult epoch in generated.epochs) {
+      schedule(
+        due: publishAt,
+        phase: EventPhase.completion,
+        kind: 'historical_epoch_simulated',
+        payload: epoch.toJson(),
+      );
+    }
+    schedule(
+      due: publishAt,
+      phase: EventPhase.completion,
+      kind: 'world_history_completed',
     );
   }
 
@@ -881,6 +957,7 @@ class Simulation {
         sites: _state.sites,
         worldGenesis: _state.worldGenesis,
         worldEntry: _state.worldEntry,
+        worldHistory: _state.worldHistory,
       );
       _applyEvent(event);
     }
@@ -889,6 +966,12 @@ class Simulation {
 
   void _applyEvent(ScheduledEvent event) {
     switch (event.kind) {
+      case 'world_history_started':
+        _applyWorldHistoryStarted(event);
+      case 'historical_epoch_simulated':
+        _applyHistoricalEpochSimulated(event);
+      case 'world_history_completed':
+        _applyWorldHistoryCompleted(event);
       case 'world_entry_opened':
         _applyWorldEntryOpened(event);
       case 'birth_site_selected':
@@ -2888,8 +2971,7 @@ class Simulation {
       name: event.payload['name']! as String,
       householdId: event.payload['household_id']! as String,
       anchorPositionMm: event.payload['anchor_position_mm']! as int,
-      anchorPositionYMm:
-          event.payload['anchor_position_y_mm'] as int? ?? 0,
+      anchorPositionYMm: event.payload['anchor_position_y_mm'] as int? ?? 0,
     );
     _replace(
       rooms: <String, RoomState>{..._state.rooms, roomId: room},
@@ -4097,10 +4179,128 @@ class Simulation {
     );
   }
 
+  void _applyWorldHistoryStarted(ScheduledEvent event) {
+    if (_state.worldHistory != null) return;
+    final WorldGenesisRecord? genesis = _state.worldGenesis;
+    if (genesis == null) {
+      throw StateError('World genesis must complete before prehistory.');
+    }
+    if (_state.worldEntry != null || _state.people.containsKey('P00')) {
+      throw StateError('Prehistory cannot begin after the player exists.');
+    }
+    final int rootSeed = event.payload['root_seed']! as int;
+    final String worldFingerprint =
+        event.payload['world_fingerprint']! as String;
+    if (rootSeed != _state.seed || worldFingerprint != genesis.fingerprint) {
+      throw StateError(
+        'World history provenance does not match world genesis.',
+      );
+    }
+    final WorldHistoryState history = WorldHistoryState(
+      rootSeed: rootSeed,
+      worldFingerprint: worldFingerprint,
+      generatorVersion: event.payload['generator_version']! as String,
+      totalYears: event.payload['total_years']! as int,
+      expectedEpochCount: event.payload['expected_epoch_count']! as int,
+      planFingerprint: event.payload['plan_fingerprint']! as String,
+      status: WorldHistoryStatus.simulating,
+      epochs: const <HistoricalEpochResult>[],
+    );
+    if (history.totalYears < 300 || history.expectedEpochCount <= 0) {
+      throw StateError('World history plan is too short or empty.');
+    }
+    _replace(
+      worldHistory: history,
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'world_history_started',
+          genesis.fingerprint,
+          'years=${history.totalYears} epochs=${history.expectedEpochCount} '
+              'version=${history.generatorVersion}',
+        ),
+      ],
+    );
+  }
+
+  void _applyHistoricalEpochSimulated(ScheduledEvent event) {
+    final WorldHistoryState? history = _state.worldHistory;
+    if (history == null || history.complete) {
+      throw StateError('No active world history can accept this epoch.');
+    }
+    if (_state.worldEntry != null || _state.people.containsKey('P00')) {
+      throw StateError('A player appeared during prehistory.');
+    }
+    final HistoricalEpochResult epoch = HistoricalEpochResult.fromJson(
+      event.payload,
+    );
+    for (final HistoricalAnchor anchor in epoch.anchors) {
+      final bool subjectExists =
+          _state.regions.containsKey(anchor.subjectId) ||
+          _state.sites.containsKey(anchor.subjectId) ||
+          _state.routes.containsKey(anchor.subjectId);
+      if (!subjectExists) {
+        throw StateError(
+          'Historical anchor references an unknown subject: '
+          '${anchor.subjectId}.',
+        );
+      }
+    }
+    final WorldHistoryState next = history.applyEpoch(epoch);
+    final HistoricalMetrics metrics = epoch.metricsAfter;
+    _replace(
+      worldHistory: next,
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'historical_epoch_simulated',
+          epoch.id,
+          '${epoch.startYearsBeforePresent}-${epoch.endYearsBeforePresent} BP '
+              'steps=${epoch.macroStepCount} population='
+              '${metrics.populationEstimate} households='
+              '${metrics.householdEstimate} trade=${metrics.tradeReach} '
+              'pressure=${metrics.resourcePressure}',
+        ),
+      ],
+    );
+  }
+
+  void _applyWorldHistoryCompleted(ScheduledEvent event) {
+    final WorldHistoryState? history = _state.worldHistory;
+    if (history == null) {
+      throw StateError('World history was not started.');
+    }
+    if (_state.worldEntry != null || _state.people.containsKey('P00')) {
+      throw StateError('A player appeared before prehistory completed.');
+    }
+    final WorldHistoryState complete = history.markComplete();
+    _replace(
+      worldHistory: complete,
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'world_history_completed',
+          complete.worldFingerprint,
+          'years=${complete.totalYears} anchors=${complete.anchors.length} '
+              'fingerprint=${complete.planFingerprint}',
+        ),
+      ],
+    );
+  }
+
   void _applyWorldEntryOpened(ScheduledEvent event) {
     if (_state.worldEntry != null) return;
     if (_state.worldGenesis == null) {
       throw StateError('World genesis must complete before world entry opens.');
+    }
+    final bool historyPending = _state.pendingEvents.any(
+      (ScheduledEvent value) =>
+          value.kind == 'world_history_started' ||
+          value.kind == 'historical_epoch_simulated' ||
+          value.kind == 'world_history_completed',
+    );
+    if (historyPending || _state.worldHistory?.complete == false) {
+      throw StateError('World history must complete before world entry opens.');
     }
     final String playerPersonId = event.payload['player_person_id']! as String;
     if (_state.people.containsKey(playerPersonId)) {
@@ -4205,6 +4405,7 @@ class Simulation {
     Map<String, WorldSite>? sites,
     WorldGenesisRecord? worldGenesis,
     WorldEntryState? worldEntry,
+    WorldHistoryState? worldHistory,
   }) {
     _state = WorldState(
       seed: _state.seed,
@@ -4235,6 +4436,7 @@ class Simulation {
       sites: Map<String, WorldSite>.unmodifiable(sites ?? _state.sites),
       worldGenesis: worldGenesis ?? _state.worldGenesis,
       worldEntry: worldEntry ?? _state.worldEntry,
+      worldHistory: worldHistory ?? _state.worldHistory,
     );
   }
 }

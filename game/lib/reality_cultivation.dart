@@ -16,3 +16,4 @@ export 'src/routine.dart';
 export 'src/simulation.dart';
 export 'src/world_generation.dart';
 export 'src/world_entry.dart';
+export 'src/world_history.dart';

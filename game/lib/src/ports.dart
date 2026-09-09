@@ -11,6 +11,7 @@ import 'routine.dart';
 import 'simulation.dart';
 import 'world_generation.dart';
 import 'world_entry.dart';
+import 'world_history.dart';
 
 enum CommandStatus { accepted, duplicate, rejected }
 
@@ -61,6 +62,17 @@ class WorldEntryView {
 
   int get feasibleSiteCount =>
       sites.where((BirthSiteCandidate site) => site.feasible).length;
+}
+
+class WorldHistoryView {
+  const WorldHistoryView(this.state);
+
+  final WorldHistoryState state;
+
+  int get completedEpochCount => state.epochs.length;
+  int get expectedEpochCount => state.expectedEpochCount;
+  List<HistoricalAnchor> get anchors => state.anchors;
+  HistoricalMetrics? get currentMetrics => state.currentMetrics;
 }
 
 class PersonView {
@@ -556,6 +568,7 @@ class SupplyJourneyView {
 abstract interface class QueryPort {
   WorldView world();
   WorldEntryView? worldEntry();
+  WorldHistoryView? worldHistory();
   PersonView? person(String id);
   HouseholdView? household(String id);
   WorldDirectoryView directory();
@@ -621,6 +634,12 @@ class SimulationHost implements CommandPort, QueryPort {
         simulation.birthSiteCandidates(),
       ),
     );
+  }
+
+  @override
+  WorldHistoryView? worldHistory() {
+    final WorldHistoryState? history = simulation.state.worldHistory;
+    return history == null ? null : WorldHistoryView(history);
   }
 
   @override

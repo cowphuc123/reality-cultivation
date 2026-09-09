@@ -1,5 +1,16 @@
 # Nhật ký dự án
 
+## 2026-09-10 — K5.24: V2.17 epoch tiền sử vĩ mô
+
+- Thêm `WorldHistoryGenerator`: seed và fingerprint bản đồ sinh tuổi lịch sử trong ba dải 300–1.000, 1.000–9.999 hoặc 10.000–30.000 năm; seed mặc định sinh 741 năm.
+- Chạy ba epoch liên tục từ quá khứ tới hiện tại, mỗi epoch 64 bước vĩ mô. Dân số cohort, số hộ, đất canh tác, giao thương và áp lực tài nguyên được truyền qua đủ 192 bước.
+- Sáu biến cố neo gắn với hộ, đồng, sông, chợ, đèo và tuyến hiện tại; mỗi mốc lưu năm, chủ thể, lời tóm tắt và delta số thật. Lũ seed mặc định làm mất 7 dân cohort và 5 mẫu đất, đồng thời tăng áp lực tài nguyên 138 điểm.
+- `simulatePrehistory` kiểm seed, fingerprint bản đồ, biên epoch, anchor và fingerprint kế hoạch trước khi ghi sự kiện; lịch sử giả/sai bản đồ và chạy lặp bị từ chối sạch.
+- Hàng đợi công bố `world_history_started` → ba `historical_epoch_simulated` → `world_history_completed`; P00 bị cấm xuất hiện và nhập thế bị chặn cho tới mốc cuối.
+- Màn chọn nơi sinh và trang Hồ sơ đều hiện tuổi, epoch, số liệu vùng, biến cố neo và fingerprint; giao diện nói rõ cohort 183 dân không phải 183 `Person` chi tiết.
+- Runner V2.17 đạt hash `4854adc4af68e1ce`; fingerprint lịch sử seed mặc định `582235ed607d383c`; catalog 22 điều kiện. 22/22 runner và 18/18 widget test đạt; toàn bộ 21 hash V0–V2.16 giữ nguyên. Tổng catalog chạy được lên 441 điều kiện.
+- Thêm [[K5_24_V2_17_EPOCH_TIEN_SU_VI_MO]].
+
 ## 2026-09-10 — K5.23: V2.16 chọn nơi sinh sau khi tạo thế giới
 
 - Thêm `WorldEntryState`: thế giới có thể dừng ở `awaitingBirthSite` khi P00 chưa tồn tại, rồi lưu nguồn gốc nhập thế ở trạng thái `born`.
