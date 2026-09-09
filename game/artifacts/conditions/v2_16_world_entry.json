@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-16-world-entry",
+  "conditions": [
+    {"id":"V216-ORDER-001","title":"Thế giới và cư dân nền tồn tại trước nhân vật người chơi","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"P00 is absent while worldEntry awaits a birth site"},
+    {"id":"V216-ORDER-002","title":"Chọn nơi sinh đi qua lệnh và hàng đợi sự kiện","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"P00 remains absent until the accepted selection event is advanced"},
+    {"id":"V216-ORDER-003","title":"Mốc chọn nơi xảy ra trước mốc sinh","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"birth_site_selected fact precedes the P00 birth fact"},
+    {"id":"V216-SITE-001","title":"Mọi địa điểm sinh đều được đánh giá từ trạng thái thật","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"All five generated sites appear as evaluated candidates"},
+    {"id":"V216-SITE-002","title":"Nơi sinh cần hộ, phòng, người chăm, sữa và quyền sử dụng","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"Only SITE-HOME is feasible in the first fixture"},
+    {"id":"V216-SITE-003","title":"Nơi bị khóa giải thích lý do","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"Every infeasible site has a non-empty reason"},
+    {"id":"V216-SITE-004","title":"Không có nơi khả thi thì không được mở nhập thế","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"A world without infant feed rejects world entry opening"},
+    {"id":"V216-COMMAND-001","title":"Lệnh chọn nơi không hợp lệ bị từ chối sạch","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"Locked site command is rejected and not recorded as accepted"},
+    {"id":"V216-COMMAND-002","title":"Lệnh chọn nơi giữ tính idempotent","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"Repeating an accepted command id returns duplicate"},
+    {"id":"V216-BIRTH-001","title":"P00 sinh đúng hộ, phòng, người chăm và tọa độ","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"Birth context equals the selected candidate and room anchor"},
+    {"id":"V216-BIRTH-002","title":"P00 chỉ vào danh sách hộ sau khi sinh","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"Household membership gains P00 at birth completion"},
+    {"id":"V216-WORLD-001","title":"Không mở nhập thế trước khi worldgen hoàn tất","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"Entry opening without genesis throws StateError"},
+    {"id":"V216-SAVE-001","title":"Lưu và nạp giữ nguồn gốc nhập thế","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"Semantic hash, born status and selected site survive save/load"},
+    {"id":"V216-UI-001","title":"Màn chọn nơi sinh thích nghi điện thoại và máy tính","status":"automated","runner":"../client/test/widget_test.dart","oracle":"390px layout presents all sites; 1000px layout places the first two cards on one row"},
+    {"id":"V216-UI-002","title":"Giao diện khóa nơi thiếu điều kiện và mở nơi hợp lệ","status":"automated","runner":"../client/test/widget_test.dart","oracle":"SITE-HOME button is enabled while SITE-RIVER is disabled"},
+    {"id":"V216-UI-003","title":"Chọn nơi sinh chuyển vào giao diện chơi và lưu ngay","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Selecting SITE-HOME creates P00, opens navigation and persists born provenance"},
+    {"id":"V216-MAP-001","title":"Phòng giữ đủ tọa độ hai chiều từ sự kiện tạo","status":"automated","runner":"tool/verify_v2_16_world_entry.dart","oracle":"P00 birth position equals both X and Y of the selected room"},
+    {"id":"V216-REGRESSION-001","title":"Hai mươi runner V0–V2.15 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart through tool/verify_v2_15_seeded_world_generation.dart","oracle":"All earlier runners pass with unchanged published hashes"}
+  ]
+}

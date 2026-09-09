@@ -90,6 +90,11 @@ class HouseholdState {
   HouseholdState recordCaregiverSubstitution() =>
       _copy(caregiverSubstitutions: caregiverSubstitutions + 1);
 
+  HouseholdState addMember(String personId) {
+    if (memberIds.contains(personId)) return this;
+    return _copy(memberIds: <String>[...memberIds, personId]);
+  }
+
   HouseholdState settleWorkDay() {
     final Map<String, int> completed = <String, int>{
       ...workCompletedSecondsByPerson,
@@ -108,6 +113,7 @@ class HouseholdState {
   }
 
   HouseholdState _copy({
+    List<String>? memberIds,
     Map<String, int>? careInterruptionSecondsByPerson,
     Map<String, int>? totalCareInterruptionSecondsByPerson,
     Map<String, int>? workCompletedSecondsByPerson,
@@ -123,7 +129,7 @@ class HouseholdState {
   }) => HouseholdState(
     id: id,
     name: name,
-    memberIds: memberIds,
+    memberIds: memberIds ?? this.memberIds,
     resourceItemIds: resourceItemIds,
     authorizedUsersByItemId: authorizedUsersByItemId,
     scheduledWorkSecondsByPerson: scheduledWorkSecondsByPerson,

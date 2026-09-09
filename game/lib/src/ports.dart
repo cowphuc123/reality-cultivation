@@ -10,6 +10,7 @@ import 'route.dart';
 import 'routine.dart';
 import 'simulation.dart';
 import 'world_generation.dart';
+import 'world_entry.dart';
 
 enum CommandStatus { accepted, duplicate, rejected }
 
@@ -49,6 +50,17 @@ class WorldView {
   final int pendingEventCount;
   final int factCount;
   final String semanticHash;
+}
+
+/// Giai đoạn người chơi bước vào thế giới và các nơi sinh được kiểm tra thật.
+class WorldEntryView {
+  const WorldEntryView({required this.state, required this.sites});
+
+  final WorldEntryState state;
+  final List<BirthSiteCandidate> sites;
+
+  int get feasibleSiteCount =>
+      sites.where((BirthSiteCandidate site) => site.feasible).length;
 }
 
 class PersonView {
@@ -543,6 +555,7 @@ class SupplyJourneyView {
 
 abstract interface class QueryPort {
   WorldView world();
+  WorldEntryView? worldEntry();
   PersonView? person(String id);
   HouseholdView? household(String id);
   WorldDirectoryView directory();
@@ -595,6 +608,18 @@ class SimulationHost implements CommandPort, QueryPort {
       pendingEventCount: state.pendingEvents.length,
       factCount: state.facts.length,
       semanticHash: state.semanticHash(),
+    );
+  }
+
+  @override
+  WorldEntryView? worldEntry() {
+    final WorldEntryState? entry = simulation.state.worldEntry;
+    if (entry == null) return null;
+    return WorldEntryView(
+      state: entry,
+      sites: List<BirthSiteCandidate>.unmodifiable(
+        simulation.birthSiteCandidates(),
+      ),
     );
   }
 

@@ -11,6 +11,7 @@ import 'region.dart';
 import 'route.dart';
 import 'routine.dart';
 import 'world_generation.dart';
+import 'world_entry.dart';
 
 const int gameSecondsPerDay = 86400;
 const int realMillisecondsPerGameDay = 5000;
@@ -306,6 +307,7 @@ class WorldState {
     this.regions = const <String, WorldRegion>{},
     this.sites = const <String, WorldSite>{},
     this.worldGenesis,
+    this.worldEntry,
   });
 
   factory WorldState.initial(int seed) => WorldState(
@@ -326,6 +328,7 @@ class WorldState {
     regions: const <String, WorldRegion>{},
     sites: const <String, WorldSite>{},
     worldGenesis: null,
+    worldEntry: null,
   );
 
   final int seed;
@@ -351,6 +354,9 @@ class WorldState {
 
   /// Dấu vết của bộ sinh đã công bố bản đồ này, nếu thế giới dùng worldgen.
   final WorldGenesisRecord? worldGenesis;
+
+  /// Luồng chọn nơi sinh, chỉ có ở thế giới đã bật nhập thế V2.16.
+  final WorldEntryState? worldEntry;
 
   Map<String, Object?> toJson() {
     final List<PersonState> sortedPeople = people.values.toList()
@@ -432,6 +438,9 @@ class WorldState {
     }
     if (worldGenesis != null) {
       result['world_genesis'] = worldGenesis!.toJson();
+    }
+    if (worldEntry != null) {
+      result['world_entry'] = worldEntry!.toJson();
     }
     return result;
   }
@@ -525,6 +534,11 @@ class WorldState {
           : WorldGenesisRecord.fromJson(
               (json['world_genesis']! as Map).cast<String, Object?>(),
             ),
+      worldEntry: json['world_entry'] == null
+          ? null
+          : WorldEntryState.fromJson(
+              (json['world_entry']! as Map).cast<String, Object?>(),
+            ),
     );
   }
 }
@@ -554,6 +568,13 @@ class InfantIntentCommand extends SimCommand {
 
   final String personId;
   final InfantIntent intent;
+}
+
+class ChooseBirthSiteCommand extends SimCommand {
+  const ChooseBirthSiteCommand({required String id, required this.siteId})
+    : super(id);
+
+  final String siteId;
 }
 
 class Simulation {
@@ -628,6 +649,134 @@ class Simulation {
     );
   }
 
+  /// Mở giai đoạn chọn nơi sinh sau khi bản đồ và đời sống nền đã tồn tại.
+  void openWorldEntry({
+    String playerPersonId = 'P00',
+    String playerName = 'Vô Danh',
+    SimTime? due,
+  }) {
+    if (_state.worldEntry != null ||
+        _state.pendingEvents.any(
+          (ScheduledEvent event) => event.kind == 'world_entry_opened',
+        )) {
+      throw StateError('World entry has already been opened.');
+    }
+    schedule(
+      due: due ?? _state.now,
+      phase: EventPhase.completion,
+      kind: 'world_entry_opened',
+      payload: <String, Object?>{
+        'player_person_id': playerPersonId,
+        'player_name': playerName,
+      },
+    );
+  }
+
+  /// Địa điểm được kiểm tra từ trạng thái thật, không lưu cờ khả dụng riêng.
+  List<BirthSiteCandidate> birthSiteCandidates() {
+    final List<WorldSite> sites = _state.sites.values.toList()
+      ..sort((WorldSite a, WorldSite b) => a.id.compareTo(b.id));
+    return <BirthSiteCandidate>[
+      for (final WorldSite site in sites) _evaluateBirthSite(site),
+    ];
+  }
+
+  BirthSiteCandidate _evaluateBirthSite(WorldSite site) {
+    if (site.kind != 'household') {
+      return BirthSiteCandidate(
+        siteId: site.id,
+        siteName: site.name,
+        siteKind: site.kind,
+        feasible: false,
+        reason: 'Không phải khu cư trú có hộ chăm trẻ.',
+      );
+    }
+    final List<RoomState> rooms =
+        _state.rooms.values
+            .where(
+              (RoomState room) =>
+                  _state.households.containsKey(room.householdId) &&
+                  site.contains(
+                    WorldPoint(room.anchorPositionMm, room.anchorPositionYMm),
+                  ),
+            )
+            .toList()
+          ..sort((RoomState a, RoomState b) {
+            final int byDistance = site.center
+                .distanceTo(WorldPoint(a.anchorPositionMm, a.anchorPositionYMm))
+                .compareTo(
+                  site.center.distanceTo(
+                    WorldPoint(b.anchorPositionMm, b.anchorPositionYMm),
+                  ),
+                );
+            return byDistance != 0 ? byDistance : a.id.compareTo(b.id);
+          });
+    if (rooms.isEmpty) {
+      return BirthSiteCandidate(
+        siteId: site.id,
+        siteName: site.name,
+        siteKind: site.kind,
+        feasible: false,
+        reason: 'Chưa có hộ với phòng ở thật tại địa điểm này.',
+      );
+    }
+    String lastReason = 'Chưa có điều kiện chăm trẻ.';
+    for (final RoomState room in rooms) {
+      final HouseholdState household = _state.households[room.householdId]!;
+      final List<PersonState> caregivers =
+          _state.people.values
+              .where(
+                (PersonState person) =>
+                    person.householdId == household.id &&
+                    person.caregiverAgent?.available == true &&
+                    person.point != null &&
+                    site.contains(person.point!),
+              )
+              .toList()
+            ..sort((PersonState a, PersonState b) {
+              final int bySkill = (b.caregiverAgent?.careSkill ?? 0).compareTo(
+                a.caregiverAgent?.careSkill ?? 0,
+              );
+              return bySkill != 0 ? bySkill : a.id.compareTo(b.id);
+            });
+      if (caregivers.isEmpty) {
+        lastReason = 'Hộ tại đây chưa có người chăm trẻ sẵn sàng.';
+        continue;
+      }
+      final String? feedId = household.resourceItemIds['infant_feed'];
+      final CareItemState? feed = feedId == null ? null : _state.items[feedId];
+      final PersonState? caregiver = caregivers
+          .where(
+            (PersonState person) =>
+                feed != null &&
+                feed.quantity > 0 &&
+                household.canUse(person.id, feed.id),
+          )
+          .firstOrNull;
+      if (caregiver == null) {
+        lastReason = 'Hộ tại đây chưa có sữa và quyền chăm trẻ hợp lệ.';
+        continue;
+      }
+      return BirthSiteCandidate(
+        siteId: site.id,
+        siteName: site.name,
+        siteKind: site.kind,
+        feasible: true,
+        reason: 'Có phòng ở, người chăm và nguồn sữa thật.',
+        householdId: household.id,
+        roomId: room.id,
+        caregiverId: caregiver.id,
+      );
+    }
+    return BirthSiteCandidate(
+      siteId: site.id,
+      siteName: site.name,
+      siteKind: site.kind,
+      feasible: false,
+      reason: lastReason,
+    );
+  }
+
   bool issue(SimCommand command) {
     if (_state.acceptedCommandIds.contains(command.id)) return false;
     if (command case SetGoalCommand(:final personId, :final goal)) {
@@ -680,6 +829,29 @@ class Simulation {
       if (intent == InfantIntent.cryForCare) _startCryResponse(personId);
       return true;
     }
+    if (command case ChooseBirthSiteCommand(:final siteId)) {
+      final WorldEntryState? entry = _state.worldEntry;
+      if (entry == null || !entry.awaitingBirthSite) {
+        throw StateError('Thế giới không chờ chọn nơi sinh.');
+      }
+      final BirthSiteCandidate? candidate = birthSiteCandidates()
+          .where((BirthSiteCandidate value) => value.siteId == siteId)
+          .firstOrNull;
+      if (candidate == null) {
+        throw StateError('Địa điểm sinh không tồn tại.');
+      }
+      if (!candidate.feasible) throw StateError(candidate.reason);
+      _replace(
+        acceptedCommandIds: <String>{..._state.acceptedCommandIds, command.id},
+      );
+      schedule(
+        due: _state.now,
+        phase: EventPhase.completion,
+        kind: 'birth_site_selected',
+        payload: <String, Object?>{'site_id': siteId},
+      );
+      return true;
+    }
     return false;
   }
 
@@ -708,6 +880,7 @@ class Simulation {
         regions: _state.regions,
         sites: _state.sites,
         worldGenesis: _state.worldGenesis,
+        worldEntry: _state.worldEntry,
       );
       _applyEvent(event);
     }
@@ -716,6 +889,10 @@ class Simulation {
 
   void _applyEvent(ScheduledEvent event) {
     switch (event.kind) {
+      case 'world_entry_opened':
+        _applyWorldEntryOpened(event);
+      case 'birth_site_selected':
+        _applyBirthSiteSelected(event);
       case 'birth':
         final String personId = event.payload['person_id']! as String;
         final String name = event.payload['name']! as String;
@@ -723,6 +900,20 @@ class Simulation {
         final bool isInfant = event.payload['infant'] == true;
         final String caregiverId =
             event.payload['caregiver_id'] as String? ?? '';
+        final String? householdId = event.payload['household_id'] as String?;
+        final HouseholdState? household = householdId == null
+            ? null
+            : _state.households[householdId];
+        final Map<String, HouseholdState> households = household == null
+            ? _state.households
+            : <String, HouseholdState>{
+                ..._state.households,
+                household.id: household.addMember(personId),
+              };
+        final WorldEntryState? worldEntry =
+            _state.worldEntry?.playerPersonId == personId
+            ? _state.worldEntry!.markBorn()
+            : _state.worldEntry;
         _replace(
           people: <String, PersonState>{
             ..._state.people,
@@ -733,7 +924,7 @@ class Simulation {
               infancy: isInfant ? InfantState.initial(caregiverId) : null,
               positionMm: event.payload['position_mm'] as int?,
               positionYMm: event.payload['position_y_mm'] as int? ?? 0,
-              householdId: event.payload['household_id'] as String?,
+              householdId: householdId,
               roomId: event.payload['room_id'] as String?,
             ),
           },
@@ -741,6 +932,8 @@ class Simulation {
             ..._state.facts,
             _fact('birth', personId, name + ' was born'),
           ],
+          households: households,
+          worldEntry: worldEntry,
         );
         if (isInfant) {
           schedule(
@@ -2695,6 +2888,8 @@ class Simulation {
       name: event.payload['name']! as String,
       householdId: event.payload['household_id']! as String,
       anchorPositionMm: event.payload['anchor_position_mm']! as int,
+      anchorPositionYMm:
+          event.payload['anchor_position_y_mm'] as int? ?? 0,
     );
     _replace(
       rooms: <String, RoomState>{..._state.rooms, roomId: room},
@@ -3902,6 +4097,89 @@ class Simulation {
     );
   }
 
+  void _applyWorldEntryOpened(ScheduledEvent event) {
+    if (_state.worldEntry != null) return;
+    if (_state.worldGenesis == null) {
+      throw StateError('World genesis must complete before world entry opens.');
+    }
+    final String playerPersonId = event.payload['player_person_id']! as String;
+    if (_state.people.containsKey(playerPersonId)) {
+      throw StateError('Player person already exists before world entry.');
+    }
+    final List<BirthSiteCandidate> candidates = birthSiteCandidates();
+    final int feasibleCount = candidates
+        .where((BirthSiteCandidate candidate) => candidate.feasible)
+        .length;
+    if (feasibleCount == 0) {
+      throw StateError(
+        'No feasible birth site exists in the generated world: '
+        '${candidates.map((BirthSiteCandidate value) => '${value.siteId}=${value.reason}').join('; ')}',
+      );
+    }
+    final String playerName = event.payload['player_name']! as String;
+    _replace(
+      worldEntry: WorldEntryState.awaiting(
+        playerPersonId: playerPersonId,
+        playerName: playerName,
+      ),
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'world_entry_opened',
+          playerPersonId,
+          '$feasibleCount/${candidates.length} birth sites are feasible',
+        ),
+      ],
+    );
+  }
+
+  void _applyBirthSiteSelected(ScheduledEvent event) {
+    final WorldEntryState? entry = _state.worldEntry;
+    if (entry == null || !entry.awaitingBirthSite) {
+      throw StateError('World is not awaiting a birth site.');
+    }
+    final String siteId = event.payload['site_id']! as String;
+    final BirthSiteCandidate? candidate = birthSiteCandidates()
+        .where((BirthSiteCandidate value) => value.siteId == siteId)
+        .firstOrNull;
+    if (candidate == null || !candidate.feasible) {
+      throw StateError(candidate?.reason ?? 'Birth site no longer exists.');
+    }
+    final RoomState room = _state.rooms[candidate.roomId]!;
+    _replace(
+      worldEntry: entry.select(
+        siteId: candidate.siteId,
+        selectedHouseholdId: candidate.householdId!,
+        selectedRoomId: candidate.roomId!,
+        selectedCaregiverId: candidate.caregiverId!,
+      ),
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'birth_site_selected',
+          entry.playerPersonId,
+          '${candidate.siteId}|${candidate.householdId}|'
+              '${candidate.roomId}|${candidate.caregiverId}',
+        ),
+      ],
+    );
+    schedule(
+      due: event.due,
+      phase: EventPhase.completion,
+      kind: 'birth',
+      payload: <String, Object?>{
+        'person_id': entry.playerPersonId,
+        'name': entry.playerName,
+        'infant': true,
+        'caregiver_id': candidate.caregiverId!,
+        'position_mm': room.anchorPositionMm,
+        'position_y_mm': room.anchorPositionYMm,
+        'room_id': room.id,
+        'household_id': candidate.householdId!,
+      },
+    );
+  }
+
   WorldFact _fact(String kind, String subjectId, String detail) => WorldFact(
     id: 'fact-' + (_state.revision + 1).toString(),
     time: _state.now,
@@ -3926,6 +4204,7 @@ class Simulation {
     Map<String, WorldRegion>? regions,
     Map<String, WorldSite>? sites,
     WorldGenesisRecord? worldGenesis,
+    WorldEntryState? worldEntry,
   }) {
     _state = WorldState(
       seed: _state.seed,
@@ -3955,6 +4234,7 @@ class Simulation {
       regions: Map<String, WorldRegion>.unmodifiable(regions ?? _state.regions),
       sites: Map<String, WorldSite>.unmodifiable(sites ?? _state.sites),
       worldGenesis: worldGenesis ?? _state.worldGenesis,
+      worldEntry: worldEntry ?? _state.worldEntry,
     );
   }
 }

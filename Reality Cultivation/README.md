@@ -48,6 +48,7 @@ Game text mô phỏng thế giới tu tiên liên tục, ưu tiên chiều sâu 
 - [[docs/K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH|K5.20 — V2.13 gánh việc khi nghỉ bệnh]]
 - [[docs/K5_21_V2_14_BAN_DO_VUNG_DAU_TIEN|K5.21 — V2.14 bản đồ vùng đầu tiên]]
 - [[docs/K5_22_V2_15_SINH_BAN_DO_TU_SEED|K5.22 — V2.15 sinh bản đồ từ seed]]
+- [[docs/K5_23_V2_16_CHON_NOI_SINH_SAU_KHI_TAO_THE_GIOI|K5.23 — V2.16 chọn nơi sinh sau khi tạo thế giới]]
 - Mã chạy được nằm trong thư mục `game/` ở gốc dự án.
 - Shell Flutter responsive nằm trong `client/`; bản web release được tạo tại `client/build/web`.
 

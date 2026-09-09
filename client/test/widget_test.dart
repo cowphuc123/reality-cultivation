@@ -14,6 +14,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -72,6 +73,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -95,12 +97,72 @@ void main() {
     expect(find.text('Nhân vật tồn tại'), findsNothing);
   });
 
+  testWidgets('world exists before player chooses a feasible birth site', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('birth-site-selection')), findsOneWidget);
+    expect(find.text('Chọn nơi bạn sẽ chào đời'), findsOneWidget);
+    expect(find.textContaining('4 cư dân nền'), findsOneWidget);
+    expect(find.byKey(const Key('birth-site-SITE-HOME')), findsOneWidget);
+    expect(find.byKey(const Key('birth-site-SITE-RIVER')), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('choose-birth-SITE-HOME')))
+          .onPressed,
+      isNotNull,
+    );
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(const Key('choose-birth-SITE-RIVER')),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(find.byKey(const Key('mobile-navigation')), findsNothing);
+    expect(find.text('Vô Danh'), findsNothing);
+
+    tester.view.physicalSize = const Size(1000, 800);
+    await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.byKey(const Key('birth-site-SITE-FIELD'))).dy,
+      tester.getTopLeft(find.byKey(const Key('birth-site-SITE-HOME'))).dy,
+    );
+    tester.view.physicalSize = const Size(390, 844);
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byKey(const Key('choose-birth-SITE-HOME')));
+    await tester.tap(find.byKey(const Key('choose-birth-SITE-HOME')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('birth-site-selection')), findsNothing);
+    expect(find.byKey(const Key('mobile-navigation')), findsOneWidget);
+    expect(find.text('Vô Danh'), findsOneWidget);
+    expect(repository.value, contains('"status": "born"'));
+    expect(repository.value, contains('"selected_site_id": "SITE-HOME"'));
+  });
+
   testWidgets('new world seed regenerates and persists the map', (
     WidgetTester tester,
   ) async {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -138,6 +200,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -177,6 +240,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -191,7 +255,11 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
     await tester.pumpWidget(
-      RealityCultivationApp(autoStart: false, saveRepository: repository),
+      RealityCultivationApp(
+        requireBirthSelection: false,
+        autoStart: false,
+        saveRepository: repository,
+      ),
     );
     await tester.pumpAndSettle();
     expect(
@@ -206,6 +274,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -224,6 +293,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -254,6 +324,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -270,6 +341,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -294,6 +366,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -328,6 +401,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -365,6 +439,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -393,6 +468,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -427,6 +503,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -450,6 +527,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -485,6 +563,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -504,6 +583,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -536,6 +616,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -554,6 +635,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -597,6 +679,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -614,6 +697,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -662,6 +746,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -686,6 +771,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -753,6 +839,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -771,6 +858,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -836,6 +924,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),
@@ -858,6 +947,7 @@ void main() {
     final MemorySaveRepository repository = MemorySaveRepository();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: repository,
@@ -908,6 +998,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(
       RealityCultivationApp(
+        requireBirthSelection: false,
         autoStart: false,
         autoRestore: false,
         saveRepository: MemorySaveRepository(),

@@ -1,6 +1,6 @@
 # Trạng thái hiện tại
 
-Cập nhật: 2026-09-09.
+Cập nhật: 2026-09-10.
 
 > Trợ lý mới tiếp nhận dự án: đọc [[CHUYEN_GIAO]] trước tiên.
 
@@ -41,6 +41,9 @@ Lịch sử đầy đủ từng lượt việc nằm trong [[CHANGELOG]]. Tóm t
 | V2.13 | Chuyển ca cố định của người nghỉ bệnh cho người đủ điều kiện | [[K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH]] · `edf67b2b36cda0eb` |
 | V2.14 | Vùng, địa điểm và quy người/phòng/vật theo tọa độ hai chiều | [[K5_21_V2_14_BAN_DO_VUNG_DAU_TIEN]] · `1d70b51a89d4b142` |
 | V2.15 | Seed sinh kích thước vùng, tọa độ và bán kính địa điểm; lưu provenance | [[K5_22_V2_15_SINH_BAN_DO_TU_SEED]] · `5595e41dd7f499bc` |
+| V2.16 | Thế giới/NPC có trước; chọn nơi đủ điều kiện rồi P00 mới sinh | [[K5_23_V2_16_CHON_NOI_SINH_SAU_KHI_TAO_THE_GIOI]] · `de0313eb51f483ba` |
+
+Hiện có **21/21 runner**, **18/18 widget test** và **419 điều kiện catalog chạy được**; đây là bộ kiểm chứng triển khai riêng, không cộng vào 1.860 điều kiện thiết kế chưa chạy.
 
 Web đang chạy: **https://cowphuc123.github.io/reality-cultivation/** — tự động build lại mỗi lần đẩy `client/` lên GitHub (`.github/workflows/deploy-web.yml`). Bản cũ trên Sites (`chatgpt.site`) vẫn còn, chưa gỡ.
 
@@ -54,13 +57,14 @@ Làm tiếp từ điện thoại: ưu tiên Remote vào chính PC; xem [[HUONG_D
 - Chưa chốt phạm vi bản đầu, quy tắc tạm dừng, mô phỏng khi đóng game hoặc hệ cảnh giới.
 - Chưa có: giải phẫu đa bộ phận, thương tích, già đi, chết; diễn biến cơ thể trong ngày (cơ thể người lớn chạy theo ngày); nước bẩn và bệnh do nước; khẩu phần riêng từng người; quan hệ giữa người với người; hậu quả xã hội của việc từ chối; mục tiêu cá nhân dài hạn; lây bệnh và thuốc; chuỗi game sau tháng đầu.
 - Nghỉ bệnh vẫn là **tất cả hoặc không có gì**: chưa có làm nhẹ hay nửa buổi. Ca nay có thể chuyển nguyên khối cho một người khác, nhưng chưa chia ca, đổi công hay tạo nghĩa vụ bù; xem [[K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH]].
-- Seed đã sinh được kích thước một vùng cùng tọa độ/bán kính năm địa điểm; người/phòng/vật và tuyến client bám kết quả đó. Tên, loại và số lượng địa điểm vẫn là template An Khê: chưa có ô đất, độ cao, khí hậu, tài nguyên, biên giới, dân số, lịch sử tiền game hay màn chọn nơi sinh. Đồ thị đường đi chưa sinh từ địa hình.
+- Seed đã sinh được kích thước một vùng cùng tọa độ/bán kính năm địa điểm; người/phòng/vật và tuyến client bám kết quả đó. Tên, loại và số lượng địa điểm vẫn là template An Khê: chưa có ô đất, độ cao, khí hậu, tài nguyên, biên giới, sinh dân số hay lịch sử tiền game. Đồ thị đường đi chưa sinh từ địa hình.
+- Đã tách thế giới khỏi P00 và có màn chọn nơi sinh thật, nhưng mới chỉ `SITE-HOME` đủ điều kiện trong một hộ fixture. Chưa có nhiều hoàn cảnh sinh, phả hệ hoặc epoch tiền sử; thanh tiến độ hiện là bản tổng kết các bước đồng bộ đã hoàn tất.
 - Thân nhiệt người lớn **cố ý chưa làm**: chưa có mùa, thời tiết hay nhiệt độ môi trường để nó phản ứng lại; xem [[K5_15_V2_8_NUOC_VA_CON_KHAT]].
 - Kho git đã có commit đầu và đẩy lên `github.com/cowphuc123/reality-cultivation` (công khai); chưa thiết lập sao lưu tự động ngoài GitHub.
 
 ## Bước tiếp theo đề xuất
 
-Ưu tiên V2.16 tách tạo thế giới khỏi sinh nhân vật: hiện tiến độ tạo, cho xem bản đồ và chọn một địa điểm sinh hợp lệ rồi mới tạo P00. Sau khi vòng đời này chạy được mới thêm các epoch tiền sử. Nhánh gần khác là làm việc nhẹ/nửa buổi khi hồi bệnh. Thân nhiệt nên chờ có khí hậu/mùa.
+Ưu tiên V2.17 thêm epoch tiền sử tối thiểu trước lúc nhập thế: số năm do seed quyết định, mô phỏng không có P00, lưu các mốc lịch sử và chỉ mở chọn nơi sinh sau khi epoch cuối hoàn tất. Sau đó tăng số hộ và hoàn cảnh sinh khả thi. Nhánh gần khác là làm việc nhẹ/nửa buổi khi hồi bệnh. Thân nhiệt nên chờ có khí hậu/mùa.
 
 Shared fixture V1 chưa chạy parity PWA. TN01–TN08 ([[LUA_CHON_TRAI_NGHIEM]]) và ADR công nghệ ACCEPTED vẫn mở.
 

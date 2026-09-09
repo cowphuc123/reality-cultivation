@@ -12,12 +12,14 @@ class RealityCultivationApp extends StatelessWidget {
     super.key,
     this.autoStart = true,
     this.autoRestore = true,
+    this.requireBirthSelection = true,
     this.saveRepository,
     this.initialSimulation,
   });
 
   final bool autoStart;
   final bool autoRestore;
+  final bool requireBirthSelection;
   final SaveRepository? saveRepository;
   final Simulation? initialSimulation;
 
@@ -74,6 +76,7 @@ class RealityCultivationApp extends StatelessWidget {
     home: GameScreen(
       autoStart: autoStart,
       autoRestore: autoRestore,
+      requireBirthSelection: requireBirthSelection,
       saveRepository: saveRepository ?? SharedPreferencesSaveRepository(),
       initialSimulation: initialSimulation,
     ),
@@ -85,12 +88,14 @@ class GameScreen extends StatefulWidget {
     super.key,
     required this.autoStart,
     required this.autoRestore,
+    required this.requireBirthSelection,
     required this.saveRepository,
     this.initialSimulation,
   });
 
   final bool autoStart;
   final bool autoRestore;
+  final bool requireBirthSelection;
   final SaveRepository saveRepository;
   final Simulation? initialSimulation;
 
@@ -115,11 +120,17 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _bindSimulation(widget.initialSimulation ?? _newSimulation());
+    _bindSimulation(
+      widget.initialSimulation ??
+          _newSimulation(awaitBirthSelection: widget.requireBirthSelection),
+    );
     unawaited(_initialize());
   }
 
-  Simulation _newSimulation({int seed = 20260907}) {
+  Simulation _newSimulation({
+    int seed = 20260907,
+    bool awaitBirthSelection = true,
+  }) {
     final GeneratedWorld generated = WorldGenerator.generate(rootSeed: seed);
     final WorldSite home = generated.site('SITE-HOME');
     final WorldSite river = generated.site('SITE-RIVER');
@@ -320,21 +331,6 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     ..schedule(
       due: const SimTime(0),
       phase: EventPhase.completion,
-      kind: 'birth',
-      payload: <String, Object?>{
-        'person_id': 'P00',
-        'name': 'Vô Danh',
-        'infant': true,
-        'caregiver_id': 'N01',
-        'position_mm': home.center.xMm,
-        'position_y_mm': home.center.yMm,
-        'room_id': 'ROOM-SLEEP',
-        'household_id': 'H01',
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
       kind: 'person_created',
       payload: <String, Object?>{
         'person_id': 'N04',
@@ -429,7 +425,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       payload: const <String, Object?>{
         'household_id': 'H01',
         'name': 'Hộ ven suối',
-        'member_ids': <String>['N01', 'N02', 'N03', 'P00'],
+        'member_ids': <String>['N01', 'N02', 'N03'],
         'resource_item_ids': <String, String>{
           'food': 'I-FOOD-01',
           'water': 'I-WATER-01',
@@ -463,7 +459,18 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'supply_route_id': 'RT-ANKHE',
       },
     )
-    ..advanceTo(const SimTime(0));
+    ..openWorldEntry();
+
+    simulation.advanceTo(const SimTime(0));
+    if (!awaitBirthSelection) {
+      simulation.issue(
+        const ChooseBirthSiteCommand(
+          id: 'bootstrap-birth-site',
+          siteId: 'SITE-HOME',
+        ),
+      );
+      simulation.advanceTo(const SimTime(0));
+    }
 
     return simulation;
   }
@@ -497,7 +504,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     }
     _ready = true;
     if (!mounted) return;
-    if (widget.autoStart) _runner.start();
+    if (widget.autoStart && _host.person('P00') != null) _runner.start();
     setState(() {});
   }
 
@@ -569,6 +576,39 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     _showMessage(result.message);
   }
 
+  Future<void> _chooseBirthSite(String siteId) async {
+    if (!_ready) return;
+    final String commandId =
+        'ui-birth-site-${_simulation.state.revision}-$_commandSequence';
+    _commandSequence++;
+    final CommandResult result = _host.submit(
+      ChooseBirthSiteCommand(id: commandId, siteId: siteId),
+    );
+    if (!result.accepted) {
+      if (mounted) _showMessage(result.message);
+      return;
+    }
+    _simulation.advanceTo(_simulation.state.now);
+    Object? saveError;
+    try {
+      await widget.saveRepository.writeLatest(_simulation.state.save());
+    } on Object catch (error) {
+      saveError = error;
+    }
+    if (!mounted) return;
+    if (widget.autoStart) _runner.start();
+    setState(() {
+      _saveStatus = saveError == null
+          ? 'Đã sinh vào ngày 0 · ${_simulation.state.semanticHash()}'
+          : 'Đã sinh nhưng lưu thất bại: $saveError';
+    });
+    _showMessage(
+      saveError == null
+          ? 'Bạn đã sinh ra trong thế giới này.'
+          : 'Bạn đã sinh ra, nhưng chưa lưu được thế giới.',
+    );
+  }
+
   Future<void> _save({bool announce = true}) async {
     final String snapshot = _simulation.state.save();
     final int savedDay = _simulation.state.now.day;
@@ -600,7 +640,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       }
       final Simulation restored = Simulation.fromSave(source);
       _bindSimulation(restored);
-      if (wasRunning) _runner.start();
+      if (wasRunning && _host.person('P00') != null) _runner.start();
       setState(() {
         _saveStatus =
             'Đã tải ngày ${restored.state.now.day} · ${restored.state.semanticHash()}';
@@ -678,11 +718,16 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     if (seed == null || !mounted) return;
     final bool wasRunning = _runner.running;
     _runner.stop();
-    _bindSimulation(_newSimulation(seed: seed));
+    _bindSimulation(
+      _newSimulation(
+        seed: seed,
+        awaitBirthSelection: widget.requireBirthSelection,
+      ),
+    );
     _commandSequence = 0;
     await widget.saveRepository.writeLatest(_simulation.state.save());
     if (!mounted) return;
-    if (wasRunning) _runner.start();
+    if (wasRunning && _host.person('P00') != null) _runner.start();
     setState(() {
       _sectionIndex = 0;
       _saveStatus = 'Đã tạo và lưu thế giới seed $seed từ ngày 0.';
@@ -699,7 +744,24 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final WorldView world = _host.world();
-    final PersonView player = _host.person('P00')!;
+    final WorldEntryView? entry = _host.worldEntry();
+    final PersonView? playerState = _host.person('P00');
+    if (entry?.state.awaitingBirthSite == true && playerState == null) {
+      return _BirthSelectionScreen(
+        entry: entry!,
+        world: world,
+        worldMap: _host.worldMap(),
+        ready: _ready,
+        onChoose: (String siteId) => unawaited(_chooseBirthSite(siteId)),
+        onNewWorld: () => unawaited(_confirmNewWorld()),
+      );
+    }
+    if (playerState == null) {
+      return const Scaffold(
+        body: Center(child: Text('Bản lưu không có nhân vật người chơi.')),
+      );
+    }
+    final PersonView player = playerState;
     final HouseholdView? household = _host.household('H01');
     final List<WorldFact> facts = _host.recentFacts(limit: 50);
     final _CommandPanel command = _CommandPanel(
@@ -1577,6 +1639,263 @@ class _ProfilePage extends StatelessWidget {
       ],
     ),
   );
+}
+
+class _BirthSelectionScreen extends StatelessWidget {
+  const _BirthSelectionScreen({
+    required this.entry,
+    required this.world,
+    required this.worldMap,
+    required this.ready,
+    required this.onChoose,
+    required this.onNewWorld,
+  });
+
+  final WorldEntryView entry;
+  final WorldView world;
+  final WorldMapView worldMap;
+  final bool ready;
+  final ValueChanged<String> onChoose;
+  final VoidCallback onNewWorld;
+
+  SiteMapView? _mapSite(String id) {
+    for (final RegionMapView region in worldMap.regions) {
+      for (final SiteMapView site in region.sites) {
+        if (site.site.id == id) return site;
+      }
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final WorldGenesisRecord? genesis = worldMap.genesis;
+    return Scaffold(
+      key: const Key('birth-site-selection'),
+      appBar: AppBar(
+        title: const Text('Reality Cultivation'),
+        actions: <Widget>[
+          TextButton.icon(
+            key: const Key('entry-new-world'),
+            onPressed: ready ? onNewWorld : null,
+            icon: const Icon(Icons.casino_outlined),
+            label: const Text('Seed khác'),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final bool compact = constraints.maxWidth < 760;
+            final double contentWidth =
+                (constraints.maxWidth - (compact ? 32 : 56))
+                    .clamp(0, 1180)
+                    .toDouble();
+            final double cardWidth = compact
+                ? contentWidth
+                : (contentWidth - 16) / 2;
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                compact ? 16 : 28,
+                24,
+                compact ? 16 : 28,
+                40,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1180),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'THẾ GIỚI ĐÃ SỐNG TRƯỚC KHI BẠN ĐẾN',
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: const Color(0xffc6a56a),
+                              letterSpacing: 1.5,
+                            ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Chọn nơi bạn sẽ chào đời',
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Bản đồ, cư dân, căn phòng và vật tư đã được tạo trước. '
+                        'Một nơi chỉ mở khi thật sự có hộ ở, người chăm và nguồn sữa.',
+                      ),
+                      const SizedBox(height: 20),
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Row(
+                                children: <Widget>[
+                                  const Icon(Icons.public, size: 20),
+                                  const SizedBox(width: 9),
+                                  Expanded(
+                                    child: Text(
+                                      'Tạo thế giới hoàn tất · seed ${worldMap.genesis?.rootSeed ?? '-'}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${entry.feasibleSiteCount}/${entry.sites.length} nơi có thể sinh',
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              const LinearProgressIndicator(value: 1),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 14,
+                                runSpacing: 7,
+                                children: <Widget>[
+                                  Text('${worldMap.regions.length} vùng'),
+                                  Text('${worldMap.siteCount} địa điểm'),
+                                  Text('${world.personCount} cư dân nền'),
+                                  if (genesis != null)
+                                    Text('Dấu sinh ${genesis.fingerprint}'),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        children: <Widget>[
+                          for (final BirthSiteCandidate candidate
+                              in entry.sites)
+                            SizedBox(
+                              width: cardWidth,
+                              child: _BirthSiteCard(
+                                key: Key('birth-site-${candidate.siteId}'),
+                                candidate: candidate,
+                                mapSite: _mapSite(candidate.siteId),
+                                enabled: ready,
+                                onChoose: () => onChoose(candidate.siteId),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _BirthSiteCard extends StatelessWidget {
+  const _BirthSiteCard({
+    super.key,
+    required this.candidate,
+    required this.mapSite,
+    required this.enabled,
+    required this.onChoose,
+  });
+
+  final BirthSiteCandidate candidate;
+  final SiteMapView? mapSite;
+  final bool enabled;
+  final VoidCallback onChoose;
+
+  @override
+  Widget build(BuildContext context) {
+    final WorldSite? site = mapSite?.site;
+    final Color accent = candidate.feasible
+        ? const Color(0xff9dbb73)
+        : const Color(0xff8d9288);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                CircleAvatar(
+                  backgroundColor: accent.withValues(alpha: .14),
+                  foregroundColor: accent,
+                  child: Icon(_siteIcon(candidate.siteKind), size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        candidate.siteName,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(_siteKindLabel(candidate.siteKind)),
+                    ],
+                  ),
+                ),
+                Icon(
+                  candidate.feasible ? Icons.lock_open : Icons.lock_outline,
+                  color: accent,
+                  size: 20,
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(candidate.reason),
+            if (site != null) ...<Widget>[
+              const SizedBox(height: 10),
+              Text(
+                'Tọa độ ${_km(site.center.xMm)} km, '
+                '${_km(site.center.yMm)} km · '
+                '${mapSite!.population} người · ${mapSite!.roomNames.length} phòng',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            if (candidate.feasible) ...<Widget>[
+              const SizedBox(height: 8),
+              Text(
+                'Hộ ${candidate.householdId} · phòng ${candidate.roomId} · '
+                'người chăm ${candidate.caregiverId}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: accent),
+              ),
+            ],
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                key: Key('choose-birth-${candidate.siteId}'),
+                onPressed: enabled && candidate.feasible ? onChoose : null,
+                icon: Icon(
+                  candidate.feasible ? Icons.child_care : Icons.lock_outline,
+                ),
+                label: Text(
+                  candidate.feasible ? 'Sinh tại đây' : 'Chưa đủ điều kiện',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _WorldMapPanel extends StatelessWidget {

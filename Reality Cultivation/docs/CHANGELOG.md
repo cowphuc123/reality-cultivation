@@ -1,5 +1,16 @@
 # Nhật ký dự án
 
+## 2026-09-10 — K5.23: V2.16 chọn nơi sinh sau khi tạo thế giới
+
+- Thêm `WorldEntryState`: thế giới có thể dừng ở `awaitingBirthSite` khi P00 chưa tồn tại, rồi lưu nguồn gốc nhập thế ở trạng thái `born`.
+- Đánh giá nơi sinh từ trạng thái thật của khu cư trú, phòng, hộ, vị trí và khả năng người chăm, nguồn sữa cùng quyền dùng vật; fixture chỉ mở `SITE-HOME`, bốn địa điểm khác hiện lý do bị khóa.
+- Thêm `ChooseBirthSiteCommand` và hai mốc `world_entry_opened` / `birth_site_selected`; chọn nơi đi qua hàng đợi, sau đó sự kiện `birth` mới đặt P00 vào phòng và thêm vào hộ.
+- Client không còn tạo P00 cùng worldgen. Trước khi sinh, clock dừng và hiện màn responsive gồm provenance, kết quả các bước tạo và thẻ mọi địa điểm; chọn xong lưu ngay rồi mới vào năm khu vực chơi.
+- Sửa lỗi `room_created` từng bỏ qua `anchor_position_y_mm`, khiến phòng hai chiều bị đặt về Y=0 dù payload đúng.
+- Save schema thêm `world_entry` và tọa độ Y đã có của người/phòng; save cũ không có trường mới vẫn nạp được.
+- Runner V2.16 đạt hash `de0313eb51f483ba`; catalog 18 điều kiện. 21/21 runner và 18/18 widget test đạt; toàn bộ 20 hash V0–V2.15 giữ nguyên. Tổng catalog chạy được lên 419 điều kiện.
+- Thêm [[K5_23_V2_16_CHON_NOI_SINH_SAU_KHI_TAO_THE_GIOI]].
+
 ## 2026-09-09 — K5.22: V2.15 sinh bản đồ từ seed
 
 - Thêm `WorldGenerator`: seed 31-bit dương sinh kích thước vùng, tọa độ và bán kính năm địa điểm; cùng seed/config/version cho cùng fingerprint.
