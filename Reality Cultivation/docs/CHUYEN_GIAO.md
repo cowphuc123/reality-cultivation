@@ -24,7 +24,7 @@ Viết ngày 2026-09-09. Tài liệu này dành cho **trợ lý AI tiếp nhận
 
 ## 1. Dự án là gì, trong ba câu
 
-Game text mô phỏng thế giới tu tiên, tham vọng chiều sâu vượt Dwarf Fortress. Người chơi giao mục tiêu cho nhân vật chứ không điều khiển từng bước; 5 giây ngoài đời = 1 ngày trong game. Hiện đã có **lõi mô phỏng chạy được** (Dart) và **giao diện text đa nền tảng** (Flutter), đang triển khai theo từng lát cắt dọc V0 → V2.12.
+Game text mô phỏng thế giới tu tiên, tham vọng chiều sâu vượt Dwarf Fortress. Người chơi giao mục tiêu cho nhân vật chứ không điều khiển từng bước; 5 giây ngoài đời = 1 ngày trong game. Hiện đã có **lõi mô phỏng chạy được** (Dart) và **giao diện text đa nền tảng** (Flutter), đang triển khai theo từng lát cắt dọc V0 → V2.13.
 
 Địa chỉ chơi thử: **https://cowphuc123.github.io/reality-cultivation/**
 Kho mã: **https://github.com/cowphuc123/reality-cultivation** (công khai)
@@ -36,7 +36,7 @@ Kho mã: **https://github.com/cowphuc123/reality-cultivation** (công khai)
 | Tầng | Nội dung | Trạng thái |
 | --- | --- | --- |
 | **Kế hoạch K0–K4** | 9 đặc tả nền, DL01–DL06, K0–K4 (~60 tài liệu) | **1.860 điều kiện thiết kế, chưa chạy** bằng mô phỏng thật |
-| **Mã K5** | `game/` + `client/`, V0 → V2.12 | **331 điều kiện có bộ chạy tự động**, tất cả đang xanh |
+| **Mã K5** | `game/` + `client/`, V0 → V2.13 | **351 điều kiện có bộ chạy tự động**, tất cả đang xanh |
 
 Hai bộ đếm này **độc lập**. Đừng cộng chúng, và đừng nói 1.860 điều kiện đã chạy.
 
@@ -94,6 +94,7 @@ Hash hiện tại (2026-09-09):
 | `verify_v2_10_two_axes_and_fork` | `2a87b934f03e0f29` |
 | `verify_v2_11_adult_illness` | `beabb8f20438f377` |
 | `verify_v2_12_illness_rest` | `f57b6f0fb06205bb` |
+| `verify_v2_13_work_substitution` | `edf67b2b36cda0eb` |
 
 Lệnh chạy tất cả:
 
@@ -162,6 +163,7 @@ cd "D:/Reality Cultivation/client" && flutter analyze
 
 # Một bộ chạy
 cd "D:/Reality Cultivation/game" && dart run tool/verify_v2_12_illness_rest.dart
+cd "D:/Reality Cultivation/game" && dart run tool/verify_v2_13_work_substitution.dart
 
 # Test giao diện
 cd "D:/Reality Cultivation/client" && flutter test
@@ -187,7 +189,7 @@ export PATH="/c/Program Files/GitHub CLI:$PATH"
 Đây là những điều người dùng đã yêu cầu rõ — **tôn trọng chúng**:
 
 - **Viết tiếng Việt.** Toàn bộ hồ sơ, chú thích mã, nhãn giao diện và báo cáo đều bằng tiếng Việt.
-- **Không tự đẩy lên GitHub.** Làm việc và cập nhật hồ sơ tại chỗ; **chỉ commit + build web + push khi người dùng nói "đẩy lên"**. Yêu cầu này đưa ra ngày 2026-09-08 để tiết kiệm token.
+- **Sau khi hoàn tất trọn một lát cắt:** chạy kiểm tra, cập nhật hồ sơ, rồi tự commit và push theo U016. Không đẩy trạng thái đang dở hoặc đang lỗi. Yêu cầu ngày 2026-09-09 này thay quy tắc cũ ngày 2026-09-08.
 - **Nhắc trước khi đụng lõi.** Khi việc sắp làm sửa `simulation.dart`/`routine.dart` hoặc là thiết kế hệ mới, nói trước để người dùng đổi sang model mạnh hơn, rồi hãy làm. Người dùng dùng Sonnet cho việc thường và Opus cho việc lõi.
 - **Ưu tiên GUI** (U015): mọi chức năng thật phải có nơi truy cập trên cả điện thoại và máy tính; hệ chưa có thì ghi rõ "chưa mở", đừng bịa số.
 - **Báo cáo trung thực.** Nói rõ cái gì chạy được, cái gì chỉ đúng trên giấy, cái gì là fixture chưa duyệt.
@@ -209,7 +211,7 @@ export PATH="/c/Program Files/GitHub CLI:$PATH"
 | V2.6 | Tay nghề lên tay, đói và tâm trạng |
 | V2.7–V2.8 | Cơ thể người lớn: ăn, đốt, sụt cân, nước và cơn khát |
 | V2.9–V2.10 | Tuyến vận tải thật, vị trí hai chiều, ngã rẽ và chọn đường |
-| V2.11–V2.12 | Bệnh của người lớn, và người ốm được nghỉ |
+| V2.11–V2.13 | Bệnh của người lớn, nghỉ bệnh và chuyển ca cho người gánh thay |
 
 **Chuỗi nhân quả dài nhất hiện có** (không đoạn nào viết sẵn):
 

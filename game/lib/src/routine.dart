@@ -13,6 +13,7 @@ class RoutineBlock {
     this.priority = 50,
     this.blocking = false,
     this.needKind,
+    this.requiredSkill,
     this.outputResource,
     this.outputAmount = 0,
     this.planDay,
@@ -34,6 +35,9 @@ class RoutineBlock {
 
   /// Nhu cầu của hộ đã sinh ra khối này, nếu khối do kế hoạch tạo.
   final String? needKind;
+
+  /// Tay nghề tối thiểu để một người khác có thể gánh thay khối này.
+  final String? requiredSkill;
 
   /// Khóa nguồn lực mà khối này bổ sung cho hộ khi làm xong.
   final String? outputResource;
@@ -62,6 +66,7 @@ class RoutineBlock {
     if (priority != 50) 'priority': priority,
     if (blocking) 'blocking': true,
     if (needKind != null) 'need_kind': needKind,
+    if (requiredSkill != null) 'required_skill': requiredSkill,
     if (outputResource != null) 'output_resource': outputResource,
     if (outputAmount > 0) 'output_amount': outputAmount,
     if (planDay != null) 'plan_day': planDay,
@@ -76,6 +81,7 @@ class RoutineBlock {
     priority: json['priority'] as int? ?? 50,
     blocking: json['blocking'] as bool? ?? false,
     needKind: json['need_kind'] as String?,
+    requiredSkill: json['required_skill'] as String?,
     outputResource: json['output_resource'] as String?,
     outputAmount: json['output_amount'] as int? ?? 0,
     planDay: json['plan_day'] as int?,
@@ -329,9 +335,8 @@ class RoutineState {
   }
 
   /// Thay toàn bộ khối do kế hoạch sinh ra, giữ nguyên bảng giờ cố định.
-  RoutineState withGeneratedBlocks(List<RoutineBlock> generated) => _copy(
-    blocks: <RoutineBlock>[...fixedBlocks, ...generated],
-  );
+  RoutineState withGeneratedBlocks(List<RoutineBlock> generated) =>
+      _copy(blocks: <RoutineBlock>[...fixedBlocks, ...generated]);
 
   /// Ghi một xung đột do nghĩa vụ ngoài nhịp sống, ví dụ bữa ăn của hộ.
   RoutineState recordConflict(ScheduleConflict conflict) =>
@@ -376,7 +381,9 @@ class RoutineState {
     activePlannedEndSeconds: clearActive
         ? null
         : (activePlannedEndSeconds ?? this.activePlannedEndSeconds),
-    activeLostSeconds: clearActive ? 0 : (activeLostSeconds ?? this.activeLostSeconds),
+    activeLostSeconds: clearActive
+        ? 0
+        : (activeLostSeconds ?? this.activeLostSeconds),
     preemptedBy: clearPreemption ? null : (preemptedBy ?? this.preemptedBy),
     preemptedAtSeconds: clearPreemption
         ? null
@@ -400,8 +407,7 @@ class RoutineState {
       'active_planned_end_seconds': activePlannedEndSeconds,
     if (activeLostSeconds > 0) 'active_lost_seconds': activeLostSeconds,
     if (preemptedBy != null) 'preempted_by': preemptedBy,
-    if (preemptedAtSeconds != null)
-      'preempted_at_seconds': preemptedAtSeconds,
+    if (preemptedAtSeconds != null) 'preempted_at_seconds': preemptedAtSeconds,
     if (completedBlocks > 0) 'completed_blocks': completedBlocks,
     if (deferredStarts > 0) 'deferred_starts': deferredStarts,
     if (droppedBlocks > 0) 'dropped_blocks': droppedBlocks,

@@ -149,11 +149,7 @@ class PersonState {
     required int positionMm,
     required String roomId,
     int? positionYMm,
-  }) => _copy(
-    positionMm: positionMm,
-    positionYMm: positionYMm,
-    roomId: roomId,
-  );
+  }) => _copy(positionMm: positionMm, positionYMm: positionYMm, roomId: roomId);
 
   PersonState withRoutine(RoutineState value) => _copy(routine: value);
 
@@ -241,10 +237,14 @@ class PersonState {
           ),
     skills: json['skills'] == null
         ? null
-        : PersonSkills.fromJson((json['skills']! as Map).cast<String, Object?>()),
+        : PersonSkills.fromJson(
+            (json['skills']! as Map).cast<String, Object?>(),
+          ),
     agenda: json['agenda'] == null
         ? null
-        : PersonAgenda.fromJson((json['agenda']! as Map).cast<String, Object?>()),
+        : PersonAgenda.fromJson(
+            (json['agenda']! as Map).cast<String, Object?>(),
+          ),
     body: json['adult_body'] == null
         ? null
         : AdultBodyState.fromJson(
@@ -1549,6 +1549,12 @@ class Simulation {
     final PersonState person = _state.people[personId]!;
     final RoutineState routine = person.routine!;
     final bool canDefer = attempt < _routineMaxDeferrals;
+    if (!canDefer &&
+        !block.generated &&
+        competing.startsWith('nghỉ vì ốm') &&
+        _reassignSickWorkerBlock(personId, block)) {
+      return;
+    }
     if (!canDefer && _rescheduleBlock(personId, block)) return;
     final RoutineState next = canDefer
         ? routine.deferStart(
@@ -1589,6 +1595,166 @@ class Simulation {
     }
   }
 
+  /// Chuyển một ca cố định của người đang nghỉ bệnh cho thành viên cùng hộ.
+  ///
+  /// Người nhận phải đang khỏe, có lịch, có quyền dùng kho đích, đủ tay nghề
+  /// và còn một khoảng trống trong ngày. Hồ sơ cá nhân vẫn có quyền từ chối
+  /// nếu mức ưu tiên của ca thấp hơn ngưỡng họ chấp nhận.
+  bool _reassignSickWorkerBlock(String originalId, RoutineBlock block) {
+    final PersonState? original = _state.people[originalId];
+    final String? householdId = original?.householdId;
+    final HouseholdState? household = householdId == null
+        ? null
+        : _state.households[householdId];
+    if (original == null || household == null || !household.workSubstitution) {
+      return false;
+    }
+
+    final String? itemId = block.outputResource == null
+        ? null
+        : household.resourceItemIds[block.outputResource];
+    final String? skillCode =
+        block.requiredSkill ??
+        (block.needKind == null ? null : _skillByResource[block.needKind]);
+    final List<String> candidates =
+        household.memberIds.where((String id) {
+          if (id == originalId) return false;
+          final PersonState? person = _state.people[id];
+          if (person == null ||
+              person.infancy != null ||
+              person.routine == null) {
+            return false;
+          }
+          if (_competingObligation(person) != null) return false;
+          if (itemId == null && block.outputResource != null) return false;
+          if (itemId != null && !household.canUse(id, itemId)) return false;
+          if (skillCode != null &&
+              (person.skills?.level(skillCode) ?? 0) < _minimumWorkSkill) {
+            return false;
+          }
+          return true;
+        }).toList()..sort((String leftId, String rightId) {
+          final PersonState left = _state.people[leftId]!;
+          final PersonState right = _state.people[rightId]!;
+          final int bySkill = (right.skills?.level(skillCode ?? '') ?? 0)
+              .compareTo(left.skills?.level(skillCode ?? '') ?? 0);
+          return bySkill != 0 ? bySkill : leftId.compareTo(rightId);
+        });
+
+    final int day = _state.now.day;
+    final int secondOfDay = _state.now.seconds % gameSecondsPerDay;
+    for (final String candidateId in candidates) {
+      PersonState candidate = _state.people[candidateId]!;
+      final PersonAgenda? agenda = candidate.agenda;
+      if (agenda != null && block.priority < agenda.acceptanceFloor) {
+        final String reason =
+            'mệt ${agenda.fatigue}/1000, chỉ nhận việc từ mức '
+            '${agenda.acceptanceFloor}; ca gánh thay mức ${block.priority}';
+        _replace(
+          people: <String, PersonState>{
+            ..._state.people,
+            candidateId: candidate.withAgenda(
+              agenda.recordOffer(accepted: false, reason: reason),
+            ),
+          },
+          facts: <WorldFact>[
+            ..._state.facts,
+            _fact(
+              'work_substitution_refused',
+              candidateId,
+              'original=$originalId block=${block.id} '
+                  'priority=${block.priority} floor=${agenda.acceptanceFloor}',
+            ),
+          ],
+        );
+        continue;
+      }
+      candidate = _state.people[candidateId]!;
+      final RoutineState candidateRoutine = candidate.routine!;
+      final int? slot = _freeSlot(
+        person: candidate,
+        planned: candidateRoutine.generatedBlocks,
+        durationSeconds: block.durationSeconds,
+        priority: block.priority,
+        earliest: secondOfDay + 1800,
+      );
+      if (slot == null) continue;
+
+      final RoutineBlock cover = RoutineBlock(
+        id: 'COVER-${block.id}-BY-$candidateId-D$day',
+        activity: block.activity,
+        startSecondOfDay: slot,
+        durationSeconds: block.durationSeconds,
+        roomId: block.roomId,
+        priority: block.priority,
+        blocking: block.blocking,
+        needKind: block.needKind,
+        requiredSkill: block.requiredSkill,
+        outputResource: block.outputResource,
+        outputAmount: block.outputAmount,
+        planDay: day,
+      );
+      final PersonState currentOriginal = _state.people[originalId]!;
+      final RoutineState originalRoutine = currentOriginal.routine!;
+      PersonState nextCandidate = candidate.withRoutine(
+        candidateRoutine.withGeneratedBlocks(<RoutineBlock>[
+          ...candidateRoutine.generatedBlocks,
+          cover,
+        ]),
+      );
+      if (agenda != null) {
+        nextCandidate = nextCandidate.withAgenda(
+          agenda.recordOffer(accepted: true),
+        );
+      }
+      _replace(
+        people: <String, PersonState>{
+          ..._state.people,
+          originalId: currentOriginal.withRoutine(
+            originalRoutine.dropStart(
+              nowSeconds: _state.now.seconds,
+              blockId: block.id,
+              competingActivity: 'đã chuyển cho $candidateId vì nghỉ bệnh',
+            ),
+          ),
+          candidateId: nextCandidate,
+        },
+        facts: <WorldFact>[
+          ..._state.facts,
+          _fact(
+            'routine_block_reassigned',
+            originalId,
+            'block=${block.id} substitute=$candidateId '
+                'start=$slot duration=${block.durationSeconds} '
+                'activity=${block.activity}',
+          ),
+        ],
+      );
+      schedule(
+        due: SimTime(day * gameSecondsPerDay + slot),
+        phase: EventPhase.intent,
+        kind: 'routine_block_started',
+        payload: <String, Object?>{
+          'person_id': candidateId,
+          'block_id': cover.id,
+        },
+      );
+      return true;
+    }
+
+    _replace(
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'routine_block_reassignment_failed',
+          originalId,
+          'block=${block.id} candidates=${candidates.length}',
+        ),
+      ],
+    );
+    return false;
+  }
+
   /// Xếp lại một khối đã lùi hết lượt vào giờ trống còn lại trong ngày.
   ///
   /// Bản xếp lại là một khối riêng chỉ sống trong ngày hôm đó, nên bảng giờ
@@ -1619,6 +1785,7 @@ class Simulation {
       priority: block.priority,
       blocking: block.blocking,
       needKind: block.needKind,
+      requiredSkill: block.requiredSkill,
       outputResource: block.outputResource,
       outputAmount: block.outputAmount,
       planDay: day,
@@ -1651,10 +1818,7 @@ class Simulation {
       ),
       phase: EventPhase.intent,
       kind: 'routine_block_started',
-      payload: <String, Object?>{
-        'person_id': personId,
-        'block_id': moved.id,
-      },
+      payload: <String, Object?>{'person_id': personId, 'block_id': moved.id},
     );
     return true;
   }
@@ -1676,7 +1840,9 @@ class Simulation {
       );
       final bool wellbeing = _wellbeing(worker);
       PersonAgenda nextAgenda = wellbeing
-          ? agenda.tire(worked).afterWork(workedSeconds: worked, lostSeconds: lost)
+          ? agenda
+                .tire(worked)
+                .afterWork(workedSeconds: worked, lostSeconds: lost)
           : agenda.tire(worked);
       if (worker.body != null) nextAgenda = nextAgenda.logWork(worked);
       PersonState next = worker.withAgenda(nextAgenda);
@@ -2101,6 +2267,7 @@ class Simulation {
               .cast<String, int>(),
       wellbeing: event.payload['enable_v2_6'] == true,
       adultIllness: event.payload['enable_v2_11'] == true,
+      workSubstitution: event.payload['enable_v2_13'] == true,
     );
     _replace(
       households: <String, HouseholdState>{
@@ -2328,8 +2495,9 @@ class Simulation {
       final int shareEnergyKj = fed && eaters.isNotEmpty
           ? foodGrams * _kjPerHundredGramsFood ~/ 100 ~/ eaters.length
           : 0;
-      final int shareWaterMl =
-          fed && eaters.isNotEmpty ? waterMl ~/ eaters.length : 0;
+      final int shareWaterMl = fed && eaters.isNotEmpty
+          ? waterMl ~/ eaters.length
+          : 0;
       bool changed = false;
       for (final String memberId in eaters) {
         final PersonState member = updated[memberId]!;
@@ -2394,7 +2562,8 @@ class Simulation {
     final HouseholdState? household = _state.households[householdId];
     if (household == null) return;
     if (household.wellbeing) _settleAdultBodies(household);
-    final HouseholdState settled = _state.households[householdId]!.settleWorkDay();
+    final HouseholdState settled = _state.households[householdId]!
+        .settleWorkDay();
     _replace(
       households: <String, HouseholdState>{
         ..._state.households,
@@ -2453,8 +2622,7 @@ class Simulation {
       severity: 420,
       bodyTemperatureMilliC: 37800,
       symptoms: const <String>['runny_nose', 'light_cough', 'mild_fever'],
-      physiologyCoupled:
-          event.payload['physiology_coupled'] as bool? ?? false,
+      physiologyCoupled: event.payload['physiology_coupled'] as bool? ?? false,
     );
     _replace(
       illnesses: <String, IllnessState>{
@@ -2777,8 +2945,7 @@ class Simulation {
     final PersonState? person = _state.people[personId];
     final CaregiverAgentState? agent = person?.caregiverAgent;
     if (person == null || agent == null) return;
-    final String reason =
-        event.payload['reason'] as String? ?? 'unknown';
+    final String reason = event.payload['reason'] as String? ?? 'unknown';
     final PersonState updated = person.withCaregiverAgent(
       agent.withAvailability(available),
     );
@@ -3051,9 +3218,7 @@ class Simulation {
     if (illness == null || !illness.active || household == null) return;
     const int careWaterMl = 400;
     final String? waterId = household.resourceItemIds['water'];
-    final CareItemState? water = waterId == null
-        ? null
-        : _state.items[waterId];
+    final CareItemState? water = waterId == null ? null : _state.items[waterId];
     if (water == null ||
         water.quantity < careWaterMl ||
         !household.canUse(carerId, water.id)) {
@@ -3084,10 +3249,7 @@ class Simulation {
         ..._state.items,
         water.id: water.consume(careWaterMl),
       },
-      illnesses: <String, IllnessState>{
-        ..._state.illnesses,
-        illnessId: cared,
-      },
+      illnesses: <String, IllnessState>{..._state.illnesses, illnessId: cared},
       facts: <WorldFact>[
         ..._state.facts,
         _fact(
@@ -3102,9 +3264,7 @@ class Simulation {
 
   /// Bệnh đang hoạt động của một người, nếu có.
   IllnessState? _activeIllness(String personId) => _state.illnesses.values
-      .where(
-        (IllnessState value) => value.personId == personId && value.active,
-      )
+      .where((IllnessState value) => value.personId == personId && value.active)
       .firstOrNull;
 
   /// Sức lực thật sau khi tính cả bệnh.
@@ -3119,8 +3279,7 @@ class Simulation {
   }
 
   /// Sức lực của người chở, phần nghìn; chưa có cơ thể thì coi như đủ sức.
-  int _carrierCapability(PersonState carrier) =>
-      _effectiveCapability(carrier);
+  int _carrierCapability(PersonState carrier) => _effectiveCapability(carrier);
 
   /// Tốc độ đi trên đường bằng của người này.
   int _carrierBaseSpeed(PersonState carrier) =>
@@ -3233,11 +3392,7 @@ class Simulation {
       ],
     );
     if (legIndex + 2 < path.length) {
-      _scheduleRouteLeg(
-        journey: next,
-        route: route,
-        legIndex: legIndex + 1,
-      );
+      _scheduleRouteLeg(journey: next, route: route, legIndex: legIndex + 1);
       return;
     }
     // Hết chặng cuối thì giao hàng.
@@ -3429,10 +3584,7 @@ class Simulation {
       due: nextDeparture,
       phase: EventPhase.movement,
       kind: 'supply_journey_started',
-      payload: <String, Object?>{
-        ...event.payload,
-        'journey_index': nextIndex,
-      },
+      payload: <String, Object?>{...event.payload, 'journey_index': nextIndex},
     );
   }
 

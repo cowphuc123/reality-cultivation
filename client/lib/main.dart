@@ -430,6 +430,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'auto_plan': true,
         'enable_v2_6': true,
         'enable_v2_11': true,
+        'enable_v2_13': true,
         'infant_id': 'P00',
         'caregiver_id': 'N01',
         'production_actor_id': 'N03',
@@ -864,6 +865,14 @@ const List<Map<String, Object?>> _routineN02 = <Map<String, Object?>>[
 ];
 
 const List<Map<String, Object?>> _routineN03 = <Map<String, Object?>>[
+  <String, Object?>{
+    'id': 'R-N03-DUNG-CU',
+    'activity': 'kiểm tra dụng cụ',
+    'start_second_of_day': 18000,
+    'duration_seconds': 1800,
+    'room_id': 'ROOM-YARD',
+    'priority': 80,
+  },
   <String, Object?>{
     'id': 'R-N03-MAI',
     'activity': 'sửa mái',
@@ -2238,6 +2247,11 @@ class _HouseholdPanel extends StatelessWidget {
                         icon: Icons.swap_horiz,
                       ),
                       _MetricTile(
+                        label: 'Ca được gánh thay',
+                        value: '${value.reassignedBlocks}',
+                        icon: Icons.group_work_outlined,
+                      ),
+                      _MetricTile(
                         label: 'Xung đột lịch',
                         value: '${value.scheduleConflicts}',
                         icon: Icons.event_busy_outlined,
@@ -2975,6 +2989,15 @@ String _factDetail(WorldFact fact) {
     'work_offer_refused' =>
       '${fact.subjectId} từ chối vì đang mệt ${values['fatigue'] ?? '?'}/1000, '
           'chỉ nhận việc từ mức ${values['floor'] ?? '?'} trở lên.',
+    'work_substitution_refused' =>
+      '${fact.subjectId} từ chối gánh ca ${values['block'] ?? ''} của '
+          '${values['original'] ?? 'người đang nghỉ bệnh'} vì mức ưu tiên chưa đủ.',
+    'routine_block_reassigned' =>
+      '${values['substitute'] ?? 'Một thành viên'} gánh thay '
+          '${values['activity'] ?? 'công việc'} của ${fact.subjectId} trong '
+          '${((int.tryParse(values['duration'] ?? '') ?? 0) ~/ 3600)} giờ.',
+    'routine_block_reassignment_failed' =>
+      'Không tìm được người đủ điều kiện gánh ca ${values['block'] ?? ''} của ${fact.subjectId}.',
     'routine_block_rescheduled' =>
       'Việc bị lùi hết lượt được xếp lại sang ${values['moved_to'] ?? 'giờ khác'}.',
     'routine_block_started' =>
@@ -3081,6 +3104,9 @@ String _factLabel(String kind) => switch (kind) {
   'routine_work_delivered' => 'Làm xong và nhập kho',
   'routine_work_lost' => 'Mất trắng công việc',
   'work_offer_refused' => 'Từ chối việc được giao',
+  'work_substitution_refused' => 'Từ chối gánh việc',
+  'routine_block_reassigned' => 'Hộ chuyển ca cho người khác',
+  'routine_block_reassignment_failed' => 'Không chuyển được ca',
   'skill_improved' => 'Lên tay nghề',
   'body_mass_lost' => 'Sụt cân vì thiếu ăn',
   'body_drank' => 'Uống nước từ kho hộ',

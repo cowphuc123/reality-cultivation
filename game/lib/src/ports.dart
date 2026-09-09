@@ -191,6 +191,7 @@ class HouseholdView {
     required this.supplyDeliveries,
     required this.productionRuns,
     required this.caregiverSubstitutions,
+    required this.reassignedBlocks,
     required this.supplyJourneys,
     required this.members,
     required this.items,
@@ -210,6 +211,7 @@ class HouseholdView {
   final int supplyDeliveries;
   final int productionRuns;
   final int caregiverSubstitutions;
+  final int reassignedBlocks;
   final List<SupplyJourneyView> supplyJourneys;
   final List<HouseholdMemberView> members;
   final List<HouseholdItemView> items;
@@ -218,18 +220,19 @@ class HouseholdView {
   final List<HouseholdNeed> needs;
 
   /// Các khối việc do kế hoạch của hộ sinh ra cho hôm nay.
-  List<(String, RoutineBlock)> get plannedWork => <(String, RoutineBlock)>[
-    for (final HouseholdMemberView member in members)
-      for (final RoutineBlock block
-          in member.routine?.blocks.where(
-                (RoutineBlock block) => block.generated,
-              ) ??
-              const <RoutineBlock>[])
-        (member.name, block),
-  ]..sort(
-    ((String, RoutineBlock) a, (String, RoutineBlock) b) =>
-        a.$2.startSecondOfDay.compareTo(b.$2.startSecondOfDay),
-  );
+  List<(String, RoutineBlock)> get plannedWork =>
+      <(String, RoutineBlock)>[
+        for (final HouseholdMemberView member in members)
+          for (final RoutineBlock block
+              in member.routine?.blocks.where(
+                    (RoutineBlock block) => block.generated,
+                  ) ??
+                  const <RoutineBlock>[])
+            (member.name, block),
+      ]..sort(
+        ((String, RoutineBlock) a, (String, RoutineBlock) b) =>
+            a.$2.startSecondOfDay.compareTo(b.$2.startSecondOfDay),
+      );
 
   /// Số lần thành viên từ chối việc hộ giao.
   int get refusedOffers => members.fold(
@@ -308,7 +311,8 @@ class RoutineSummaryView {
   final int conflictCount;
   final List<ScheduleConflict> conflicts;
 
-  ScheduleConflict? get lastConflict => conflicts.isEmpty ? null : conflicts.last;
+  ScheduleConflict? get lastConflict =>
+      conflicts.isEmpty ? null : conflicts.last;
 }
 
 /// Hồ sơ một người bất kỳ trong thế giới, kể cả người ngoài hộ.
@@ -410,7 +414,14 @@ class WorldDirectoryView {
 }
 
 class HouseholdItemView {
-  const HouseholdItemView({required this.id, required this.kind, required this.quantity, required this.unit, required this.condition, required this.roomName});
+  const HouseholdItemView({
+    required this.id,
+    required this.kind,
+    required this.quantity,
+    required this.unit,
+    required this.condition,
+    required this.roomName,
+  });
   final String id;
   final String kind;
   final int quantity;
@@ -461,8 +472,7 @@ class SupplyJourneyView {
 
   /// Tên các điểm mốc trên đường đã chọn, để hiện thành lộ trình đọc được.
   List<String> get pathNames => <String>[
-    for (final String id in pathWaypointIds)
-      route?.waypoint(id)?.name ?? id,
+    for (final String id in pathWaypointIds) route?.waypoint(id)?.name ?? id,
   ];
 
   /// Tuyến này có ngã rẽ nên đường đã chọn là một quyết định thật.
@@ -772,6 +782,13 @@ class SimulationHost implements CommandPort, QueryPort {
       supplyDeliveries: household.supplyDeliveries,
       productionRuns: household.productionRuns,
       caregiverSubstitutions: household.caregiverSubstitutions,
+      reassignedBlocks: simulation.state.facts
+          .where(
+            (WorldFact fact) =>
+                fact.kind == 'routine_block_reassigned' &&
+                household.memberIds.contains(fact.subjectId),
+          )
+          .length,
       supplyJourneys:
           <SupplyJourneyView>[
             for (final SupplyJourneyState journey
@@ -834,7 +851,9 @@ class SimulationHost implements CommandPort, QueryPort {
               quantity: item.quantity,
               unit: item.unit,
               condition: item.condition,
-              roomName: item.roomId == null ? null : simulation.state.rooms[item.roomId]?.name,
+              roomName: item.roomId == null
+                  ? null
+                  : simulation.state.rooms[item.roomId]?.name,
             ),
       ],
     );

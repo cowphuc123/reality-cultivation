@@ -221,9 +221,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('save-world')));
     await tester.pumpAndSettle();
-    final Simulation delayedJourney = Simulation.fromSave(
-      repository.value!,
-    )..advanceTo(const SimTime(4 * gameSecondsPerDay + 22 * 3600));
+    final Simulation delayedJourney = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(4 * gameSecondsPerDay + 22 * 3600));
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
@@ -484,9 +483,10 @@ void main() {
     final AdultBodyState body = evening.state.people['N01']!.body!;
     // Bữa ăn đi vào cơ thể thật và một ngày trôi thì đốt năng lượng thật.
     expect(body.totalIntakeKj, greaterThan(0));
-    expect(body.totalBurnedKj, greaterThanOrEqualTo(
-      AdultBodyState.basalKjPerDay,
-    ));
+    expect(
+      body.totalBurnedKj,
+      greaterThanOrEqualTo(AdultBodyState.basalKjPerDay),
+    );
     expect(body.energyReserveKj, isNot(equals(reserveStart)));
     expect(body.capability, inInclusiveRange(0, 1000));
 
@@ -684,11 +684,7 @@ void main() {
       greaterThan(route.pathDistanceMm(viaPass)),
     );
     expect(
-      route.pathSeconds(
-        path: viaPlain,
-        cargo: cargo,
-        capabilityPerMille: 1000,
-      ),
+      route.pathSeconds(path: viaPlain, cargo: cargo, capabilityPerMille: 1000),
       lessThan(
         route.pathSeconds(
           path: viaPass,
@@ -858,9 +854,12 @@ void main() {
       isTrue,
     );
     // Kỳ nghỉ để lại dấu thật trong sổ giờ mất.
+    expect(week.state.people['N01']!.routine!.lostSeconds, greaterThan(0));
     expect(
-      week.state.people['N01']!.routine!.lostSeconds,
-      greaterThan(0),
+      week.state.facts.any(
+        (WorldFact fact) => fact.kind == 'routine_block_reassigned',
+      ),
+      isTrue,
     );
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -877,5 +876,6 @@ void main() {
     await tester.tap(find.byKey(const Key('nav-2')));
     await tester.pumpAndSettle();
     expect(find.text('Xung đột lịch'), findsOneWidget);
+    expect(find.text('Ca được gánh thay'), findsOneWidget);
   });
 }

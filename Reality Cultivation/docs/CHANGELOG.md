@@ -1,5 +1,21 @@
 # Nhật ký dự án
 
+## 2026-09-09 — K5.20: V2.13 gánh việc khi nghỉ bệnh
+
+- Sau ba lần lùi vì bệnh, một ca cố định nay được chào cho thành viên cùng hộ thay vì mặc nhiên mất hẳn.
+- Người nhận phải đang khỏe, có lịch, đủ quyền với kho đích, đạt nghề tối thiểu và còn đủ giờ trống. Ứng viên được xét theo tay nghề rồi ID để giữ tính tái lập.
+- NPC giữ quyền từ chối theo mệt, đói, khát và tâm trạng. Fixture: N02 nghề 900 nhưng quá mệt nên từ chối; N04 nghề 100 bị loại; N03 nghề 700 nhận ca gom củi của N01.
+- Khối `COVER-...` giữ hoạt động, thời lượng, phòng, ưu tiên, sản lượng và nghề; khi hoàn tất N03 giao đủ 1.200 củi vào kho thật.
+- Thêm `RoutineBlock.requiredSkill`, `HouseholdState.workSubstitution` và cờ `enable_v2_13`; tắt cờ giữ hành vi cũ.
+- GUI thêm ba loại mốc tiếng Việt và ô **Ca được gánh thay** trên trang Hộ.
+- Runner V2.13 đạt ngày 3 hash `edf67b2b36cda0eb`; catalog 20 điều kiện; 18/18 runner và 16/16 widget test đạt. Toàn bộ 17 hash V0–V2.12 giữ nguyên.
+- Thêm [[K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH]].
+
+## 2026-09-09 — Làm tiếp giữa điện thoại và PC
+
+- Người dùng xác nhận quy trình mới: hoàn tất lát cắt và kiểm tra đạt thì trợ lý tự commit và push; không đẩy trạng thái đang dở hoặc đang lỗi. Quy tắc này thay yêu cầu ngày 2026-09-08.
+- Thêm [[HUONG_DAN_LAM_TIEP_TREN_DIEN_THOAI]]. Cách ưu tiên là dùng Remote của ChatGPT để điện thoại điều khiển đúng host PC, giữ cùng repository, vault Obsidian, công cụ và task.
+
 ## 2026-09-09 — Hồ sơ chuyển giao
 
 - Viết [[CHUYEN_GIAO]]: điểm vào duy nhất cho trợ lý mới tiếp nhận dự án, theo yêu cầu người dùng muốn chuyển sang làm với trợ lý khác.

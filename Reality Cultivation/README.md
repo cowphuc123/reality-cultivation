@@ -22,6 +22,7 @@ Game text mô phỏng thế giới tu tiên liên tục, ưu tiên chiều sâu 
 | [Nhật ký dự án](docs/CHANGELOG.md) | Những thay đổi quan trọng theo ngày |
 | [Cách làm việc với hồ sơ](HUONG_DAN.md) | Quy trình dùng Obsidian và cập nhật bối cảnh |
 | [[docs/HUONG_DAN_MO_BAN_TEST|Mở bản test]] | Nhấp đúp file mở game và các thao tác cần thử |
+| [[docs/HUONG_DAN_LAM_TIEP_TREN_DIEN_THOAI|Làm tiếp trên điện thoại]] | Dùng Remote hoặc GitHub mà không mất trạng thái |
 
 ## Triển khai
 
@@ -44,6 +45,7 @@ Game text mô phỏng thế giới tu tiên liên tục, ưu tiên chiều sâu 
 - [[docs/K5_17_V2_10_HAI_CHIEU_VA_NGA_RE|K5.17 — V2.10 vị trí hai chiều và ngã rẽ]]
 - [[docs/K5_18_V2_11_BENH_CUA_NGUOI_LON|K5.18 — V2.11 bệnh của người lớn]]
 - [[docs/K5_19_V2_12_NGHI_BENH|K5.19 — V2.12 người ốm được nghỉ thật]]
+- [[docs/K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH|K5.20 — V2.13 gánh việc khi nghỉ bệnh]]
 - Mã chạy được nằm trong thư mục `game/` ở gốc dự án.
 - Shell Flutter responsive nằm trong `client/`; bản web release được tạo tại `client/build/web`.
 

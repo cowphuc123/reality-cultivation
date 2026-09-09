@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-13-work-substitution",
+  "conditions": [
+    {"id":"V213-TRANSFER-001","title":"Ca cố định được chuyển khi người giữ ca nghỉ bệnh","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"R-N01-FUEL is reassigned after three deferrals"},
+    {"id":"V213-TRANSFER-002","title":"Người nhận là thành viên cùng hộ","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"N03 in H01 receives N01's block"},
+    {"id":"V213-TRANSFER-003","title":"Người nhận đang khỏe và có lịch riêng","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"Candidate filtering requires no competing obligation and a RoutineState"},
+    {"id":"V213-SKILL-001","title":"Người nhận phải đủ tay nghề tối thiểu","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"N04 at gather_fuel 100 is not selected"},
+    {"id":"V213-RIGHT-001","title":"Ca tạo sản lượng đòi quyền dùng kho đích","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"Candidate filtering checks authorized use of the household resource item"},
+    {"id":"V213-AGENCY-001","title":"Người quá mệt được quyền từ chối","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"N02 refuses priority 70 below their acceptance floor"},
+    {"id":"V213-AGENCY-002","title":"Từ chối được ghi vào hồ sơ cá nhân và lịch sử thế giới","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"work_substitution_refused and refusedOffers are recorded"},
+    {"id":"V213-SLOT-001","title":"Ca chỉ chuyển khi người nhận còn đủ giờ trống","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"_freeSlot preserves fixed blocks of equal or higher priority"},
+    {"id":"V213-COPY-001","title":"Ca chuyển giữ nguyên thời lượng và địa điểm","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"The cover block remains 10800 seconds in ROOM-YARD"},
+    {"id":"V213-COPY-002","title":"Ca chuyển giữ nguyên ưu tiên và nghề yêu cầu","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"Priority 70 and gather_fuel are preserved"},
+    {"id":"V213-COPY-003","title":"Ca chuyển giữ nguyên sản lượng dự kiến","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"The cover block retains output amount 1200"},
+    {"id":"V213-EXEC-001","title":"Người nhận thật sự bắt đầu ca","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"routine_block_started names the generated COVER block"},
+    {"id":"V213-EXEC-002","title":"Hoàn tất ca đưa sản lượng vào kho thật","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"N03 delivers all 1200 fuel"},
+    {"id":"V213-HISTORY-001","title":"Người bệnh ghi nhận ca đã giao cho ai","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"ScheduleConflict names N03 as the substitute"},
+    {"id":"V213-FAIL-001","title":"Không có người hợp lệ thì ghi thất bại rồi dùng cách xử lý cũ","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"routine_block_reassignment_failed precedes reschedule or drop"},
+    {"id":"V213-FLAG-001","title":"Tắt cờ V2.13 giữ hành vi cũ","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"No reassignment fact exists when enable_v2_13 is false"},
+    {"id":"V213-SAVE-001","title":"Lưu giữa ca gánh thay tái hiện đúng","status":"automated","runner":"tool/verify_v2_13_work_substitution.dart","oracle":"Continuous and restored day-three hashes both equal edf67b2b36cda0eb"},
+    {"id":"V213-REGRESSION-001","title":"Mười bảy runner V0–V2.12 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart through tool/verify_v2_12_illness_rest.dart","oracle":"All earlier runners pass with unchanged hashes"},
+    {"id":"V213-UI-001","title":"GUI dịch mốc chuyển ca và từ chối","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Timeline presents Vietnamese labels and details for V2.13 facts"},
+    {"id":"V213-UI-002","title":"Hồ sơ hộ cho biết số ca đã gánh thay","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Household card exposes the reassigned block count"}
+  ]
+}

@@ -38,6 +38,8 @@
     "households[].supply_deliveries",
     "households[].production_runs",
     "households[].caregiver_substitutions",
+    "households[].work_substitution",
+    "people[].routine.blocks[].required_skill",
     "supply_journeys"
   ]
 }

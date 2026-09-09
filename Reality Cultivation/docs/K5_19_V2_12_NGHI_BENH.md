@@ -18,7 +18,7 @@ Tôi ghi đó là chỗ hở lớn nhất. V2.12 đóng nó.
 
 ## Nghỉ tới khi khỏi, không theo một con số tuỳ ý
 
-Cách làm không cần cơ chế mới: **ốm trở thành một nghĩa vụ chen chỗ**, đi qua đúng máy móc lùi–xếp lại–bỏ đã có từ V2.5. Khối việc của người đang ốm bị lùi 30 phút mỗi lần, tối đa ba lần, rồi bỏ hẳn trong ngày nếu không còn giờ trống.
+Cách làm không cần cơ chế mới: **ốm trở thành một nghĩa vụ chen chỗ**, đi qua đúng máy móc lùi–xếp lại–bỏ đã có từ V2.5. Khối việc của người đang ốm bị lùi 15 phút mỗi lần, tối đa ba lần, rồi bỏ hẳn trong ngày nếu không còn giờ trống.
 
 Lần đầu tôi lấy **mức nặng** làm ngưỡng nghỉ (≥ 300) và nó hỏng ngay: một lượt chăm hạ mức nặng từ 322 xuống 202 **trong bốn mươi phút**, tụt dưới ngưỡng, nên hôm sau người ta lại đi làm và ốm lại — đúng cái vòng lặp cần phá. Luật đúng là **nghỉ cho tới khi khỏi hẳn**. Lượt chạy xác nhận: vẫn còn nghỉ ở mức nặng **55/1000**, tức là gần khỏi mà chưa khỏi.
 
@@ -72,7 +72,7 @@ Nghỉ hiện là **tất cả hoặc không có gì**: ốm thì không làm g�
 
 Khối bị bỏ vì nghỉ bệnh không được làm bù ngày sau — nó mất hẳn. Người ốm cũng không tự sửa lịch của mình cho nhẹ hơn, vì bảng giờ vẫn là dữ liệu cố định chứ chưa phải thứ NPC tự thương lượng.
 
-Ngưỡng "nghỉ tới khi khỏi", bước lùi 30 phút và trần ba lần lùi đều là fixture kỹ thuật kế thừa từ V2.5, chưa phải cân bằng đã chốt.
+Ngưỡng "nghỉ tới khi khỏi", bước lùi 15 phút và trần ba lần lùi đều là fixture kỹ thuật kế thừa từ V2.5, chưa phải cân bằng đã chốt.
 
 Bước tiếp theo đề xuất: cho người khác gánh việc của người đang nghỉ (chuyển khối cố định, không chỉ chào việc mới), hoặc bắt đầu bản đồ vùng để `WorldPoint` có chỗ dùng thật.
 

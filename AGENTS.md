@@ -13,7 +13,7 @@ Hồ sơ chính nằm trong vault Obsidian `Reality Cultivation/`, không phải
 
 - Trao đổi và viết tài liệu bằng tiếng Việt, diễn đạt dễ hiểu.
 - Đây là game text mô phỏng tu tiên sâu: 5 giây ngoài đời bằng 1 ngày game; người chơi giao việc và mục tiêu; NPC có đời sống riêng; cơ thể, thương tích, vật phẩm và công pháp có chiều sâu.
-- Người dùng yêu cầu lập kế hoạch chi tiết trước. Hiện chưa được yêu cầu bắt đầu lập trình game; tiếp tục thiết kế cho đến khi người dùng chuyển sang triển khai.
+- Kế hoạch chi tiết đã hoàn thành và dự án đang triển khai bằng các vertical slice chạy được. Đọc `STATE.md` để biết phiên bản hiện tại trước khi sửa mã.
 - Không tự coi đề xuất của trợ lý là quyết định đã được người dùng duyệt.
 - Giữ tham vọng dài hạn; phạm vi nhỏ ban đầu là đề xuất triển khai theo chặng, không phải tự ý cắt mục tiêu.
 - Tôn trọng chỉnh sửa trực tiếp của người dùng trong tài liệu. Đọc bản hiện tại trước khi sửa; không ghi đè bằng bản nhớ từ hội thoại.
@@ -22,3 +22,4 @@ Hồ sơ chính nằm trong vault Obsidian `Reality Cultivation/`, không phải
 - Giữ file này ngắn; đặt thiết kế chi tiết trong `Reality Cultivation/docs/`. Chỉ tách thêm tài liệu hệ thống khi thực sự cần.
 - Dùng vault Obsidian hiện có làm nguồn tài liệu duy nhất; không duy trì bản sao hồ sơ ở gốc dự án. Giữ nguyên cấu hình `.obsidian` và ghi chú riêng của người dùng. Dùng liên kết nội bộ và metadata đơn giản để hỗ trợ tra cứu.
 - Chỉ dẫn mới của người dùng có ưu tiên hơn những giả định cũ trong hồ sơ.
+- Sau khi hoàn tất trọn một lát cắt và mọi kiểm tra đạt, tự commit và push lên GitHub. Không đẩy trạng thái đang dở hoặc đang lỗi.

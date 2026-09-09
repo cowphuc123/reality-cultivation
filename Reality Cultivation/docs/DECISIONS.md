@@ -21,6 +21,7 @@ Cập nhật: 2026-09-08.
 | U013 | Khi tạo bản lưu, game sinh thế giới rồi mô phỏng hàng trăm, hàng nghìn hoặc hàng vạn năm không có nhân vật chính; sau đó người chơi chọn vị trí trên bản đồ và nhân vật mới sinh/nhập thế | Người dùng xác nhận, 2026-09-06 |
 | U014 | Người chơi điều khiển nhân vật ngay từ lúc sơ sinh; không tóm lược hoặc bỏ qua tuổi thơ | Người dùng xác nhận, 2026-09-06 |
 | U015 | Ưu tiên làm GUI đẹp và đầy đủ trước khi tiếp tục mở rộng mô phỏng | Người dùng yêu cầu, 2026-09-07; tiếp tục 2026-09-08 |
+| U016 | Sau khi hoàn tất trọn một lát cắt và kiểm tra đạt, trợ lý tự commit và push lên GitHub; không đẩy việc đang dở/lỗi | Người dùng xác nhận, 2026-09-09 |
 
 ## Đề xuất của trợ lý — chưa được người dùng chốt
 
@@ -44,6 +45,10 @@ Lịch sử đầy đủ từng lượt việc — tài liệu nào thêm gì, s
 
 ## Diễn biến gần nhất
 
+Ngày 2026-09-09: người dùng thay đổi quy trình Git: **hoàn tất lát cắt thì tự commit và push** để có thể tiếp tục giữa điện thoại và PC. Quy tắc này thay cho yêu cầu ngày 2026-09-08. Đã thêm [[HUONG_DAN_LAM_TIEP_TREN_DIEN_THOAI]]; cách ưu tiên là dùng Remote vào chính PC để giữ cùng thư mục, vault, công cụ và task.
+
+Ngày 2026-09-09: hoàn thành V2.13 tại [[K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH]]. Sau ba lần lùi vì bệnh, ca cố định được chào cho thành viên cùng hộ đang khỏe, đủ quyền, đủ nghề và đủ giờ. Người nhận có quyền từ chối theo trạng thái riêng; ca chuyển giữ nguyên thời lượng, nơi, ưu tiên và sản lượng. Chưa có chia ca, việc nhẹ hay đổi công. Hash V2.13 `edf67b2b36cda0eb`; 17 hash cũ giữ nguyên.
+
 Ngày 2026-09-09: người dùng muốn **chuyển dự án sang làm với trợ lý khác (ChatGPT)**. Đã viết [[CHUYEN_GIAO]] làm điểm vào duy nhất, ghi lại những thứ trước nay chỉ nằm trong hội thoại chứ không có trong hồ sơ: kỷ luật giữ hash, quy ước cờ `enable_v2_X`, năm phần bắt buộc của mỗi lát cắt, ba lý do hợp lệ để đổi hash cũ, và họ lỗi “đọc trạng thái cũ rồi ghi đè” đã trúng hai lần. Không đổi mã, không đổi hash.
 
 Ngày 2026-09-09: hoàn thành V2.12 tại [[K5_19_V2_12_NGHI_BENH]]. Nghỉ bệnh là **tất cả hoặc không có gì** — chưa có làm nhẹ, làm nửa buổi, hay chuyển khối cố định sang người khác gánh; khối bị bỏ vì nghỉ thì mất hẳn, không làm bù. NPC cũng không tự sửa lịch của mình cho nhẹ hơn vì bảng giờ vẫn là dữ liệu cố định. Luật nghỉ là "tới khi khỏi hẳn" chứ không theo mức nặng, vì một lượt chăm hạ mức nặng trong bốn mươi phút khiến ngưỡng theo mức nặng vô dụng. Lượt chạy cho một kết quả không đặt trước và cần ghi lại: nghỉ **không cứu được lịch vốn không bền** — người làm 10,3 giờ/ngày vẫn ốm lại, và cuối kỳ còn đỡ mệt hơn người làm 6 giờ vì được nghỉ nhiều hơn. Đã bỏ một đoạn code chết không bao giờ với tay được. Hash V2.11 đổi `e81de5a0e3d29c55` → `beabb8f20438f377`.
@@ -54,7 +59,7 @@ Ngày 2026-09-09: hoàn thành V2.10 tại [[K5_17_V2_10_HAI_CHIEU_VA_NGA_RE]]. 
 
 Ngày 2026-09-08: hoàn thành V2.9 tại [[K5_16_V2_9_TUYEN_VAN_TAI_THAT]]. Vị trí vẫn là **một trục một chiều**, nên tuyến chưa có ngã ba, đường vòng hay chọn tuyến; địa hình là hệ số cố định gắn vào chặng, chưa có mưa/mùa/đêm. Người chở đi một mạch không ăn uống dọc đường; chưa có cướp đường, hỏng hàng, phương tiện hay giá cả ở chợ. Các hệ số 1.200 mm/s đường bằng, 40 kg sức mang, chậm tối đa 40% khi đầy tải và ba mức địa hình 100/40/60 phần trăm đều là fixture chưa duyệt. Mười ba runner V0–V2.8 giữ nguyên hash vì nhánh tuyến thật là đường riêng.
 
-Ngày 2026-09-08: người dùng đổi cách làm — từ nay **không commit/push/build web sau mỗi lát cắt**, chỉ đẩy lên GitHub khi được yêu cầu. Lý do là tiết kiệm phần "loay hoay xác nhận đã lên GitHub" chứ không phải bản thân việc đẩy. Việc cập nhật hồ sơ Obsidian và chạy kiểm chứng vẫn làm như cũ sau mỗi lát cắt.
+Ngày 2026-09-08: người dùng từng yêu cầu không tự đẩy sau mỗi lát cắt. Quy tắc này đã được U016 ngày 2026-09-09 thay thế.
 
 Ngày 2026-09-08: hoàn thành V2.8 tại [[K5_15_V2_8_NUOC_VA_CON_KHAT]]. **Cố ý không làm thân nhiệt người lớn** dù bước tiếp trước có ghi: chưa có mùa, thời tiết hay nhiệt độ môi trường nào để thân nhiệt phản ứng lại, nên làm bây giờ là bịa ra một con số vô nghĩa. Thân nhiệt thuộc về mô hình môi trường K4.4 chứ không phải một trường thêm vào cơ thể. Nước vẫn chỉ đổi mỗi ngày một lần, chưa có nước bẩn hay bệnh do nước. Ngưỡng 90%/80% cho sức theo nước, trần uống 3.500 ml/ngày, 2.500 ml mỗi người trong tính nhu cầu và trọng số khát/15 đều là fixture chưa duyệt. Hash V2.7 đổi `e59171aea8e9867b` → `dc54cde35203486a` vì đó là fixture duy nhất có cơ thể; đây là mở rộng mô hình có chủ đích, không phải sửa lỗi.
 
