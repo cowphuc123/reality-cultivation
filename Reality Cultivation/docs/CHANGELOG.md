@@ -1,5 +1,15 @@
 # Nhật ký dự án
 
+## 2026-09-09 — K5.21: V2.14 bản đồ vùng đầu tiên
+
+- Thêm `WorldRegion`: vùng chữ nhật có biên thật bằng milimét; thêm `WorldSite`: địa điểm có tâm hai chiều, loại và bán kính.
+- Người, phòng và vật được suy ra thuộc địa điểm từ tọa độ hiện tại, không lưu thêm nhãn dễ mâu thuẫn. Người trong vùng nhưng ngoài mọi địa điểm được đếm riêng.
+- Vật phẩm có trục Y tùy chọn và đi qua save; trục Y phân biệt Đồng ngoài với Khúc lội suối dù hai nơi có cùng tọa độ X.
+- Fixture client có Thung lũng An Khê 13 × 3,5 km và năm địa điểm khớp với tuyến vận tải đã có.
+- Trang Hồ sơ thêm Bản đồ vùng dạng text với thẻ từng nơi, số người, phòng, vật, tọa độ và bán kính; nhật ký dịch hai mốc vùng/địa điểm.
+- Runner V2.14 đạt hash `1d70b51a89d4b142`; catalog 22 điều kiện; 19/19 runner và 16/16 widget test đạt. Toàn bộ 18 hash V0–V2.13 giữ nguyên.
+- Thêm [[K5_21_V2_14_BAN_DO_VUNG_DAU_TIEN]].
+
 ## 2026-09-09 — K5.20: V2.13 gánh việc khi nghỉ bệnh
 
 - Sau ba lần lùi vì bệnh, một ca cố định nay được chào cho thành viên cùng hộ thay vì mặc nhiên mất hẳn.

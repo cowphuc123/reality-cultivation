@@ -10,6 +10,7 @@ export 'src/infancy.dart';
 export 'src/infant_body.dart';
 export 'src/household.dart';
 export 'src/ports.dart';
+export 'src/region.dart';
 export 'src/route.dart';
 export 'src/routine.dart';
 export 'src/simulation.dart';

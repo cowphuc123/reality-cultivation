@@ -123,6 +123,83 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     ..schedule(
       due: const SimTime(0),
       phase: EventPhase.completion,
+      kind: 'region_created',
+      payload: const <String, Object?>{
+        'region_id': 'REG-ANKHE',
+        'name': 'Thung lũng An Khê',
+        'width_mm': 13000000,
+        'height_mm': 3500000,
+      },
+    )
+    ..schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
+      kind: 'site_created',
+      payload: const <String, Object?>{
+        'site_id': 'SITE-HOME',
+        'region_id': 'REG-ANKHE',
+        'name': 'Hộ ven suối',
+        'kind': 'household',
+        'center_x_mm': 12000,
+        'radius_mm': 100000,
+      },
+    )
+    ..schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
+      kind: 'site_created',
+      payload: const <String, Object?>{
+        'site_id': 'SITE-RIVER',
+        'region_id': 'REG-ANKHE',
+        'name': 'Khúc lội suối',
+        'kind': 'river',
+        'center_x_mm': 4012000,
+        'radius_mm': 300000,
+      },
+    )
+    ..schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
+      kind: 'site_created',
+      payload: const <String, Object?>{
+        'site_id': 'SITE-FIELD',
+        'region_id': 'REG-ANKHE',
+        'name': 'Đồng ngoài',
+        'kind': 'field',
+        'center_x_mm': 4012000,
+        'center_y_mm': 3000000,
+        'radius_mm': 500000,
+      },
+    )
+    ..schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
+      kind: 'site_created',
+      payload: const <String, Object?>{
+        'site_id': 'SITE-PASS',
+        'region_id': 'REG-ANKHE',
+        'name': 'Chân đèo',
+        'kind': 'pass',
+        'center_x_mm': 8012000,
+        'radius_mm': 400000,
+      },
+    )
+    ..schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
+      kind: 'site_created',
+      payload: const <String, Object?>{
+        'site_id': 'SITE-MARKET',
+        'region_id': 'REG-ANKHE',
+        'name': 'Chợ An Khê',
+        'kind': 'market',
+        'center_x_mm': 12012000,
+        'radius_mm': 600000,
+      },
+    )
+    ..schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
       kind: 'room_created',
       payload: const <String, Object?>{
         'room_id': 'ROOM-SLEEP',
@@ -683,6 +760,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         saves: saves,
         world: world,
         directory: _host.directory(),
+        worldMap: _host.worldMap(),
       ),
     ];
     final int secondsOfDay = world.time.seconds % gameSecondsPerDay;
@@ -1416,11 +1494,13 @@ class _ProfilePage extends StatelessWidget {
     required this.saves,
     required this.world,
     required this.directory,
+    required this.worldMap,
   });
 
   final Widget saves;
   final WorldView world;
   final WorldDirectoryView directory;
+  final WorldMapView worldMap;
 
   @override
   Widget build(BuildContext context) => _PageFrame(
@@ -1455,6 +1535,8 @@ class _ProfilePage extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 14),
+        _WorldMapPanel(worldMap: worldMap),
         const SizedBox(height: 14),
         Card(
           key: const Key('people-directory'),
@@ -1505,6 +1587,117 @@ class _ProfilePage extends StatelessWidget {
     ),
   );
 }
+
+class _WorldMapPanel extends StatelessWidget {
+  const _WorldMapPanel({required this.worldMap});
+
+  final WorldMapView worldMap;
+
+  @override
+  Widget build(BuildContext context) {
+    if (worldMap.regions.isEmpty) {
+      return const Card(
+        key: Key('world-map'),
+        child: Padding(
+          padding: EdgeInsets.all(17),
+          child: Text('Thế giới này chưa có vùng địa lý được vật chất hóa.'),
+        ),
+      );
+    }
+    return Card(
+      key: const Key('world-map'),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(17, 17, 17, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const _SectionLabel(label: 'BẢN ĐỒ VÙNG'),
+            const SizedBox(height: 6),
+            Text(
+              '${worldMap.regions.length} vùng · ${worldMap.siteCount} địa điểm · '
+              '${worldMap.unplacedPeople} người đang ngoài mọi địa điểm',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            for (final RegionMapView region in worldMap.regions) ...<Widget>[
+              Text(
+                region.region.name,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Text(
+                '${_km(region.region.widthMm)} km × '
+                '${_km(region.region.heightMm)} km · '
+                '${region.sites.length} địa điểm',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: <Widget>[
+                  for (final SiteMapView site in region.sites)
+                    Chip(
+                      avatar: Icon(_siteIcon(site.site.kind), size: 17),
+                      label: Text(site.site.name),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              for (final SiteMapView site in region.sites)
+                Card(
+                  key: Key('map-site-${site.site.id}'),
+                  color: const Color(0xff111611),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ExpansionTile(
+                    leading: Icon(_siteIcon(site.site.kind)),
+                    title: Text(site.site.name),
+                    subtitle: Text(
+                      '${_siteKindLabel(site.site.kind)} · '
+                      '${site.population} người · ${site.itemCount} vật',
+                    ),
+                    childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                    children: <Widget>[
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Tọa độ: (${_km(site.site.center.xMm)}, '
+                          '${_km(site.site.center.yMm)}) km\n'
+                          'Bán kính: ${_km(site.site.radiusMm)} km\n'
+                          'Người: ${site.peopleNames.isEmpty ? 'không có' : site.peopleNames.join(', ')}\n'
+                          'Phòng: ${site.roomNames.isEmpty ? 'không có' : site.roomNames.join(', ')}\n'
+                          'Vật: ${site.itemKinds.isEmpty ? 'không có' : site.itemKinds.map(_itemKindLabel).join(', ')}',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _km(int millimetres) => (millimetres / 1000000).toStringAsFixed(2);
+
+String _siteKindLabel(String kind) => switch (kind) {
+  'household' => 'Khu cư trú',
+  'market' => 'Chợ',
+  'river' => 'Sông suối',
+  'field' => 'Đồng ruộng',
+  'pass' => 'Đèo',
+  _ => kind,
+};
+
+IconData _siteIcon(String kind) => switch (kind) {
+  'household' => Icons.cottage_outlined,
+  'market' => Icons.storefront_outlined,
+  'river' => Icons.water_outlined,
+  'field' => Icons.grass_outlined,
+  'pass' => Icons.landscape_outlined,
+  _ => Icons.place_outlined,
+};
 
 class _PersonProfileCard extends StatelessWidget {
   const _PersonProfileCard({required this.person});
@@ -2998,6 +3191,12 @@ String _factDetail(WorldFact fact) {
           '${((int.tryParse(values['duration'] ?? '') ?? 0) ~/ 3600)} giờ.',
     'routine_block_reassignment_failed' =>
       'Không tìm được người đủ điều kiện gánh ca ${values['block'] ?? ''} của ${fact.subjectId}.',
+    'region_created' =>
+      'Vùng ${fact.detail.split(' width=').first} được vật chất hóa trên bản đồ.',
+    'site_created' =>
+      'Địa điểm ${fact.detail.split(' kind=').first} xuất hiện tại '
+          '(${_km(int.tryParse(values['x'] ?? '') ?? 0)}, '
+          '${_km(int.tryParse(values['y'] ?? '') ?? 0)}) km.',
     'routine_block_rescheduled' =>
       'Việc bị lùi hết lượt được xếp lại sang ${values['moved_to'] ?? 'giờ khác'}.',
     'routine_block_started' =>
@@ -3107,6 +3306,8 @@ String _factLabel(String kind) => switch (kind) {
   'work_substitution_refused' => 'Từ chối gánh việc',
   'routine_block_reassigned' => 'Hộ chuyển ca cho người khác',
   'routine_block_reassignment_failed' => 'Không chuyển được ca',
+  'region_created' => 'Một vùng được tạo',
+  'site_created' => 'Một địa điểm được tạo',
   'skill_improved' => 'Lên tay nghề',
   'body_mass_lost' => 'Sụt cân vì thiếu ăn',
   'body_drank' => 'Uống nước từ kho hộ',

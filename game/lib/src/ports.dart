@@ -2,8 +2,10 @@ import 'adult_body.dart';
 import 'agenda.dart';
 import 'care.dart';
 import 'domestic.dart';
+import 'geometry.dart';
 import 'household.dart';
 import 'infancy.dart';
+import 'region.dart';
 import 'route.dart';
 import 'routine.dart';
 import 'simulation.dart';
@@ -413,6 +415,50 @@ class WorldDirectoryView {
       .toList(growable: false);
 }
 
+/// Bản đồ vùng ở dạng dữ liệu đọc được bởi mọi giao diện.
+class WorldMapView {
+  const WorldMapView({
+    required this.regions,
+    required this.unplacedPeople,
+    required this.unplacedItems,
+    required this.unplacedRooms,
+  });
+
+  final List<RegionMapView> regions;
+  final int unplacedPeople;
+  final int unplacedItems;
+  final int unplacedRooms;
+
+  int get siteCount => regions.fold(
+    0,
+    (int total, RegionMapView region) => total + region.sites.length,
+  );
+}
+
+class RegionMapView {
+  const RegionMapView({required this.region, required this.sites});
+
+  final WorldRegion region;
+  final List<SiteMapView> sites;
+}
+
+class SiteMapView {
+  const SiteMapView({
+    required this.site,
+    required this.peopleNames,
+    required this.itemKinds,
+    required this.roomNames,
+  });
+
+  final WorldSite site;
+  final List<String> peopleNames;
+  final List<String> itemKinds;
+  final List<String> roomNames;
+
+  int get population => peopleNames.length;
+  int get itemCount => itemKinds.length;
+}
+
 class HouseholdItemView {
   const HouseholdItemView({
     required this.id,
@@ -497,6 +543,7 @@ abstract interface class QueryPort {
   PersonView? person(String id);
   HouseholdView? household(String id);
   WorldDirectoryView directory();
+  WorldMapView worldMap();
   List<WorldFact> recentFacts({int limit = 20});
 }
 
@@ -737,6 +784,85 @@ class SimulationHost implements CommandPort, QueryPort {
             ]),
           ),
       ]),
+    );
+  }
+
+  @override
+  WorldMapView worldMap() {
+    final WorldState state = simulation.state;
+    final List<WorldSite> orderedSites = state.sites.values.toList()
+      ..sort((WorldSite a, WorldSite b) => a.id.compareTo(b.id));
+    WorldSite? containing(WorldPoint? point) {
+      if (point == null) return null;
+      final List<WorldSite> matches =
+          orderedSites.where((WorldSite site) => site.contains(point)).toList()
+            ..sort((WorldSite a, WorldSite b) {
+              final int byDistance = a
+                  .distanceTo(point)
+                  .compareTo(b.distanceTo(point));
+              return byDistance != 0 ? byDistance : a.id.compareTo(b.id);
+            });
+      return matches.firstOrNull;
+    }
+
+    final Map<String, List<String>> peopleBySite = <String, List<String>>{};
+    int unplacedPeople = 0;
+    for (final PersonState person in state.people.values) {
+      final WorldSite? site = containing(person.point);
+      if (site == null) {
+        unplacedPeople++;
+      } else {
+        peopleBySite.putIfAbsent(site.id, () => <String>[]).add(person.name);
+      }
+    }
+    final Map<String, List<String>> itemsBySite = <String, List<String>>{};
+    int unplacedItems = 0;
+    for (final CareItemState item in state.items.values) {
+      final WorldSite? site = containing(
+        WorldPoint(item.positionMm, item.positionYMm),
+      );
+      if (site == null) {
+        unplacedItems++;
+      } else {
+        itemsBySite.putIfAbsent(site.id, () => <String>[]).add(item.kind);
+      }
+    }
+    final Map<String, List<String>> roomsBySite = <String, List<String>>{};
+    int unplacedRooms = 0;
+    for (final RoomState room in state.rooms.values) {
+      final WorldSite? site = containing(
+        WorldPoint(room.anchorPositionMm, room.anchorPositionYMm),
+      );
+      if (site == null) {
+        unplacedRooms++;
+      } else {
+        roomsBySite.putIfAbsent(site.id, () => <String>[]).add(room.name);
+      }
+    }
+
+    final List<WorldRegion> regions = state.regions.values.toList()
+      ..sort((WorldRegion a, WorldRegion b) => a.id.compareTo(b.id));
+    return WorldMapView(
+      regions: <RegionMapView>[
+        for (final WorldRegion region in regions)
+          RegionMapView(
+            region: region,
+            sites: <SiteMapView>[
+              for (final WorldSite site in orderedSites.where(
+                (WorldSite value) => value.regionId == region.id,
+              ))
+                SiteMapView(
+                  site: site,
+                  peopleNames: (peopleBySite[site.id] ?? <String>[])..sort(),
+                  itemKinds: (itemsBySite[site.id] ?? <String>[])..sort(),
+                  roomNames: (roomsBySite[site.id] ?? <String>[])..sort(),
+                ),
+            ],
+          ),
+      ],
+      unplacedPeople: unplacedPeople,
+      unplacedItems: unplacedItems,
+      unplacedRooms: unplacedRooms,
     );
   }
 

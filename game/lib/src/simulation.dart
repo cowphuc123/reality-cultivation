@@ -7,6 +7,7 @@ import 'domestic.dart';
 import 'geometry.dart';
 import 'household.dart';
 import 'infancy.dart';
+import 'region.dart';
 import 'route.dart';
 import 'routine.dart';
 
@@ -301,6 +302,8 @@ class WorldState {
     required this.illnesses,
     required this.supplyJourneys,
     this.routes = const <String, TradeRoute>{},
+    this.regions = const <String, WorldRegion>{},
+    this.sites = const <String, WorldSite>{},
   });
 
   factory WorldState.initial(int seed) => WorldState(
@@ -318,6 +321,8 @@ class WorldState {
     illnesses: const <String, IllnessState>{},
     supplyJourneys: const <String, SupplyJourneyState>{},
     routes: const <String, TradeRoute>{},
+    regions: const <String, WorldRegion>{},
+    sites: const <String, WorldSite>{},
   );
 
   final int seed;
@@ -336,6 +341,10 @@ class WorldState {
 
   /// Các tuyến đường đã được vật chất hóa trong thế giới này.
   final Map<String, TradeRoute> routes;
+
+  /// Các vùng và địa điểm đã được vật chất hóa trên bản đồ thế giới.
+  final Map<String, WorldRegion> regions;
+  final Map<String, WorldSite> sites;
 
   Map<String, Object?> toJson() {
     final List<PersonState> sortedPeople = people.values.toList()
@@ -399,6 +408,20 @@ class WorldState {
         ..sort((TradeRoute a, TradeRoute b) => a.id.compareTo(b.id));
       result['routes'] = sorted
           .map((TradeRoute value) => value.toJson())
+          .toList();
+    }
+    if (regions.isNotEmpty) {
+      final List<WorldRegion> sorted = regions.values.toList()
+        ..sort((WorldRegion a, WorldRegion b) => a.id.compareTo(b.id));
+      result['regions'] = sorted
+          .map((WorldRegion value) => value.toJson())
+          .toList();
+    }
+    if (sites.isNotEmpty) {
+      final List<WorldSite> sorted = sites.values.toList()
+        ..sort((WorldSite a, WorldSite b) => a.id.compareTo(b.id));
+      result['sites'] = sorted
+          .map((WorldSite value) => value.toJson())
           .toList();
     }
     return result;
@@ -475,6 +498,18 @@ class WorldState {
             in (json['routes'] as List<Object?>? ?? const <Object?>[]))
           TradeRoute.fromJson((item! as Map).cast<String, Object?>()).id:
               TradeRoute.fromJson((item as Map).cast<String, Object?>()),
+      },
+      regions: <String, WorldRegion>{
+        for (final Object? item
+            in (json['regions'] as List<Object?>? ?? const <Object?>[]))
+          WorldRegion.fromJson((item! as Map).cast<String, Object?>()).id:
+              WorldRegion.fromJson((item as Map).cast<String, Object?>()),
+      },
+      sites: <String, WorldSite>{
+        for (final Object? item
+            in (json['sites'] as List<Object?>? ?? const <Object?>[]))
+          WorldSite.fromJson((item! as Map).cast<String, Object?>()).id:
+              WorldSite.fromJson((item as Map).cast<String, Object?>()),
       },
     );
   }
@@ -617,6 +652,8 @@ class Simulation {
         illnesses: _state.illnesses,
         supplyJourneys: _state.supplyJourneys,
         routes: _state.routes,
+        regions: _state.regions,
+        sites: _state.sites,
       );
       _applyEvent(event);
     }
@@ -742,6 +779,10 @@ class Simulation {
         _applyRoomCreated(event);
       case 'route_created':
         _applyRouteCreated(event);
+      case 'region_created':
+        _applyRegionCreated(event);
+      case 'site_created':
+        _applySiteCreated(event);
       case 'route_leg_arrived':
         _applyRouteLegArrived(event);
       case 'infant_illness_onset':
@@ -2220,6 +2261,7 @@ class Simulation {
       id: itemId,
       kind: event.payload['kind']! as String,
       positionMm: event.payload['position_mm']! as int,
+      positionYMm: event.payload['position_y_mm'] as int? ?? 0,
       quantity: event.payload['quantity']! as int,
       condition: event.payload['condition'] as int? ?? 1000,
       energyKjPer100Ml: event.payload['energy_kj_per_100ml'] as int? ?? 0,
@@ -3070,6 +3112,73 @@ class Simulation {
     );
   }
 
+  void _applyRegionCreated(ScheduledEvent event) {
+    final String regionId = event.payload['region_id']! as String;
+    if (_state.regions.containsKey(regionId)) return;
+    final WorldRegion region = WorldRegion(
+      id: regionId,
+      name: event.payload['name']! as String,
+      minXMm: event.payload['min_x_mm'] as int? ?? 0,
+      minYMm: event.payload['min_y_mm'] as int? ?? 0,
+      widthMm: event.payload['width_mm']! as int,
+      heightMm: event.payload['height_mm']! as int,
+    );
+    if (region.widthMm <= 0 || region.heightMm <= 0) {
+      throw StateError('Region $regionId must have positive dimensions.');
+    }
+    _replace(
+      regions: <String, WorldRegion>{..._state.regions, regionId: region},
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'region_created',
+          regionId,
+          '${region.name} width=${region.widthMm} height=${region.heightMm}',
+        ),
+      ],
+    );
+  }
+
+  void _applySiteCreated(ScheduledEvent event) {
+    final String siteId = event.payload['site_id']! as String;
+    if (_state.sites.containsKey(siteId)) return;
+    final String regionId = event.payload['region_id']! as String;
+    final WorldRegion? region = _state.regions[regionId];
+    if (region == null) {
+      throw StateError('Site $siteId references an unknown region.');
+    }
+    final WorldSite site = WorldSite(
+      id: siteId,
+      regionId: regionId,
+      name: event.payload['name']! as String,
+      kind: event.payload['kind']! as String,
+      center: WorldPoint(
+        event.payload['center_x_mm']! as int,
+        event.payload['center_y_mm'] as int? ?? 0,
+      ),
+      radiusMm: event.payload['radius_mm']! as int,
+    );
+    if (site.radiusMm <= 0) {
+      throw StateError('Site $siteId must have a positive radius.');
+    }
+    if (!region.contains(site.center)) {
+      throw StateError('Site $siteId lies outside region $regionId.');
+    }
+    _replace(
+      sites: <String, WorldSite>{..._state.sites, siteId: site},
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'site_created',
+          siteId,
+          '${site.name} kind=${site.kind} region=$regionId '
+              'x=${site.center.xMm} y=${site.center.yMm} '
+              'radius=${site.radiusMm}',
+        ),
+      ],
+    );
+  }
+
   /// Dưới mức đủ nước này thì cơ thể đổ bệnh.
   static const int _illnessHydrationFloor = 700;
 
@@ -3715,6 +3824,8 @@ class Simulation {
     Map<String, IllnessState>? illnesses,
     Map<String, SupplyJourneyState>? supplyJourneys,
     Map<String, TradeRoute>? routes,
+    Map<String, WorldRegion>? regions,
+    Map<String, WorldSite>? sites,
   }) {
     _state = WorldState(
       seed: _state.seed,
@@ -3741,6 +3852,8 @@ class Simulation {
         supplyJourneys ?? _state.supplyJourneys,
       ),
       routes: Map<String, TradeRoute>.unmodifiable(routes ?? _state.routes),
+      regions: Map<String, WorldRegion>.unmodifiable(regions ?? _state.regions),
+      sites: Map<String, WorldSite>.unmodifiable(sites ?? _state.sites),
     );
   }
 }

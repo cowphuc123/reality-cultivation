@@ -40,6 +40,9 @@
     "households[].caregiver_substitutions",
     "households[].work_substitution",
     "people[].routine.blocks[].required_skill",
+    "items[].position_y_mm",
+    "regions",
+    "sites",
     "supply_journeys"
   ]
 }

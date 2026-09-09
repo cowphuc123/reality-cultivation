@@ -39,6 +39,7 @@ Lịch sử đầy đủ từng lượt việc nằm trong [[CHANGELOG]]. Tóm t
 | V2.11 | Bệnh của người lớn, khởi phát từ mất nước hoặc kiệt sức | [[K5_18_V2_11_BENH_CUA_NGUOI_LON]] · `beabb8f20438f377` |
 | V2.12 | Người ốm được nghỉ thật, tới khi khỏi hẳn | [[K5_19_V2_12_NGHI_BENH]] · `f57b6f0fb06205bb` |
 | V2.13 | Chuyển ca cố định của người nghỉ bệnh cho người đủ điều kiện | [[K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH]] · `edf67b2b36cda0eb` |
+| V2.14 | Vùng, địa điểm và quy người/phòng/vật theo tọa độ hai chiều | [[K5_21_V2_14_BAN_DO_VUNG_DAU_TIEN]] · `1d70b51a89d4b142` |
 
 Web đang chạy: **https://cowphuc123.github.io/reality-cultivation/** — tự động build lại mỗi lần đẩy `client/` lên GitHub (`.github/workflows/deploy-web.yml`). Bản cũ trên Sites (`chatgpt.site`) vẫn còn, chưa gỡ.
 
@@ -52,13 +53,13 @@ Làm tiếp từ điện thoại: ưu tiên Remote vào chính PC; xem [[HUONG_D
 - Chưa chốt phạm vi bản đầu, quy tắc tạm dừng, mô phỏng khi đóng game hoặc hệ cảnh giới.
 - Chưa có: giải phẫu đa bộ phận, thương tích, già đi, chết; diễn biến cơ thể trong ngày (cơ thể người lớn chạy theo ngày); nước bẩn và bệnh do nước; khẩu phần riêng từng người; quan hệ giữa người với người; hậu quả xã hội của việc từ chối; mục tiêu cá nhân dài hạn; lây bệnh và thuốc; chuỗi game sau tháng đầu.
 - Nghỉ bệnh vẫn là **tất cả hoặc không có gì**: chưa có làm nhẹ hay nửa buổi. Ca nay có thể chuyển nguyên khối cho một người khác, nhưng chưa chia ca, đổi công hay tạo nghĩa vụ bù; xem [[K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH]].
-- Vị trí đã có **hai chiều** nhưng chưa ai dùng ngoài tuyến vận tải: ba gian nhà vẫn trên trục, chưa có bản đồ, chưa có vùng, chưa có worldgen. Địa hình vẫn là hệ số cố định, chưa có mưa/mùa/đêm làm chậm; đồ thị đường đi viết sẵn trong fixture chứ chưa sinh từ địa hình.
+- Đã có vùng và năm địa điểm dùng tọa độ hai chiều; người/phòng/vật được quy vào nơi từ vị trí thật. Tuy nhiên tất cả vẫn là fixture viết sẵn: chưa có ô đất, độ cao, khí hậu, tài nguyên, biên giới, worldgen hay màn chọn nơi sinh. Đồ thị đường đi chưa sinh từ địa hình.
 - Thân nhiệt người lớn **cố ý chưa làm**: chưa có mùa, thời tiết hay nhiệt độ môi trường để nó phản ứng lại; xem [[K5_15_V2_8_NUOC_VA_CON_KHAT]].
 - Kho git đã có commit đầu và đẩy lên `github.com/cowphuc123/reality-cultivation` (công khai); chưa thiết lập sao lưu tự động ngoài GitHub.
 
 ## Bước tiếp theo đề xuất
 
-Làm việc nhẹ/nửa buổi trong giai đoạn hồi bệnh, hoặc bắt đầu bản đồ vùng để `WorldPoint` có chỗ dùng thật. Thân nhiệt nên chờ có mô hình môi trường trước.
+Ưu tiên V2.15 sinh vùng và địa điểm xác định từ seed để tiến tới luồng tạo thế giới và chọn nơi sinh của U013. Nhánh gần khác là làm việc nhẹ/nửa buổi khi hồi bệnh. Thân nhiệt nên chờ có khí hậu/mùa.
 
 Shared fixture V1 chưa chạy parity PWA. TN01–TN08 ([[LUA_CHON_TRAI_NGHIEM]]) và ADR công nghệ ACCEPTED vẫn mở.
 

@@ -83,6 +83,7 @@ class CareItemState {
     required this.id,
     required this.kind,
     required this.positionMm,
+    this.positionYMm = 0,
     required this.quantity,
     required this.condition,
     this.energyKjPer100Ml = 0,
@@ -95,6 +96,7 @@ class CareItemState {
   final String id;
   final String kind;
   final int positionMm;
+  final int positionYMm;
   final int quantity;
   final int condition;
   final int energyKjPer100Ml;
@@ -109,6 +111,7 @@ class CareItemState {
     id: id,
     kind: kind,
     positionMm: positionMm,
+    positionYMm: positionYMm,
     quantity: (quantity - amount).clamp(0, quantity),
     condition: condition,
     energyKjPer100Ml: energyKjPer100Ml,
@@ -122,6 +125,7 @@ class CareItemState {
     id: id,
     kind: kind,
     positionMm: positionMm,
+    positionYMm: positionYMm,
     quantity: quantity,
     condition: (condition - amount).clamp(0, 1000),
     energyKjPer100Ml: energyKjPer100Ml,
@@ -135,6 +139,7 @@ class CareItemState {
     id: id,
     kind: kind,
     positionMm: positionMm,
+    positionYMm: positionYMm,
     quantity: quantity + amount,
     condition: condition,
     energyKjPer100Ml: energyKjPer100Ml,
@@ -148,6 +153,7 @@ class CareItemState {
     'id': id,
     'kind': kind,
     'position_mm': positionMm,
+    if (positionYMm != 0) 'position_y_mm': positionYMm,
     'quantity': quantity,
     'condition': condition,
     if (energyKjPer100Ml > 0) 'energy_kj_per_100ml': energyKjPer100Ml,
@@ -161,6 +167,7 @@ class CareItemState {
     id: json['id']! as String,
     kind: json['kind']! as String,
     positionMm: json['position_mm']! as int,
+    positionYMm: json['position_y_mm'] as int? ?? 0,
     quantity: json['quantity']! as int,
     condition: json['condition']! as int,
     energyKjPer100Ml: json['energy_kj_per_100ml'] as int? ?? 0,

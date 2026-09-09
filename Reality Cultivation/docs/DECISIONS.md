@@ -1,6 +1,6 @@
 # Yêu cầu, đề xuất và câu hỏi mở
 
-Cập nhật: 2026-09-08.
+Cập nhật: 2026-09-09.
 
 ## Yêu cầu do người dùng nêu
 
@@ -44,6 +44,8 @@ Trừ những gì ghi trong bảng U ở trên, **mọi tên, con số, ngưỡn
 Lịch sử đầy đủ từng lượt việc — tài liệu nào thêm gì, số điều kiện tăng ra sao — nằm trong [[CHANGELOG]] và trong phần mở đầu của mỗi tài liệu K tương ứng. Không cần chép lại ở đây.
 
 ## Diễn biến gần nhất
+
+Ngày 2026-09-09: hoàn thành V2.14 tại [[K5_21_V2_14_BAN_DO_VUNG_DAU_TIEN]]. Tọa độ hai chiều nay thuộc một vùng có biên và năm địa điểm có bán kính; người, phòng và vật được suy ra thuộc nơi nào thay vì lưu nhãn trùng với vị trí. Đây mới là fixture bản đồ, chưa phải worldgen hoặc màn chọn nơi sinh. Hash `1d70b51a89d4b142`; 18 hash cũ giữ nguyên.
 
 Ngày 2026-09-09: người dùng thay đổi quy trình Git: **hoàn tất lát cắt thì tự commit và push** để có thể tiếp tục giữa điện thoại và PC. Quy tắc này thay cho yêu cầu ngày 2026-09-08. Đã thêm [[HUONG_DAN_LAM_TIEP_TREN_DIEN_THOAI]]; cách ưu tiên là dùng Remote vào chính PC để giữ cùng thư mục, vault, công cụ và task.
 

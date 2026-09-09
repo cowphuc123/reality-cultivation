@@ -46,6 +46,7 @@ Game text mô phỏng thế giới tu tiên liên tục, ưu tiên chiều sâu 
 - [[docs/K5_18_V2_11_BENH_CUA_NGUOI_LON|K5.18 — V2.11 bệnh của người lớn]]
 - [[docs/K5_19_V2_12_NGHI_BENH|K5.19 — V2.12 người ốm được nghỉ thật]]
 - [[docs/K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH|K5.20 — V2.13 gánh việc khi nghỉ bệnh]]
+- [[docs/K5_21_V2_14_BAN_DO_VUNG_DAU_TIEN|K5.21 — V2.14 bản đồ vùng đầu tiên]]
 - Mã chạy được nằm trong thư mục `game/` ở gốc dự án.
 - Shell Flutter responsive nằm trong `client/`; bản web release được tạo tại `client/build/web`.
 

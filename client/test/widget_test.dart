@@ -50,6 +50,10 @@ void main() {
     expect(find.byKey(const Key('save-world')), findsOneWidget);
     expect(find.byKey(const Key('load-world')), findsOneWidget);
     expect(find.byKey(const Key('new-world')), findsOneWidget);
+    expect(find.byKey(const Key('world-map')), findsOneWidget);
+    expect(find.byKey(const Key('map-site-SITE-HOME')), findsOneWidget);
+    expect(find.byKey(const Key('map-site-SITE-FIELD')), findsOneWidget);
+    expect(find.text('Thung lũng An Khê'), findsOneWidget);
     await tester.tap(find.byKey(const Key('new-world')));
     await tester.pumpAndSettle();
     expect(find.text('Tạo thế giới mới?'), findsOneWidget);

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-14-region-map",
+  "conditions": [
+    {"id":"V214-REGION-001","title":"Vùng có ranh giới chữ nhật bằng tọa độ thật","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"REG-ANKHE spans 13 by 3.5 kilometres"},
+    {"id":"V214-REGION-002","title":"Hai góc biên đều thuộc vùng","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"Both minimum and maximum boundary points are contained"},
+    {"id":"V214-REGION-003","title":"Vượt biên một milimét là ngoài vùng","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"x=13000001 is rejected"},
+    {"id":"V214-REGION-004","title":"Kích thước vùng phải dương","status":"manual","runner":"lib/src/simulation.dart","oracle":"region_created rejects non-positive width or height"},
+    {"id":"V214-SITE-001","title":"Địa điểm có tâm và bán kính thật","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"SITE-HOME contains points through radius 100000 mm"},
+    {"id":"V214-SITE-002","title":"Điểm đúng trên bán kính còn thuộc địa điểm","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"Distance exactly equal to radius is contained"},
+    {"id":"V214-SITE-003","title":"Vượt bán kính một milimét là ngoài địa điểm","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"Distance radius plus one is not contained"},
+    {"id":"V214-SITE-004","title":"Tâm địa điểm phải nằm trong vùng tham chiếu","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"A site centered one millimetre outside REG-SMALL is rejected"},
+    {"id":"V214-SITE-005","title":"Địa điểm phải tham chiếu vùng đã tồn tại","status":"manual","runner":"lib/src/simulation.dart","oracle":"site_created rejects an unknown region id"},
+    {"id":"V214-SITE-006","title":"Bán kính địa điểm phải dương","status":"manual","runner":"lib/src/simulation.dart","oracle":"site_created rejects non-positive radius"},
+    {"id":"V214-MEMBERSHIP-001","title":"Người được suy ra thuộc địa điểm từ vị trí","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"N-HOME belongs to SITE-HOME without storing a duplicate site id"},
+    {"id":"V214-MEMBERSHIP-002","title":"Phòng được suy ra thuộc địa điểm từ mốc phòng","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"ROOM-HOME is listed under SITE-HOME"},
+    {"id":"V214-MEMBERSHIP-003","title":"Vật phẩm được suy ra thuộc địa điểm từ vị trí","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"I-HOME appears under SITE-HOME"},
+    {"id":"V214-MEMBERSHIP-004","title":"Trục Y quyết định đúng địa điểm của người và vật","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"N-FIELD and I-FIELD resolve to SITE-FIELD at y=3000000"},
+    {"id":"V214-MEMBERSHIP-005","title":"Người trong vùng nhưng ngoài mọi địa điểm được đếm riêng","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"N-ROAD contributes to unplacedPeople"},
+    {"id":"V214-HISTORY-001","title":"Mỗi vùng hình thành có mốc lịch sử","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"region_created is recorded"},
+    {"id":"V214-HISTORY-002","title":"Mỗi địa điểm hình thành có mốc lịch sử","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"Five site_created facts are recorded"},
+    {"id":"V214-SAVE-001","title":"Lưu và nạp giữ nguyên bản đồ","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"Semantic hash before and after load is identical"},
+    {"id":"V214-SAVE-002","title":"Trục Y của vật phẩm đi qua bản lưu","status":"automated","runner":"tool/verify_v2_14_region_map.dart","oracle":"I-FIELD restores position_y_mm=3000000"},
+    {"id":"V214-REGRESSION-001","title":"Mười tám runner V0–V2.13 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart through tool/verify_v2_13_work_substitution.dart","oracle":"All earlier runners pass with unchanged hashes"},
+    {"id":"V214-UI-001","title":"Bản đồ vùng xuất hiện trên giao diện điện thoại","status":"automated","runner":"../client/test/widget_test.dart","oracle":"world-map and SITE-HOME are found at 390 by 844"},
+    {"id":"V214-UI-002","title":"Mỗi địa điểm có thẻ mở rộng về người, phòng và vật","status":"automated","runner":"../client/test/widget_test.dart","oracle":"SITE-HOME and SITE-FIELD cards are present and responsive"}
+  ]
+}
