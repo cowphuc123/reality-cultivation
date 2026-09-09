@@ -10,6 +10,7 @@ import 'infancy.dart';
 import 'region.dart';
 import 'route.dart';
 import 'routine.dart';
+import 'world_generation.dart';
 
 const int gameSecondsPerDay = 86400;
 const int realMillisecondsPerGameDay = 5000;
@@ -304,6 +305,7 @@ class WorldState {
     this.routes = const <String, TradeRoute>{},
     this.regions = const <String, WorldRegion>{},
     this.sites = const <String, WorldSite>{},
+    this.worldGenesis,
   });
 
   factory WorldState.initial(int seed) => WorldState(
@@ -323,6 +325,7 @@ class WorldState {
     routes: const <String, TradeRoute>{},
     regions: const <String, WorldRegion>{},
     sites: const <String, WorldSite>{},
+    worldGenesis: null,
   );
 
   final int seed;
@@ -345,6 +348,9 @@ class WorldState {
   /// Các vùng và địa điểm đã được vật chất hóa trên bản đồ thế giới.
   final Map<String, WorldRegion> regions;
   final Map<String, WorldSite> sites;
+
+  /// Dấu vết của bộ sinh đã công bố bản đồ này, nếu thế giới dùng worldgen.
+  final WorldGenesisRecord? worldGenesis;
 
   Map<String, Object?> toJson() {
     final List<PersonState> sortedPeople = people.values.toList()
@@ -423,6 +429,9 @@ class WorldState {
       result['sites'] = sorted
           .map((WorldSite value) => value.toJson())
           .toList();
+    }
+    if (worldGenesis != null) {
+      result['world_genesis'] = worldGenesis!.toJson();
     }
     return result;
   }
@@ -511,6 +520,11 @@ class WorldState {
           WorldSite.fromJson((item! as Map).cast<String, Object?>()).id:
               WorldSite.fromJson((item as Map).cast<String, Object?>()),
       },
+      worldGenesis: json['world_genesis'] == null
+          ? null
+          : WorldGenesisRecord.fromJson(
+              (json['world_genesis']! as Map).cast<String, Object?>(),
+            ),
     );
   }
 }
@@ -573,6 +587,45 @@ class Simulation {
     ]..sort();
     _replace(nextSequence: sequence + 1, pendingEvents: queue);
     return event;
+  }
+
+  /// Đưa một kết quả worldgen vào hàng đợi sự kiện theo đúng thứ tự công bố.
+  void materializeWorld(GeneratedWorld generated, {SimTime? due}) {
+    if (generated.rootSeed != _state.seed) {
+      throw StateError('Generated world seed does not match simulation seed.');
+    }
+    if (_state.worldGenesis != null ||
+        _state.regions.isNotEmpty ||
+        _state.sites.isNotEmpty ||
+        _state.pendingEvents.any(
+          (ScheduledEvent event) =>
+              event.kind == 'world_genesis_completed' ||
+              event.kind == 'region_created' ||
+              event.kind == 'site_created',
+        )) {
+      throw StateError('World geography has already been materialized.');
+    }
+    final SimTime publishAt = due ?? _state.now;
+    schedule(
+      due: publishAt,
+      phase: EventPhase.completion,
+      kind: 'region_created',
+      payload: generated.region.toJson(),
+    );
+    for (final WorldSite site in generated.sites) {
+      schedule(
+        due: publishAt,
+        phase: EventPhase.completion,
+        kind: 'site_created',
+        payload: site.toJson(),
+      );
+    }
+    schedule(
+      due: publishAt,
+      phase: EventPhase.completion,
+      kind: 'world_genesis_completed',
+      payload: generated.record.toJson(),
+    );
   }
 
   bool issue(SimCommand command) {
@@ -654,6 +707,7 @@ class Simulation {
         routes: _state.routes,
         regions: _state.regions,
         sites: _state.sites,
+        worldGenesis: _state.worldGenesis,
       );
       _applyEvent(event);
     }
@@ -783,6 +837,8 @@ class Simulation {
         _applyRegionCreated(event);
       case 'site_created':
         _applySiteCreated(event);
+      case 'world_genesis_completed':
+        _applyWorldGenesisCompleted(event);
       case 'route_leg_arrived':
         _applyRouteLegArrived(event);
       case 'infant_illness_onset':
@@ -3113,7 +3169,8 @@ class Simulation {
   }
 
   void _applyRegionCreated(ScheduledEvent event) {
-    final String regionId = event.payload['region_id']! as String;
+    final String regionId =
+        (event.payload['region_id'] ?? event.payload['id'])! as String;
     if (_state.regions.containsKey(regionId)) return;
     final WorldRegion region = WorldRegion(
       id: regionId,
@@ -3140,7 +3197,8 @@ class Simulation {
   }
 
   void _applySiteCreated(ScheduledEvent event) {
-    final String siteId = event.payload['site_id']! as String;
+    final String siteId =
+        (event.payload['site_id'] ?? event.payload['id'])! as String;
     if (_state.sites.containsKey(siteId)) return;
     final String regionId = event.payload['region_id']! as String;
     final WorldRegion? region = _state.regions[regionId];
@@ -3174,6 +3232,47 @@ class Simulation {
           '${site.name} kind=${site.kind} region=$regionId '
               'x=${site.center.xMm} y=${site.center.yMm} '
               'radius=${site.radiusMm}',
+        ),
+      ],
+    );
+  }
+
+  void _applyWorldGenesisCompleted(ScheduledEvent event) {
+    if (_state.worldGenesis != null) return;
+    final WorldGenesisRecord record = WorldGenesisRecord.fromJson(
+      event.payload,
+    );
+    if (record.rootSeed != _state.seed) {
+      throw StateError('World genesis seed does not match simulation seed.');
+    }
+    if (_state.regions.length != record.regionCount ||
+        _state.sites.length != record.siteCount ||
+        _state.regions.length != 1) {
+      throw StateError('World genesis counts do not match materialized map.');
+    }
+    final WorldRegion region = _state.regions.values.single;
+    final List<WorldSite> sites = _state.sites.values.toList()
+      ..sort((WorldSite a, WorldSite b) => a.id.compareTo(b.id));
+    final String fingerprint = WorldGenerator.fingerprintOf(
+      rootSeed: record.rootSeed,
+      generatorVersion: record.generatorVersion,
+      configId: record.configId,
+      region: region,
+      sites: sites,
+    );
+    if (fingerprint != record.fingerprint) {
+      throw StateError('World genesis fingerprint does not match the map.');
+    }
+    _replace(
+      worldGenesis: record,
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'world_genesis_completed',
+          region.id,
+          'seed=${record.rootSeed} version=${record.generatorVersion} '
+              'config=${record.configId} fingerprint=${record.fingerprint} '
+              'regions=${record.regionCount} sites=${record.siteCount}',
         ),
       ],
     );
@@ -3826,6 +3925,7 @@ class Simulation {
     Map<String, TradeRoute>? routes,
     Map<String, WorldRegion>? regions,
     Map<String, WorldSite>? sites,
+    WorldGenesisRecord? worldGenesis,
   }) {
     _state = WorldState(
       seed: _state.seed,
@@ -3854,6 +3954,7 @@ class Simulation {
       routes: Map<String, TradeRoute>.unmodifiable(routes ?? _state.routes),
       regions: Map<String, WorldRegion>.unmodifiable(regions ?? _state.regions),
       sites: Map<String, WorldSite>.unmodifiable(sites ?? _state.sites),
+      worldGenesis: worldGenesis ?? _state.worldGenesis,
     );
   }
 }

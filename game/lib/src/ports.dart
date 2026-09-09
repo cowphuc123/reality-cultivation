@@ -9,6 +9,7 @@ import 'region.dart';
 import 'route.dart';
 import 'routine.dart';
 import 'simulation.dart';
+import 'world_generation.dart';
 
 enum CommandStatus { accepted, duplicate, rejected }
 
@@ -422,12 +423,14 @@ class WorldMapView {
     required this.unplacedPeople,
     required this.unplacedItems,
     required this.unplacedRooms,
+    this.genesis,
   });
 
   final List<RegionMapView> regions;
   final int unplacedPeople;
   final int unplacedItems;
   final int unplacedRooms;
+  final WorldGenesisRecord? genesis;
 
   int get siteCount => regions.fold(
     0,
@@ -863,6 +866,7 @@ class SimulationHost implements CommandPort, QueryPort {
       unplacedPeople: unplacedPeople,
       unplacedItems: unplacedItems,
       unplacedRooms: unplacedRooms,
+      genesis: state.worldGenesis,
     );
   }
 

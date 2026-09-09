@@ -1,4 +1,4 @@
-# Reality Cultivation — lõi mô phỏng đến V2.14
+# Reality Cultivation — lõi mô phỏng đến V2.15
 
 Lõi mô phỏng xác định dùng chung cho giao diện điện thoại và máy tính.
 
@@ -21,6 +21,7 @@ Lõi mô phỏng xác định dùng chung cho giao diện điện thoại và m�
 - tuyến vận tải hai chiều có ngã rẽ và lựa chọn theo sức lực;
 - chuyển ca cố định của người nghỉ bệnh cho thành viên đủ điều kiện.
 - vùng, địa điểm và phép quy người/phòng/vật theo tọa độ hai chiều.
+- sinh hình học vùng và địa điểm xác định từ seed, có fingerprint và provenance.
 
 Chạy bằng Dart SDK:
 
@@ -35,6 +36,7 @@ dart run tool/verify_v2_household.dart
 dart run tool/verify_v2_1_household_health.dart
 dart run tool/verify_v2_13_work_substitution.dart
 dart run tool/verify_v2_14_region_map.dart
+dart run tool/verify_v2_15_seeded_world_generation.dart
 ```
 
 Giao diện Flutter nằm trong `../client`; bản chơi thử mở bằng `../MO_GAME.bat`.

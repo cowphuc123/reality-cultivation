@@ -45,6 +45,8 @@ Lịch sử đầy đủ từng lượt việc — tài liệu nào thêm gì, s
 
 ## Diễn biến gần nhất
 
+Ngày 2026-09-09: hoàn thành V2.15 tại [[K5_22_V2_15_SINH_BAN_DO_TU_SEED]]. Seed 31-bit dương nay sinh kích thước vùng, tọa độ và bán kính năm địa điểm bằng stream xác định dùng chung Dart VM/web; save giữ seed, phiên bản, config và fingerprint. Client cho nhập seed và đặt người/phòng/vật/tuyến theo bản đồ vừa sinh. Đây mới là worldgen hình học một vùng, chưa có địa hình, lịch sử tiền game hay chọn nơi sinh. Hash `5595e41dd7f499bc`; 19 hash cũ giữ nguyên.
+
 Ngày 2026-09-09: hoàn thành V2.14 tại [[K5_21_V2_14_BAN_DO_VUNG_DAU_TIEN]]. Tọa độ hai chiều nay thuộc một vùng có biên và năm địa điểm có bán kính; người, phòng và vật được suy ra thuộc nơi nào thay vì lưu nhãn trùng với vị trí. Đây mới là fixture bản đồ, chưa phải worldgen hoặc màn chọn nơi sinh. Hash `1d70b51a89d4b142`; 18 hash cũ giữ nguyên.
 
 Ngày 2026-09-09: người dùng thay đổi quy trình Git: **hoàn tất lát cắt thì tự commit và push** để có thể tiếp tục giữa điện thoại và PC. Quy tắc này thay cho yêu cầu ngày 2026-09-08. Đã thêm [[HUONG_DAN_LAM_TIEP_TREN_DIEN_THOAI]]; cách ưu tiên là dùng Remote vào chính PC để giữ cùng thư mục, vault, công cụ và task.

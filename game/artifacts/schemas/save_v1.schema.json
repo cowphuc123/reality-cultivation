@@ -43,6 +43,7 @@
     "items[].position_y_mm",
     "regions",
     "sites",
+    "world_genesis",
     "supply_journeys"
   ]
 }

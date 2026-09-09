@@ -1,5 +1,16 @@
 # Nhật ký dự án
 
+## 2026-09-09 — K5.22: V2.15 sinh bản đồ từ seed
+
+- Thêm `WorldGenerator`: seed 31-bit dương sinh kích thước vùng, tọa độ và bán kính năm địa điểm; cùng seed/config/version cho cùng fingerprint.
+- Dùng stream Park–Miller với số học an toàn cho Dart VM và Flutter web; kích thước cùng từng địa điểm dùng stream dẫn xuất có nhãn riêng.
+- `Simulation.materializeWorld` công bố vùng/địa điểm qua hàng đợi rồi xác minh seed, số lượng và fingerprint trước mốc `world_genesis_completed`; sai seed, fingerprint giả và công bố lặp đều bị chặn.
+- Save và `WorldMapView` mang provenance gồm root seed, phiên bản `v2.15.0`, config và dấu vân tay.
+- Fixture client đặt người, phòng, vật và waypoint theo các địa điểm vừa sinh, thay vì giữ tọa độ An Khê viết thẳng.
+- Hộp tạo thế giới cho nhập seed; trang Bản đồ vùng hiện seed, phiên bản và fingerprint. Đã sửa lỗi controller bị hủy khi hiệu ứng đóng hộp thoại chưa kết thúc do widget test phát hiện.
+- Runner V2.15 đạt hash `5595e41dd7f499bc`, fingerprint seed mặc định `247ad223a40016d6`; catalog 28 điều kiện; 20/20 runner và 17/17 widget test đạt. Toàn bộ 19 hash V0–V2.14 giữ nguyên.
+- Thêm [[K5_22_V2_15_SINH_BAN_DO_TU_SEED]].
+
 ## 2026-09-09 — K5.21: V2.14 bản đồ vùng đầu tiên
 
 - Thêm `WorldRegion`: vùng chữ nhật có biên thật bằng milimét; thêm `WorldSite`: địa điểm có tâm hai chiều, loại và bán kính.

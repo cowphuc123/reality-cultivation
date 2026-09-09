@@ -15,7 +15,7 @@ Viết ngày 2026-09-09. Tài liệu này dành cho **trợ lý AI tiếp nhận
 
 1. **`docs/STATE.md`** — đang ở đâu, làm gì tiếp. Ngắn, đọc trước.
 2. **`docs/DECISIONS.md`** — bảng U001–U016 là **yêu cầu người dùng đã xác nhận**; mọi thứ khác là đề xuất chưa chốt.
-3. **Tài liệu K5 mới nhất** (`docs/K5_21_V2_14_BAN_DO_VUNG_DAU_TIEN.md`) — lát cắt vừa xong.
+3. **Tài liệu K5 mới nhất** (`docs/K5_22_V2_15_SINH_BAN_DO_TU_SEED.md`) — lát cắt vừa xong.
 4. **`docs/CHANGELOG.md`** — chỉ khi cần tra lịch sử.
 
 `docs/MASTER_PLAN.md` và các tài liệu K0–K4 là **thiết kế trên giấy**, không phải mã đang chạy. Đừng lẫn hai thứ.
@@ -24,7 +24,7 @@ Viết ngày 2026-09-09. Tài liệu này dành cho **trợ lý AI tiếp nhận
 
 ## 1. Dự án là gì, trong ba câu
 
-Game text mô phỏng thế giới tu tiên, tham vọng chiều sâu vượt Dwarf Fortress. Người chơi giao mục tiêu cho nhân vật chứ không điều khiển từng bước; 5 giây ngoài đời = 1 ngày trong game. Hiện đã có **lõi mô phỏng chạy được** (Dart) và **giao diện text đa nền tảng** (Flutter), đang triển khai theo từng lát cắt dọc V0 → V2.14.
+Game text mô phỏng thế giới tu tiên, tham vọng chiều sâu vượt Dwarf Fortress. Người chơi giao mục tiêu cho nhân vật chứ không điều khiển từng bước; 5 giây ngoài đời = 1 ngày trong game. Hiện đã có **lõi mô phỏng chạy được** (Dart) và **giao diện text đa nền tảng** (Flutter), đang triển khai theo từng lát cắt dọc V0 → V2.15.
 
 Địa chỉ chơi thử: **https://cowphuc123.github.io/reality-cultivation/**
 Kho mã: **https://github.com/cowphuc123/reality-cultivation** (công khai)
@@ -36,7 +36,7 @@ Kho mã: **https://github.com/cowphuc123/reality-cultivation** (công khai)
 | Tầng | Nội dung | Trạng thái |
 | --- | --- | --- |
 | **Kế hoạch K0–K4** | 9 đặc tả nền, DL01–DL06, K0–K4 (~60 tài liệu) | **1.860 điều kiện thiết kế, chưa chạy** bằng mô phỏng thật |
-| **Mã K5** | `game/` + `client/`, V0 → V2.14 | **373 điều kiện có bộ chạy tự động**, tất cả đang xanh |
+| **Mã K5** | `game/` + `client/`, V0 → V2.15 | **401 điều kiện trong catalog triển khai**, 20 runner đang xanh |
 
 Hai bộ đếm này **độc lập**. Đừng cộng chúng, và đừng nói 1.860 điều kiện đã chạy.
 
@@ -50,14 +50,14 @@ D:\Reality Cultivation\
 │   ├── README.md               (mục lục)
 │   ├── AGENTS.md               (chỉ dẫn cho trợ lý làm trong vault)
 │   └── docs\                   (STATE, DECISIONS, CHANGELOG, K0–K5…)
-├── game\                       ← lõi mô phỏng Dart, 7.359 dòng
-│   ├── lib\src\simulation.dart (3.881 dòng — trung tâm, mọi sự kiện ở đây)
+├── game\                       ← lõi mô phỏng Dart, 7.793 dòng trong `lib/src`
+│   ├── lib\src\simulation.dart (3.838 dòng — trung tâm, mọi sự kiện ở đây)
 │   ├── lib\src\*.dart          (routine, agenda, adult_body, route, geometry…)
-│   ├── tool\verify_*.dart      (19 bộ chạy kiểm chứng)
+│   ├── tool\verify_*.dart      (20 bộ chạy kiểm chứng)
 │   └── artifacts\conditions\   (catalog điều kiện, JSON)
-├── client\                     ← shell Flutter, 4.099 dòng
-│   ├── lib\main.dart           (3.400 dòng — toàn bộ GUI)
-│   └── test\widget_test.dart   (16 bài, 885 dòng)
+├── client\                     ← shell Flutter
+│   ├── lib\main.dart           (3.256 dòng — toàn bộ GUI)
+│   └── test\widget_test.dart   (17 bài, 864 dòng)
 └── .github\workflows\          (tự động build và đăng web khi push)
 ```
 
@@ -71,7 +71,7 @@ D:\Reality Cultivation\
 
 ### 4.1. Hash là tín hiệu phát hiện hồi quy — đừng làm hỏng
 
-Mỗi bộ chạy in ra một `semanticHash` của trạng thái thế giới. Sau **mọi** thay đổi lõi, chạy lại toàn bộ 19 bộ và so hash. Hash cũ đổi mà không có lý do rõ ràng nghĩa là **vừa phá một thứ gì đó**.
+Mỗi bộ chạy in ra một `semanticHash` của trạng thái thế giới. Sau **mọi** thay đổi lõi, chạy lại toàn bộ 20 bộ và so hash. Hash cũ đổi mà không có lý do rõ ràng nghĩa là **vừa phá một thứ gì đó**.
 
 Hash hiện tại (2026-09-09):
 
@@ -96,6 +96,7 @@ Hash hiện tại (2026-09-09):
 | `verify_v2_12_illness_rest` | `f57b6f0fb06205bb` |
 | `verify_v2_13_work_substitution` | `edf67b2b36cda0eb` |
 | `verify_v2_14_region_map` | `1d70b51a89d4b142` |
+| `verify_v2_15_seeded_world_generation` | `5595e41dd7f499bc` |
 
 Lệnh chạy tất cả:
 
@@ -130,7 +131,7 @@ Bỏ bước nào cũng làm hồ sơ lệch khỏi mã.
 ### 4.4. Nguyên tắc thiết kế đã theo
 
 - **Nguyên nhân phải là trạng thái thật, không phải hẹn giờ.** Bệnh người lớn khởi phát từ mức nước/mệt thật, không từ mốc thời gian viết sẵn như bệnh trẻ sơ sinh ở V2.1.
-- **Không có RNG.** `WorldState.seed` được lưu nhưng **chưa có bộ sinh số ngẫu nhiên nào tiêu thụ nó**. Mọi thứ dùng ngưỡng xác định. Nếu muốn thêm ngẫu nhiên, phải làm bộ RNG theo seed chung (thuộc K2.1) — đừng bịa `Random()` vào một chỗ, sẽ phá tính tái lập của cả 19 bộ chạy.
+- **RNG phải đi qua stream seed chung.** V2.15 đã có Park–Miller 31-bit cho worldgen hình học, với stream dẫn xuất theo nhãn miền. Không dùng `Random()` cục bộ; mọi kết quả mới phải tái lập từ seed/config/version và không làm xô lệch stream miền khác.
 - **Số nguyên hết.** Không dùng `double` trong lõi. Có `integerSquareRoot` trong `geometry.dart`.
 - **Mọi con số là fixture chưa duyệt.** Trừ bảng U trong DECISIONS, mọi ngưỡng/hệ số đều là số kỹ thuật để kiểm chứng chuỗi nhân quả — **không phải mô hình y khoa, không phải cân bằng đã chốt**. Nói rõ điều này khi báo cáo.
 - **Ghi rõ chỗ chưa làm.** Mỗi tài liệu K5 có mục "Giới hạn và bước tiếp theo". Đừng bỏ.
@@ -166,6 +167,7 @@ cd "D:/Reality Cultivation/client" && flutter analyze
 cd "D:/Reality Cultivation/game" && dart run tool/verify_v2_12_illness_rest.dart
 cd "D:/Reality Cultivation/game" && dart run tool/verify_v2_13_work_substitution.dart
 cd "D:/Reality Cultivation/game" && dart run tool/verify_v2_14_region_map.dart
+cd "D:/Reality Cultivation/game" && dart run tool/verify_v2_15_seeded_world_generation.dart
 
 # Test giao diện
 cd "D:/Reality Cultivation/client" && flutter test
@@ -215,6 +217,7 @@ export PATH="/c/Program Files/GitHub CLI:$PATH"
 | V2.9–V2.10 | Tuyến vận tải thật, vị trí hai chiều, ngã rẽ và chọn đường |
 | V2.11–V2.13 | Bệnh của người lớn, nghỉ bệnh và chuyển ca cho người gánh thay |
 | V2.14 | Vùng, địa điểm và quy người/phòng/vật theo tọa độ hai chiều |
+| V2.15 | Seed sinh hình học vùng/địa điểm, fingerprint và provenance lưu được |
 
 **Chuỗi nhân quả dài nhất hiện có** (không đoạn nào viết sẵn):
 
@@ -228,11 +231,11 @@ Và một chuỗi khác nối cơ thể với địa lý:
 
 ## 8. Chỗ hở lớn nhất và bước tiếp
 
-**Việc nên làm ngay:** sinh vùng và địa điểm xác định từ `WorldState.seed`. V2.14 đã có biên vùng, địa điểm và phép quy thực thể theo tọa độ, nhưng Thung lũng An Khê cùng năm địa điểm vẫn là fixture viết sẵn. Đây là bước tiếp theo trực tiếp về U013 (sinh thế giới → mô phỏng tiền sử → chọn nơi trên bản đồ → sinh ra ở đó).
+**Việc nên làm ngay:** tách tạo thế giới khỏi sinh nhân vật. V2.15 đã sinh hình học từ seed nhưng client vẫn tạo P00 ngay trong cùng fixture. Bước kế nên cho xem tiến độ tạo, xem bản đồ, chọn một địa điểm sinh hợp lệ rồi mới tạo P00; đây là phần tiếp theo trực tiếp của U013.
 
 **Nhánh gần khác:** làm việc nhẹ hoặc nửa buổi khi người bệnh hồi phục. V2.13 đã chuyển được nguyên ca cho một người đủ điều kiện nhưng chưa chia ca, đổi công hoặc tạo nghĩa vụ bù.
 
-**Danh sách chưa có** (đầy đủ trong STATE.md): giải phẫu đa bộ phận, thương tích, già đi, chết, lây bệnh, thuốc, thân nhiệt người lớn *(cố ý hoãn — chưa có mô hình môi trường để phản ứng lại)*, quan hệ giữa người với người, mục tiêu cá nhân dài hạn, worldgen, hệ cảnh giới, tu luyện.
+**Danh sách chưa có** (đầy đủ trong STATE.md): giải phẫu đa bộ phận, thương tích, già đi, chết, lây bệnh, thuốc, thân nhiệt người lớn *(cố ý hoãn — chưa có mô hình môi trường để phản ứng lại)*, quan hệ giữa người với người, mục tiêu cá nhân dài hạn, worldgen ngoài hình học một vùng, lịch sử tiền game, chọn nơi sinh, hệ cảnh giới, tu luyện.
 
 **Câu hỏi còn mở với người dùng:** TN01–TN08 trong `docs/LUA_CHON_TRAI_NGHIEM.md` chưa có phản hồi; ADR chọn công nghệ vẫn ở trạng thái PROPOSED (Dart/Flutter là working stack, chưa phải quyết định cuối).
 
@@ -240,14 +243,14 @@ Và một chuỗi khác nối cơ thể với địa lý:
 
 ## 9. Việc đầu tiên nên làm khi tiếp nhận
 
-1. Chạy `dart analyze`, `flutter analyze`, `flutter test` và toàn bộ 19 bộ chạy. So hash với bảng ở mục 4.1. **Nếu khớp hết thì bạn đang ở đúng điểm bàn giao.**
-2. Đọc `docs/STATE.md` và `docs/K5_21_V2_14_BAN_DO_VUNG_DAU_TIEN.md`.
+1. Chạy `dart analyze`, `flutter analyze`, `flutter test` và toàn bộ 20 bộ chạy. So hash với bảng ở mục 4.1. **Nếu khớp hết thì bạn đang ở đúng điểm bàn giao.**
+2. Đọc `docs/STATE.md` và `docs/K5_22_V2_15_SINH_BAN_DO_TU_SEED.md`.
 3. Hỏi người dùng muốn làm hướng nào ở mục 8.
 
 ## Liên kết
 
 - Trạng thái hiện tại: [[STATE]]
 - Yêu cầu đã xác nhận và câu hỏi mở: [[DECISIONS]]
-- Lát cắt mới nhất: [[K5_21_V2_14_BAN_DO_VUNG_DAU_TIEN]]
+- Lát cắt mới nhất: [[K5_22_V2_15_SINH_BAN_DO_TU_SEED]]
 - Kế hoạch tổng: [[MASTER_PLAN]]
 - Cách dùng vault: [[HUONG_DAN]]

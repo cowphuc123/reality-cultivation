@@ -14,3 +14,4 @@ export 'src/region.dart';
 export 'src/route.dart';
 export 'src/routine.dart';
 export 'src/simulation.dart';
+export 'src/world_generation.dart';

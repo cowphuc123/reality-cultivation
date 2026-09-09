@@ -54,6 +54,7 @@ void main() {
     expect(find.byKey(const Key('map-site-SITE-HOME')), findsOneWidget);
     expect(find.byKey(const Key('map-site-SITE-FIELD')), findsOneWidget);
     expect(find.text('Thung lũng An Khê'), findsOneWidget);
+    expect(find.textContaining('0 người đang ngoài mọi địa điểm'), findsOneWidget);
     await tester.tap(find.byKey(const Key('new-world')));
     await tester.pumpAndSettle();
     expect(find.text('Tạo thế giới mới?'), findsOneWidget);
@@ -92,6 +93,43 @@ void main() {
     await tester.pump();
     expect(find.text('Hộ gia đình hình thành'), findsOneWidget);
     expect(find.text('Nhân vật tồn tại'), findsNothing);
+  });
+
+  testWidgets('new world seed regenerates and persists the map', (
+    WidgetTester tester,
+  ) async {
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Seed 20260907'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('new-world')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('world-seed-field')), '0');
+    await tester.tap(find.byKey(const Key('confirm-new-world')));
+    await tester.pump();
+    expect(
+      find.text('Seed từ 1 đến 2147483646.'),
+      findsOneWidget,
+    );
+    await tester.enterText(find.byKey(const Key('world-seed-field')), '42');
+    await tester.tap(find.byKey(const Key('confirm-new-world')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    final GeneratedWorld expected = WorldGenerator.generate(rootSeed: 42);
+    expect(find.textContaining('Seed 42'), findsOneWidget);
+    expect(find.textContaining(expected.fingerprint), findsOneWidget);
+    expect(repository.value, contains('"seed": 42'));
+    expect(repository.value, contains(expected.fingerprint));
   });
 
   testWidgets('manual save restores the exact earlier infant intent', (

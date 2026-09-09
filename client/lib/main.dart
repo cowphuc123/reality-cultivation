@@ -119,122 +119,56 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     unawaited(_initialize());
   }
 
-  Simulation _newSimulation() => Simulation.fromSeed(20260907)
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'region_created',
-      payload: const <String, Object?>{
-        'region_id': 'REG-ANKHE',
-        'name': 'Thung lũng An Khê',
-        'width_mm': 13000000,
-        'height_mm': 3500000,
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'site_created',
-      payload: const <String, Object?>{
-        'site_id': 'SITE-HOME',
-        'region_id': 'REG-ANKHE',
-        'name': 'Hộ ven suối',
-        'kind': 'household',
-        'center_x_mm': 12000,
-        'radius_mm': 100000,
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'site_created',
-      payload: const <String, Object?>{
-        'site_id': 'SITE-RIVER',
-        'region_id': 'REG-ANKHE',
-        'name': 'Khúc lội suối',
-        'kind': 'river',
-        'center_x_mm': 4012000,
-        'radius_mm': 300000,
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'site_created',
-      payload: const <String, Object?>{
-        'site_id': 'SITE-FIELD',
-        'region_id': 'REG-ANKHE',
-        'name': 'Đồng ngoài',
-        'kind': 'field',
-        'center_x_mm': 4012000,
-        'center_y_mm': 3000000,
-        'radius_mm': 500000,
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'site_created',
-      payload: const <String, Object?>{
-        'site_id': 'SITE-PASS',
-        'region_id': 'REG-ANKHE',
-        'name': 'Chân đèo',
-        'kind': 'pass',
-        'center_x_mm': 8012000,
-        'radius_mm': 400000,
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'site_created',
-      payload: const <String, Object?>{
-        'site_id': 'SITE-MARKET',
-        'region_id': 'REG-ANKHE',
-        'name': 'Chợ An Khê',
-        'kind': 'market',
-        'center_x_mm': 12012000,
-        'radius_mm': 600000,
-      },
-    )
+  Simulation _newSimulation({int seed = 20260907}) {
+    final GeneratedWorld generated = WorldGenerator.generate(rootSeed: seed);
+    final WorldSite home = generated.site('SITE-HOME');
+    final WorldSite river = generated.site('SITE-RIVER');
+    final WorldSite field = generated.site('SITE-FIELD');
+    final WorldSite pass = generated.site('SITE-PASS');
+    final WorldSite market = generated.site('SITE-MARKET');
+    final Simulation simulation = Simulation.fromSeed(seed)
+      ..materializeWorld(generated)
     ..schedule(
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'room_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'room_id': 'ROOM-SLEEP',
         'name': 'Gian ngủ',
         'household_id': 'H01',
-        'anchor_position_mm': 0,
+        'anchor_position_mm': home.center.xMm,
+        'anchor_position_y_mm': home.center.yMm,
       },
     )
     ..schedule(
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'room_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'room_id': 'ROOM-KITCHEN',
         'name': 'Gian bếp',
         'household_id': 'H01',
-        'anchor_position_mm': 5000,
+        'anchor_position_mm': home.center.xMm + 5000,
+        'anchor_position_y_mm': home.center.yMm,
       },
     )
     ..schedule(
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'room_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'room_id': 'ROOM-YARD',
         'name': 'Sân và kho củi',
         'household_id': 'H01',
-        'anchor_position_mm': 12000,
+        'anchor_position_mm': home.center.xMm + 12000,
+        'anchor_position_y_mm': home.center.yMm,
       },
     )
     ..schedule(
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'route_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'route': <String, Object?>{
           'id': 'RT-ANKHE',
           'name': 'Tuyến chợ An Khê',
@@ -244,28 +178,32 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             <String, Object?>{
               'id': 'WP-CHO',
               'name': 'Chợ An Khê',
-              'position_mm': 12012000,
+              'position_mm': market.center.xMm,
+              'position_y_mm': market.center.yMm,
             },
             <String, Object?>{
               'id': 'WP-DEO',
               'name': 'Chân đèo',
-              'position_mm': 8012000,
+              'position_mm': pass.center.xMm,
+              'position_y_mm': pass.center.yMm,
             },
             <String, Object?>{
               'id': 'WP-SUOI',
               'name': 'Khúc lội suối',
-              'position_mm': 4012000,
+              'position_mm': river.center.xMm,
+              'position_y_mm': river.center.yMm,
             },
             <String, Object?>{
               'id': 'WP-DONG',
               'name': 'Đồng ngoài',
-              'position_mm': 4012000,
-              'position_y_mm': 3000000,
+              'position_mm': field.center.xMm,
+              'position_y_mm': field.center.yMm,
             },
             <String, Object?>{
               'id': 'WP-SAN',
               'name': 'Sân hộ',
-              'position_mm': 12000,
+              'position_mm': home.center.xMm + 12000,
+              'position_y_mm': home.center.yMm,
             },
           ],
           'legs': <Map<String, Object?>>[
@@ -309,11 +247,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'person_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'person_id': 'N01',
         'name': 'Người chăm sóc',
         'birth_seconds': -25 * 365 * gameSecondsPerDay,
-        'position_mm': 5000,
+        'position_mm': home.center.xMm + 5000,
+        'position_y_mm': home.center.yMm,
         'room_id': 'ROOM-KITCHEN',
         'household_id': 'H01',
         'caregiver_agent': true,
@@ -331,11 +270,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'person_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'person_id': 'N02',
         'name': 'Người nấu ăn',
         'birth_seconds': -31 * 365 * gameSecondsPerDay,
-        'position_mm': 5000,
+        'position_mm': home.center.xMm + 5000,
+        'position_y_mm': home.center.yMm,
         'room_id': 'ROOM-KITCHEN',
         'household_id': 'H01',
         'caregiver_agent': true,
@@ -356,11 +296,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'person_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'person_id': 'N03',
         'name': 'Người làm công',
         'birth_seconds': -28 * 365 * gameSecondsPerDay,
-        'position_mm': 12000,
+        'position_mm': home.center.xMm + 12000,
+        'position_y_mm': home.center.yMm,
         'room_id': 'ROOM-YARD',
         'household_id': 'H01',
         'routine': _routineN03,
@@ -380,12 +321,13 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'birth',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'person_id': 'P00',
         'name': 'Vô Danh',
         'infant': true,
         'caregiver_id': 'N01',
-        'position_mm': 0,
+        'position_mm': home.center.xMm,
+        'position_y_mm': home.center.yMm,
         'room_id': 'ROOM-SLEEP',
         'household_id': 'H01',
       },
@@ -394,11 +336,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'person_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'person_id': 'N04',
         'name': 'Người vận chuyển',
         'birth_seconds': -34 * 365 * gameSecondsPerDay,
-        'position_mm': 12012000,
+        'position_mm': market.center.xMm,
+        'position_y_mm': market.center.yMm,
         'adult_body': <String, Object?>{'mass_g': 54000},
       },
     )
@@ -406,10 +349,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'item_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'item_id': 'I-FEED-01',
         'kind': 'infant_feed',
-        'position_mm': 0,
+        'position_mm': home.center.xMm,
+        'position_y_mm': home.center.yMm,
         'room_id': 'ROOM-SLEEP',
         'quantity': 10000,
         'energy_kj_per_100ml': 300,
@@ -422,10 +366,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'item_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'item_id': 'I-CLOTH-01',
         'kind': 'swaddling_cloth',
-        'position_mm': 0,
+        'position_mm': home.center.xMm,
+        'position_y_mm': home.center.yMm,
         'room_id': 'ROOM-SLEEP',
         'quantity': 1,
         'condition': 1000,
@@ -436,10 +381,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'item_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'item_id': 'I-FOOD-01',
         'kind': 'staple_food',
-        'position_mm': 0,
+        'position_mm': home.center.xMm,
+        'position_y_mm': home.center.yMm,
         'room_id': 'ROOM-SLEEP',
         'quantity': 15000,
         'unit': 'g',
@@ -450,10 +396,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'item_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'item_id': 'I-WATER-01',
         'kind': 'clean_water',
-        'position_mm': 0,
+        'position_mm': home.center.xMm,
+        'position_y_mm': home.center.yMm,
         'room_id': 'ROOM-SLEEP',
         'quantity': 48000,
         'unit': 'ml',
@@ -464,10 +411,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       due: const SimTime(0),
       phase: EventPhase.completion,
       kind: 'item_created',
-      payload: const <String, Object?>{
+      payload: <String, Object?>{
         'item_id': 'I-FUEL-01',
         'kind': 'firewood',
-        'position_mm': 0,
+        'position_mm': home.center.xMm,
+        'position_y_mm': home.center.yMm,
         'room_id': 'ROOM-SLEEP',
         'quantity': 4500,
         'unit': 'g',
@@ -516,6 +464,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       },
     )
     ..advanceTo(const SimTime(0));
+
+    return simulation;
+  }
 
   void _bindSimulation(Simulation simulation) {
     if (_bound) _runner.stop();
@@ -664,39 +615,79 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _confirmNewWorld() async {
-    final bool? confirmed = await showDialog<bool>(
+    String seedText = _simulation.state.seed.toString();
+    String? seedError;
+    final int? seed = await showDialog<int>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: const Text('Tạo thế giới mới?'),
-        content: const Text(
-          'Thế giới hiện tại và bản lưu gần nhất sẽ được thay bằng một thế giới mới bắt đầu từ ngày 0.',
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Giữ thế giới cũ'),
-          ),
-          FilledButton(
-            key: const Key('confirm-new-world'),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Tạo mới'),
-          ),
-        ],
+      builder: (BuildContext context) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setDialogState) =>
+            AlertDialog(
+              title: const Text('Tạo thế giới mới?'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text(
+                    'Seed quyết định kích thước vùng, vị trí và bán kính địa điểm. '
+                    'Dùng lại cùng seed sẽ sinh đúng cùng một bản đồ.',
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    key: const Key('world-seed-field'),
+                    onChanged: (String value) => seedText = value,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Seed thế giới',
+                      hintText: seedText,
+                      errorText: seedError,
+                    ),
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Giữ thế giới cũ'),
+                ),
+                FilledButton(
+                  key: const Key('confirm-new-world'),
+                  onPressed: () {
+                    final int? value = int.tryParse(seedText.trim());
+                    if (value == null) {
+                      setDialogState(
+                        () => seedError = 'Hãy nhập một số nguyên.',
+                      );
+                      return;
+                    }
+                    if (value < minimumWorldSeed ||
+                        value > maximumWorldSeed) {
+                      setDialogState(
+                        () => seedError =
+                            'Seed từ $minimumWorldSeed đến $maximumWorldSeed.',
+                      );
+                      return;
+                    }
+                    Navigator.pop(context, value);
+                  },
+                  child: const Text('Tạo mới'),
+                ),
+              ],
+            ),
       ),
     );
-    if (confirmed != true || !mounted) return;
+    if (seed == null || !mounted) return;
     final bool wasRunning = _runner.running;
     _runner.stop();
-    _bindSimulation(_newSimulation());
+    _bindSimulation(_newSimulation(seed: seed));
     _commandSequence = 0;
     await widget.saveRepository.writeLatest(_simulation.state.save());
     if (!mounted) return;
     if (wasRunning) _runner.start();
     setState(() {
       _sectionIndex = 0;
-      _saveStatus = 'Đã tạo và lưu thế giới mới từ ngày 0.';
+      _saveStatus = 'Đã tạo và lưu thế giới seed $seed từ ngày 0.';
     });
-    _showMessage('Đã tạo thế giới mới.');
+    _showMessage('Đã tạo thế giới mới từ seed $seed.');
   }
 
   void _showMessage(String message) {
@@ -1618,6 +1609,15 @@ class _WorldMapPanel extends StatelessWidget {
               '${worldMap.unplacedPeople} người đang ngoài mọi địa điểm',
               style: Theme.of(context).textTheme.bodySmall,
             ),
+            if (worldMap.genesis case final WorldGenesisRecord genesis) ...<Widget>[
+              const SizedBox(height: 5),
+              Text(
+                'Seed ${genesis.rootSeed} · bộ sinh ${genesis.generatorVersion}\n'
+                'Dấu vân tay ${genesis.fingerprint}',
+                key: const Key('world-genesis'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
             const SizedBox(height: 12),
             for (final RegionMapView region in worldMap.regions) ...<Widget>[
               Text(
@@ -3197,6 +3197,9 @@ String _factDetail(WorldFact fact) {
       'Địa điểm ${fact.detail.split(' kind=').first} xuất hiện tại '
           '(${_km(int.tryParse(values['x'] ?? '') ?? 0)}, '
           '${_km(int.tryParse(values['y'] ?? '') ?? 0)}) km.',
+    'world_genesis_completed' =>
+      'Bản đồ seed ${values['seed'] ?? ''} đã được sinh bằng '
+          '${values['version'] ?? ''}; dấu vân tay ${values['fingerprint'] ?? ''}.',
     'routine_block_rescheduled' =>
       'Việc bị lùi hết lượt được xếp lại sang ${values['moved_to'] ?? 'giờ khác'}.',
     'routine_block_started' =>
@@ -3308,6 +3311,7 @@ String _factLabel(String kind) => switch (kind) {
   'routine_block_reassignment_failed' => 'Không chuyển được ca',
   'region_created' => 'Một vùng được tạo',
   'site_created' => 'Một địa điểm được tạo',
+  'world_genesis_completed' => 'Hoàn tất sinh thế giới',
   'skill_improved' => 'Lên tay nghề',
   'body_mass_lost' => 'Sụt cân vì thiếu ăn',
   'body_drank' => 'Uống nước từ kho hộ',
