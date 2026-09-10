@@ -1,5 +1,16 @@
 # Nhật ký dự án
 
+## 2026-09-10 — K5.26: V2.19 nhiều hộ và hoàn cảnh sinh
+
+- Vật chất hóa H02 ở Đồng ngoài và H03 tại Chợ An Khê, mỗi hộ có phòng, người chăm, bốn kho tài nguyên và khăn quấn riêng; thế giới trước sinh tăng từ bốn lên sáu NPC chi tiết.
+- Mở cùng validator cho `SITE-HOME`, `SITE-FIELD` và `SITE-MARKET`; sông và đèo vẫn khóa vì không có hộ/phòng thật.
+- `BirthSiteCandidate` trả tên hộ/phòng/người chăm, kỹ năng chăm và lượng sữa/lương thực/nước/củi sau hậu quả lịch sử. Cảnh báo được suy từ các lượng này, không lưu thành cờ.
+- Ba hoàn cảnh khác nhau: H01 không cảnh báo; H02 thiếu sữa/nước/củi và người chăm ít kinh nghiệm; H03 có người chăm giỏi nhưng lương thực mỏng.
+- Runner tạo ba nhánh chọn riêng và xác nhận P00 vào đúng hộ/phòng/người chăm, ba hash sau sinh khác nhau; save/load trước sinh giữ đủ ba lựa chọn.
+- Client chọn trang Hộ theo nguồn gốc của P00 thay vì khóa cứng H01; thẻ nơi sinh responsive hiện nguồn lực và chip rủi ro.
+- Runner V2.19 đạt hash chờ chọn `491d7f5e50d4d551`; catalog 18 điều kiện. 24/24 runner và 18/18 widget test đạt; toàn bộ 23 hash V0–V2.18 giữ nguyên. Tổng catalog chạy được lên 475 điều kiện.
+- Thêm [[K5_26_V2_19_NHIEU_HO_VA_HOAN_CANH_SINH]].
+
 ## 2026-09-10 — K5.25: V2.18 hậu quả lịch sử vào snapshot
 
 - Thêm `HistoricalLegacyState` gắn fingerprint lịch sử, phiên bản công thức, hệ số dự trữ/tiếp tế, thiệt hại lũ và lượng trước/sau của từng vật phẩm.

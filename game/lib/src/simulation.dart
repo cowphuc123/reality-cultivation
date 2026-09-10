@@ -785,15 +785,6 @@ class Simulation {
     WorldSite site, {
     required Map<String, CareItemState> items,
   }) {
-    if (site.kind != 'household') {
-      return BirthSiteCandidate(
-        siteId: site.id,
-        siteName: site.name,
-        siteKind: site.kind,
-        feasible: false,
-        reason: 'Không phải khu cư trú có hộ chăm trẻ.',
-      );
-    }
     final List<RoomState> rooms =
         _state.rooms.values
             .where(
@@ -860,6 +851,23 @@ class Simulation {
         lastReason = 'Hộ tại đây chưa có sữa và quyền chăm trẻ hợp lệ.';
         continue;
       }
+      final CareItemState usableFeed = feed!;
+      int quantityOf(String resourceKey) {
+        final String? itemId = household.resourceItemIds[resourceKey];
+        return itemId == null ? 0 : items[itemId]?.quantity ?? 0;
+      }
+
+      final int foodQuantity = quantityOf('food');
+      final int waterQuantity = quantityOf('water');
+      final int fuelQuantity = quantityOf('fuel');
+      final List<String> risks = <String>[
+        if (usableFeed.quantity < 5000) 'Dự trữ sữa mỏng',
+        if (foodQuantity < 12000) 'Lương thực dự trữ thấp',
+        if (waterQuantity < 20000) 'Nguồn nước dự trữ thấp',
+        if (fuelQuantity < 3000) 'Thiếu nhiên liệu dự phòng',
+        if ((caregiver.caregiverAgent?.careSkill ?? 0) < 600)
+          'Người chăm ít kinh nghiệm',
+      ];
       return BirthSiteCandidate(
         siteId: site.id,
         siteName: site.name,
@@ -867,8 +875,16 @@ class Simulation {
         feasible: true,
         reason: 'Có phòng ở, người chăm và nguồn sữa thật.',
         householdId: household.id,
+        householdName: household.name,
         roomId: room.id,
         caregiverId: caregiver.id,
+        caregiverName: caregiver.name,
+        caregiverSkill: caregiver.caregiverAgent?.careSkill,
+        infantFeedQuantity: usableFeed.quantity,
+        foodQuantity: foodQuantity,
+        waterQuantity: waterQuantity,
+        fuelQuantity: fuelQuantity,
+        risks: List<String>.unmodifiable(risks),
       );
     }
     return BirthSiteCandidate(

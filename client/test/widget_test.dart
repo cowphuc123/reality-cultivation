@@ -93,7 +93,7 @@ void main() {
     expect(find.text('Tất cả'), findsOneWidget);
     await tester.tap(find.widgetWithText(ChoiceChip, 'Hộ gia đình'));
     await tester.pump();
-    expect(find.text('Hộ gia đình hình thành'), findsOneWidget);
+    expect(find.text('Hộ gia đình hình thành'), findsNWidgets(3));
     expect(find.text('Nhân vật tồn tại'), findsNothing);
   });
 
@@ -136,12 +136,36 @@ void main() {
       find.byKey(const Key('history-anchor-ANCHOR-ROUTE-ESTABLISHED')),
       findsOneWidget,
     );
-    expect(find.textContaining('4 cư dân nền'), findsOneWidget);
+    expect(find.textContaining('6 cư dân nền'), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-HOME')), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-RIVER')), findsOneWidget);
+    expect(find.byKey(const Key('birth-site-SITE-FIELD')), findsOneWidget);
+    expect(find.byKey(const Key('birth-site-SITE-MARKET')), findsOneWidget);
+    expect(
+      find.byKey(const Key('birth-risk-SITE-FIELD-0')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Lâm Thị Sương'), findsOneWidget);
+    expect(find.textContaining('Trần Bách'), findsOneWidget);
     expect(
       tester
           .widget<FilledButton>(find.byKey(const Key('choose-birth-SITE-HOME')))
+          .onPressed,
+      isNotNull,
+    );
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(const Key('choose-birth-SITE-FIELD')),
+          )
+          .onPressed,
+      isNotNull,
+    );
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(const Key('choose-birth-SITE-MARKET')),
+          )
           .onPressed,
       isNotNull,
     );
@@ -165,19 +189,24 @@ void main() {
     tester.view.physicalSize = const Size(390, 844);
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.byKey(const Key('choose-birth-SITE-HOME')));
-    await tester.tap(find.byKey(const Key('choose-birth-SITE-HOME')));
+    await tester.ensureVisible(find.byKey(const Key('choose-birth-SITE-FIELD')));
+    await tester.tap(find.byKey(const Key('choose-birth-SITE-FIELD')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('birth-site-selection')), findsNothing);
     expect(find.byKey(const Key('mobile-navigation')), findsOneWidget);
     expect(find.text('Vô Danh'), findsOneWidget);
     expect(repository.value, contains('"status": "born"'));
-    expect(repository.value, contains('"selected_site_id": "SITE-HOME"'));
+    expect(repository.value, contains('"selected_site_id": "SITE-FIELD"'));
+    expect(repository.value, contains('"household_id": "H02"'));
+    expect(repository.value, contains('"caregiver_id": "N05"'));
     expect(repository.value, contains('"world_history"'));
     expect(repository.value, contains('"historical_legacy"'));
     expect(repository.value, contains('"formula_version": "v2.18.0"'));
     expect(repository.value, contains('"plan_fingerprint": "582235ed607d383c"'));
+    await tester.tap(find.byKey(const Key('nav-2')));
+    await tester.pumpAndSettle();
+    expect(find.text('Hộ giữ đồng'), findsOneWidget);
     await tester.tap(find.byKey(const Key('nav-4')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('world-history-summary')), findsOneWidget);
@@ -404,7 +433,15 @@ void main() {
 
     expect(find.byKey(const Key('people-directory')), findsOneWidget);
     expect(find.byKey(const Key('item-directory')), findsOneWidget);
-    for (final String id in <String>['P00', 'N01', 'N02', 'N03', 'N04']) {
+    for (final String id in <String>[
+      'P00',
+      'N01',
+      'N02',
+      'N03',
+      'N04',
+      'N05',
+      'N06',
+    ]) {
       expect(find.byKey(Key('person-profile-$id')), findsOneWidget);
     }
     // N04 sống ngoài hộ nhưng vẫn có hồ sơ riêng.
@@ -416,7 +453,7 @@ void main() {
     );
     expect(find.textContaining('ngoài sổ kho'), findsWidgets);
     expect(
-      find.textContaining('1 vật nằm ngoài sổ kho của hộ'),
+      find.textContaining('3 vật nằm ngoài sổ kho của hộ'),
       findsOneWidget,
     );
     expect(find.textContaining('1 người sống ngoài hộ'), findsOneWidget);

@@ -1,4 +1,4 @@
-# Reality Cultivation — lõi mô phỏng đến V2.18
+# Reality Cultivation — lõi mô phỏng đến V2.19
 
 Lõi mô phỏng xác định dùng chung cho giao diện điện thoại và máy tính.
 
@@ -25,6 +25,7 @@ Lõi mô phỏng xác định dùng chung cho giao diện điện thoại và m�
 - thế giới và NPC tồn tại trước P00; nơi sinh được kiểm tra từ hộ, phòng, người chăm, sữa và quyền dùng thật.
 - tiền sử 300–30.000 năm theo seed chạy bằng epoch/cohort, lưu biến cố neo và hoàn tất trước nhập thế.
 - hậu quả tiền sử đổi tồn kho, sản lượng tiếp tế và được kiểm tra lại để còn nơi sinh khả thi.
+- ba hộ ở nhà ven suối, đồng và chợ tạo ba hoàn cảnh sinh với nguồn lực, người chăm và rủi ro khác nhau.
 
 Chạy bằng Dart SDK:
 
@@ -43,6 +44,7 @@ dart run tool/verify_v2_15_seeded_world_generation.dart
 dart run tool/verify_v2_16_world_entry.dart
 dart run tool/verify_v2_17_world_history.dart
 dart run tool/verify_v2_18_historical_legacy.dart
+dart run tool/verify_v2_19_multiple_birth_households.dart
 ```
 
 Giao diện Flutter nằm trong `../client`; bản chơi thử mở bằng `../MO_GAME.bat`.

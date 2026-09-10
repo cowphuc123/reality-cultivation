@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-19-multiple-birth-households",
+  "conditions": [
+    {"id":"V219-HOUSEHOLD-001","title":"Ba hộ tồn tại trước nhân vật người chơi","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"H01, H02 and H03 are materialized while P00 is absent"},
+    {"id":"V219-HOUSEHOLD-002","title":"Mỗi hộ có phòng người chăm và bốn kho riêng","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"Historical legacy adjusts twelve household-owned resource items"},
+    {"id":"V219-SITE-001","title":"Nhà suối đồng và chợ là ba nơi sinh khả thi","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"SITE-HOME, SITE-FIELD and SITE-MARKET pass the same real-state validator"},
+    {"id":"V219-SITE-002","title":"Sông và đèo không có hộ tiếp tục bị khóa","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"SITE-RIVER and SITE-PASS fail because no household room exists there"},
+    {"id":"V219-PROFILE-001","title":"Hoàn cảnh sinh hiện hộ phòng và người chăm thật","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"Each feasible candidate exposes household, room, caregiver and skill"},
+    {"id":"V219-PROFILE-002","title":"Hoàn cảnh sinh hiện bốn lượng tài nguyên thật","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"Each feasible candidate exposes post-history feed, food, water and fuel quantities"},
+    {"id":"V219-RISK-001","title":"Hộ ven suối không có cảnh báo đầu kỳ","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"H01 quantities and caregiver skill stay above every fixture risk threshold"},
+    {"id":"V219-RISK-002","title":"Hộ giữ đồng có bốn rủi ro từ trạng thái","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"H02 reports thin feed, water, fuel and inexperienced caregiver from actual values"},
+    {"id":"V219-RISK-003","title":"Hộ chợ chỉ cảnh báo lương thực mỏng","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"H03 reports one food risk while its other values pass"},
+    {"id":"V219-SKILL-001","title":"Ba nơi có ba mức kỹ năng chăm trẻ","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"Caregiver skills are distinct at 560, 700 and 860"},
+    {"id":"V219-SAVE-001","title":"Save load dựng lại đúng ba lựa chọn","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"Awaiting-choice hash and feasible candidate count survive save/load"},
+    {"id":"V219-BIRTH-001","title":"Chọn nhà suối sinh P00 vào H01","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"SITE-HOME selection records H01 and adds P00 to H01"},
+    {"id":"V219-BIRTH-002","title":"Chọn đồng sinh P00 vào H02","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"SITE-FIELD selection records H02 and adds P00 to H02"},
+    {"id":"V219-BIRTH-003","title":"Chọn chợ sinh P00 vào H03","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"SITE-MARKET selection records H03 and adds P00 to H03"},
+    {"id":"V219-BIRTH-004","title":"Ba lựa chọn tạo ba hash nguồn gốc khác nhau","status":"automated","runner":"tool/verify_v2_19_multiple_birth_households.dart","oracle":"Born semantic hashes differ across the three selected sites"},
+    {"id":"V219-UI-001","title":"Giao diện hiện ba nút sinh cùng tài nguyên và rủi ro","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Mobile birth screen exposes three enabled sites, caregivers and derived warning chips"},
+    {"id":"V219-UI-002","title":"Trang Hộ theo đúng lựa chọn của người chơi","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Choosing SITE-FIELD opens Hộ giữ đồng after birth and saves H02/N05 provenance"},
+    {"id":"V219-REGRESSION-001","title":"Hai mươi ba runner V0–V2.18 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart through tool/verify_v2_18_historical_legacy.dart","oracle":"All earlier runners pass with unchanged published hashes"}
+  ]
+}

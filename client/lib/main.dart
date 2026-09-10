@@ -462,9 +462,43 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'supply_carrier_id': 'N04',
         'supply_route_id': 'RT-ANKHE',
       },
-    )
-    ..simulatePrehistory(history, applyLegacy: true)
-    ..openWorldEntry();
+    );
+
+    _scheduleBirthHousehold(
+      simulation: simulation,
+      site: field,
+      householdId: 'H02',
+      householdName: 'Hộ giữ đồng',
+      personId: 'N05',
+      personName: 'Lâm Thị Sương',
+      careSkill: 560,
+      roomId: 'ROOM-FIELD-HOME',
+      roomName: 'Chòi giữ đồng',
+      itemPrefix: 'H02',
+      foodQuantity: 26000,
+      waterQuantity: 15000,
+      fuelQuantity: 2400,
+      infantFeedQuantity: 4200,
+    );
+    _scheduleBirthHousehold(
+      simulation: simulation,
+      site: market,
+      householdId: 'H03',
+      householdName: 'Hộ quán trọ chợ',
+      personId: 'N06',
+      personName: 'Trần Bách',
+      careSkill: 860,
+      roomId: 'ROOM-MARKET-LOFT',
+      roomName: 'Gác quán trọ',
+      itemPrefix: 'H03',
+      foodQuantity: 9000,
+      waterQuantity: 36000,
+      fuelQuantity: 7000,
+      infantFeedQuantity: 7500,
+    );
+    simulation
+      ..simulatePrehistory(history, applyLegacy: true)
+      ..openWorldEntry();
 
     simulation.advanceTo(const SimTime(0));
     if (!awaitBirthSelection) {
@@ -768,7 +802,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       );
     }
     final PersonView player = playerState;
-    final HouseholdView? household = _host.household('H01');
+    final HouseholdView? household = _host.household(
+      entry?.state.householdId ?? 'H01',
+    );
     final List<WorldFact> facts = _host.recentFacts(limit: 50);
     final _CommandPanel command = _CommandPanel(
       controller: _goalController,
@@ -960,6 +996,124 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           : null,
     );
   }
+}
+
+/// Vật chất hóa một hộ có đủ dữ liệu thật để validator nhập thế kiểm tra.
+void _scheduleBirthHousehold({
+  required Simulation simulation,
+  required WorldSite site,
+  required String householdId,
+  required String householdName,
+  required String personId,
+  required String personName,
+  required int careSkill,
+  required String roomId,
+  required String roomName,
+  required String itemPrefix,
+  required int foodQuantity,
+  required int waterQuantity,
+  required int fuelQuantity,
+  required int infantFeedQuantity,
+}) {
+  simulation
+    ..schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
+      kind: 'room_created',
+      payload: <String, Object?>{
+        'room_id': roomId,
+        'name': roomName,
+        'household_id': householdId,
+        'anchor_position_mm': site.center.xMm,
+        'anchor_position_y_mm': site.center.yMm,
+      },
+    )
+    ..schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
+      kind: 'person_created',
+      payload: <String, Object?>{
+        'person_id': personId,
+        'name': personName,
+        'birth_seconds': -32 * 365 * gameSecondsPerDay,
+        'position_mm': site.center.xMm,
+        'position_y_mm': site.center.yMm,
+        'room_id': roomId,
+        'household_id': householdId,
+        'caregiver_agent': true,
+        'care_skill': careSkill,
+        'current_activity': 'trông nom nhà cửa',
+        'adult_body': const <String, Object?>{'mass_g': 52000},
+      },
+    );
+  final Map<String, (String, int, String)> resources =
+      <String, (String, int, String)>{
+        'food': ('staple_food', foodQuantity, 'g'),
+        'water': ('clean_water', waterQuantity, 'ml'),
+        'fuel': ('firewood', fuelQuantity, 'g'),
+        'infant_feed': ('infant_feed', infantFeedQuantity, 'ml'),
+      };
+  final Map<String, String> resourceItemIds = <String, String>{};
+  final Map<String, List<String>> authorizedUsers = <String, List<String>>{};
+  for (final MapEntry<String, (String, int, String)> resource
+      in resources.entries) {
+    final String itemId = 'I-$itemPrefix-${resource.key.toUpperCase()}';
+    resourceItemIds[resource.key] = itemId;
+    authorizedUsers[itemId] = <String>[personId];
+    simulation.schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
+      kind: 'item_created',
+      payload: <String, Object?>{
+        'item_id': itemId,
+        'kind': resource.value.$1,
+        'position_mm': site.center.xMm,
+        'position_y_mm': site.center.yMm,
+        'room_id': roomId,
+        'quantity': resource.value.$2,
+        'unit': resource.value.$3,
+        if (resource.key == 'infant_feed') ...<String, Object?>{
+          'energy_kj_per_100ml': 300,
+          'water_ml_per_100ml': 92,
+        },
+        'owner_household_id': householdId,
+      },
+    );
+  }
+  final String clothId = 'I-$itemPrefix-CLOTH';
+  authorizedUsers[clothId] = <String>[personId];
+  simulation
+    ..schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
+      kind: 'item_created',
+      payload: <String, Object?>{
+        'item_id': clothId,
+        'kind': 'swaddling_cloth',
+        'position_mm': site.center.xMm,
+        'position_y_mm': site.center.yMm,
+        'room_id': roomId,
+        'quantity': 1,
+        'condition': 850,
+        'owner_household_id': householdId,
+      },
+    )
+    ..schedule(
+      due: const SimTime(0),
+      phase: EventPhase.completion,
+      kind: 'household_created',
+      payload: <String, Object?>{
+        'household_id': householdId,
+        'name': householdName,
+        'member_ids': <String>[personId],
+        'resource_item_ids': resourceItemIds,
+        'authorized_users_by_item_id': authorizedUsers,
+        'scheduled_work_seconds_by_person': const <String, int>{},
+        'meal_actor_id': personId,
+        'infant_id': 'P00',
+        'caregiver_id': personId,
+      },
+    );
 }
 
 /// Nhịp sống hằng ngày của hộ ven suối. Giờ giấc và mức ưu tiên là fixture
@@ -2122,12 +2276,49 @@ class _BirthSiteCard extends StatelessWidget {
             if (candidate.feasible) ...<Widget>[
               const SizedBox(height: 8),
               Text(
-                'Hộ ${candidate.householdId} · phòng ${candidate.roomId} · '
-                'người chăm ${candidate.caregiverId}',
+                '${candidate.householdName ?? candidate.householdId} · '
+                'phòng ${candidate.roomId}',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: accent),
               ),
+              const SizedBox(height: 5),
+              Text(
+                'Người chăm ${candidate.caregiverName ?? candidate.caregiverId} '
+                '· kỹ năng ${candidate.caregiverSkill ?? 0}/1000',
+                key: Key('birth-caregiver-${candidate.siteId}'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 7),
+              Wrap(
+                spacing: 10,
+                runSpacing: 5,
+                children: <Widget>[
+                  Text('Sữa ${candidate.infantFeedQuantity ?? 0} ml'),
+                  Text('Ăn ${candidate.foodQuantity ?? 0} g'),
+                  Text('Nước ${candidate.waterQuantity ?? 0} ml'),
+                  Text('Củi ${candidate.fuelQuantity ?? 0} g'),
+                ],
+              ),
+              const SizedBox(height: 7),
+              if (candidate.risks.isEmpty)
+                const Text(
+                  'Không có cảnh báo nguồn lực ban đầu.',
+                  style: TextStyle(color: Color(0xff9dbb73), fontSize: 12),
+                )
+              else
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: <Widget>[
+                    for (int index = 0; index < candidate.risks.length; index++)
+                      Chip(
+                        key: Key('birth-risk-${candidate.siteId}-$index'),
+                        avatar: const Icon(Icons.warning_amber, size: 15),
+                        label: Text(candidate.risks[index]),
+                      ),
+                  ],
+                ),
             ],
             const SizedBox(height: 16),
             SizedBox(

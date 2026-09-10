@@ -96,8 +96,16 @@ class BirthSiteCandidate {
     required this.feasible,
     required this.reason,
     this.householdId,
+    this.householdName,
     this.roomId,
     this.caregiverId,
+    this.caregiverName,
+    this.caregiverSkill,
+    this.infantFeedQuantity,
+    this.foodQuantity,
+    this.waterQuantity,
+    this.fuelQuantity,
+    this.risks = const <String>[],
   });
 
   final String siteId;
@@ -106,6 +114,14 @@ class BirthSiteCandidate {
   final bool feasible;
   final String reason;
   final String? householdId;
+  final String? householdName;
   final String? roomId;
   final String? caregiverId;
+  final String? caregiverName;
+  final int? caregiverSkill;
+  final int? infantFeedQuantity;
+  final int? foodQuantity;
+  final int? waterQuantity;
+  final int? fuelQuantity;
+  final List<String> risks;
 }
