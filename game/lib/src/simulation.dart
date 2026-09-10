@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'adult_body.dart';
+import 'birth_household_generation.dart';
 import 'agenda.dart';
 import 'care.dart';
 import 'domestic.dart';
@@ -109,6 +110,7 @@ class PersonState {
     this.skills,
     this.agenda,
     this.body,
+    this.familyRelationships = const <String, String>{},
   });
 
   final String id;
@@ -134,6 +136,9 @@ class PersonState {
 
   /// Cơ thể người lớn ở độ phân giải ngày, nếu người này đã trưởng thành.
   final AdultBodyState? body;
+
+  /// Mã người thân -> vai trò của người đó đối với nhân vật này.
+  final Map<String, String> familyRelationships;
 
   PersonState withGoal(String goal) => _copy(activeGoal: goal);
 
@@ -164,6 +169,13 @@ class PersonState {
 
   PersonState withBody(AdultBodyState value) => _copy(body: value);
 
+  PersonState withFamilyRelationship(String personId, String role) => _copy(
+    familyRelationships: <String, String>{
+      ...familyRelationships,
+      personId: role,
+    },
+  );
+
   PersonState _copy({
     String? activeGoal,
     InfantState? infancy,
@@ -175,6 +187,7 @@ class PersonState {
     PersonSkills? skills,
     PersonAgenda? agenda,
     AdultBodyState? body,
+    Map<String, String>? familyRelationships,
   }) => PersonState(
     id: id,
     name: name,
@@ -190,6 +203,7 @@ class PersonState {
     skills: skills ?? this.skills,
     agenda: agenda ?? this.agenda,
     body: body ?? this.body,
+    familyRelationships: familyRelationships ?? this.familyRelationships,
   );
 
   Map<String, Object?> toJson() {
@@ -211,6 +225,12 @@ class PersonState {
     if (skills != null) result['skills'] = skills!.toJson();
     if (agenda != null) result['agenda'] = agenda!.toJson();
     if (body != null) result['adult_body'] = body!.toJson();
+    if (familyRelationships.isNotEmpty) {
+      result['family_relationships'] = <String, String>{
+        for (final String key in familyRelationships.keys.toList()..sort())
+          key: familyRelationships[key]!,
+      };
+    }
     return result;
   }
 
@@ -255,6 +275,9 @@ class PersonState {
         : AdultBodyState.fromJson(
             (json['adult_body']! as Map).cast<String, Object?>(),
           ),
+    familyRelationships:
+        (json['family_relationships'] as Map?)?.cast<String, String>() ??
+        const <String, String>{},
   );
 }
 
@@ -744,6 +767,158 @@ class Simulation {
     );
   }
 
+  /// Vật chất hóa các hộ nơi sinh do seed và lịch sử tạo ra.
+  void materializeBirthHouseholds(
+    GeneratedBirthHouseholds generated, {
+    required GeneratedWorldHistory history,
+    SimTime? due,
+  }) {
+    if (generated.rootSeed != _state.seed) {
+      throw StateError('Birth household seed does not match simulation seed.');
+    }
+    final String? worldFingerprint =
+        _state.worldGenesis?.fingerprint ??
+        _state.pendingEvents
+            .where(
+              (ScheduledEvent event) => event.kind == 'world_genesis_completed',
+            )
+            .map(
+              (ScheduledEvent event) => event.payload['fingerprint'] as String?,
+            )
+            .firstOrNull;
+    if (worldFingerprint != generated.worldFingerprint) {
+      throw StateError('Birth households do not belong to this map.');
+    }
+    if (history.rootSeed != _state.seed ||
+        history.worldFingerprint != generated.worldFingerprint ||
+        history.fingerprint != generated.historyFingerprint) {
+      throw StateError('Birth households do not belong to this history.');
+    }
+    if (_state.households.isNotEmpty ||
+        _state.pendingEvents.any(
+          (ScheduledEvent event) =>
+              event.payload['birth_genesis_fingerprint'] != null,
+        )) {
+      throw StateError('Birth households have already been materialized.');
+    }
+    final SimTime publishAt = due ?? _state.now;
+    for (final GeneratedBirthHousehold plan in generated.households) {
+      final WorldSite site = _generatedSiteFor(plan.siteId);
+      schedule(
+        due: publishAt,
+        phase: EventPhase.completion,
+        kind: 'room_created',
+        payload: <String, Object?>{
+          'room_id': plan.roomId,
+          'name': plan.roomName,
+          'household_id': plan.householdId,
+          'anchor_position_mm': site.center.xMm,
+          'anchor_position_y_mm': site.center.yMm,
+        },
+      );
+      schedule(
+        due: publishAt,
+        phase: EventPhase.completion,
+        kind: 'person_created',
+        payload: <String, Object?>{
+          'person_id': plan.caregiverId,
+          'name': plan.caregiverName,
+          'birth_seconds': -plan.caregiverAgeYears * 365 * gameSecondsPerDay,
+          'position_mm': site.center.xMm,
+          'position_y_mm': site.center.yMm,
+          'room_id': plan.roomId,
+          'household_id': plan.householdId,
+          'caregiver_agent': true,
+          'care_skill': plan.caregiverSkill,
+          'current_activity': 'trông nom nhà cửa',
+          'adult_body': const <String, Object?>{'mass_g': 52000},
+        },
+      );
+      final Map<String, (String, int, String)> resources =
+          <String, (String, int, String)>{
+            'food': ('staple_food', plan.foodQuantity, 'g'),
+            'water': ('clean_water', plan.waterQuantity, 'ml'),
+            'fuel': ('firewood', plan.fuelQuantity, 'g'),
+            'infant_feed': ('infant_feed', plan.infantFeedQuantity, 'ml'),
+          };
+      final Map<String, String> itemIds = <String, String>{};
+      final Map<String, List<String>> rights = <String, List<String>>{};
+      for (final MapEntry<String, (String, int, String)> resource
+          in resources.entries) {
+        final String itemId =
+            'I-${plan.householdId}-${resource.key.toUpperCase()}';
+        itemIds[resource.key] = itemId;
+        rights[itemId] = <String>[plan.caregiverId];
+        schedule(
+          due: publishAt,
+          phase: EventPhase.completion,
+          kind: 'item_created',
+          payload: <String, Object?>{
+            'item_id': itemId,
+            'kind': resource.value.$1,
+            'position_mm': site.center.xMm,
+            'position_y_mm': site.center.yMm,
+            'room_id': plan.roomId,
+            'quantity': resource.value.$2,
+            'unit': resource.value.$3,
+            if (resource.key == 'infant_feed') ...<String, Object?>{
+              'energy_kj_per_100ml': 300,
+              'water_ml_per_100ml': 92,
+            },
+            'owner_household_id': plan.householdId,
+          },
+        );
+      }
+      final String clothId = 'I-${plan.householdId}-CLOTH';
+      rights[clothId] = <String>[plan.caregiverId];
+      schedule(
+        due: publishAt,
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': clothId,
+          'kind': 'swaddling_cloth',
+          'position_mm': site.center.xMm,
+          'position_y_mm': site.center.yMm,
+          'room_id': plan.roomId,
+          'quantity': 1,
+          'condition': 850,
+          'owner_household_id': plan.householdId,
+        },
+      );
+      schedule(
+        due: publishAt,
+        phase: EventPhase.completion,
+        kind: 'household_created',
+        payload: <String, Object?>{
+          'household_id': plan.householdId,
+          'name': plan.householdName,
+          'member_ids': <String>[plan.caregiverId],
+          'resource_item_ids': itemIds,
+          'authorized_users_by_item_id': rights,
+          'scheduled_work_seconds_by_person': const <String, int>{},
+          'meal_actor_id': plan.caregiverId,
+          'infant_id': 'P00',
+          'caregiver_id': plan.caregiverId,
+          'birth_caregiver_role': plan.caregiverRole,
+          'family_origin_summary': plan.familyOriginSummary,
+          'birth_genesis_fingerprint': generated.fingerprint,
+        },
+      );
+    }
+  }
+
+  WorldSite _generatedSiteFor(String siteId) {
+    final WorldSite? stateSite = _state.sites[siteId];
+    if (stateSite != null) return stateSite;
+    for (final ScheduledEvent event in _state.pendingEvents) {
+      if (event.kind == 'site_created' && event.payload['id'] == siteId) {
+        return WorldSite.fromJson(event.payload);
+      }
+    }
+    throw StateError('Birth household references unknown site $siteId.');
+  }
+
   /// Mở giai đoạn chọn nơi sinh sau khi bản đồ và đời sống nền đã tồn tại.
   void openWorldEntry({
     String playerPersonId = 'P00',
@@ -885,6 +1060,8 @@ class Simulation {
         waterQuantity: waterQuantity,
         fuelQuantity: fuelQuantity,
         risks: List<String>.unmodifiable(risks),
+        caregiverRole: household.birthCaregiverRole,
+        familyOriginSummary: household.familyOriginSummary,
       );
     }
     return BirthSiteCandidate(
@@ -1041,9 +1218,18 @@ class Simulation {
             _state.worldEntry?.playerPersonId == personId
             ? _state.worldEntry!.markBorn()
             : _state.worldEntry;
+        final String? caregiverRole =
+            event.payload['caregiver_role'] as String?;
+        final PersonState? caregiver = _state.people[caregiverId];
+        final String childRole = caregiverRole == 'guardian' ? 'ward' : 'child';
         _replace(
           people: <String, PersonState>{
             ..._state.people,
+            if (caregiver != null && caregiverRole != null)
+              caregiverId: caregiver.withFamilyRelationship(
+                personId,
+                childRole,
+              ),
             personId: PersonState(
               id: personId,
               name: name,
@@ -1053,6 +1239,9 @@ class Simulation {
               positionYMm: event.payload['position_y_mm'] as int? ?? 0,
               householdId: householdId,
               roomId: event.payload['room_id'] as String?,
+              familyRelationships: caregiverRole == null || caregiverId.isEmpty
+                  ? const <String, String>{}
+                  : <String, String>{caregiverId: caregiverRole},
             ),
           },
           facts: <WorldFact>[
@@ -2686,6 +2875,10 @@ class Simulation {
       wellbeing: event.payload['enable_v2_6'] == true,
       adultIllness: event.payload['enable_v2_11'] == true,
       workSubstitution: event.payload['enable_v2_13'] == true,
+      birthCaregiverRole: event.payload['birth_caregiver_role'] as String?,
+      familyOriginSummary: event.payload['family_origin_summary'] as String?,
+      birthGenesisFingerprint:
+          event.payload['birth_genesis_fingerprint'] as String?,
     );
     _replace(
       households: <String, HouseholdState>{
@@ -4438,6 +4631,10 @@ class Simulation {
         selectedHouseholdId: candidate.householdId!,
         selectedRoomId: candidate.roomId!,
         selectedCaregiverId: candidate.caregiverId!,
+        selectedCaregiverRole: candidate.caregiverRole ?? 'guardian',
+        selectedFamilyOriginSummary:
+            candidate.familyOriginSummary ??
+            'Người chăm nhận trách nhiệm nuôi dưỡng đứa trẻ.',
       ),
       facts: <WorldFact>[
         ..._state.facts,
@@ -4462,6 +4659,7 @@ class Simulation {
         'position_y_mm': room.anchorPositionYMm,
         'room_id': room.id,
         'household_id': candidate.householdId!,
+        'caregiver_role': candidate.caregiverRole ?? 'guardian',
       },
     );
   }

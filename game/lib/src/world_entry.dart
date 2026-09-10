@@ -10,6 +10,8 @@ class WorldEntryState {
     this.householdId,
     this.roomId,
     this.caregiverId,
+    this.caregiverRole,
+    this.familyOriginSummary,
   });
 
   factory WorldEntryState.awaiting({
@@ -28,6 +30,8 @@ class WorldEntryState {
   final String? householdId;
   final String? roomId;
   final String? caregiverId;
+  final String? caregiverRole;
+  final String? familyOriginSummary;
 
   bool get awaitingBirthSite => status == WorldEntryStatus.awaitingBirthSite;
   bool get born => status == WorldEntryStatus.born;
@@ -37,6 +41,8 @@ class WorldEntryState {
     required String selectedHouseholdId,
     required String selectedRoomId,
     required String selectedCaregiverId,
+    required String selectedCaregiverRole,
+    required String selectedFamilyOriginSummary,
   }) => WorldEntryState(
     playerPersonId: playerPersonId,
     playerName: playerName,
@@ -45,6 +51,8 @@ class WorldEntryState {
     householdId: selectedHouseholdId,
     roomId: selectedRoomId,
     caregiverId: selectedCaregiverId,
+    caregiverRole: selectedCaregiverRole,
+    familyOriginSummary: selectedFamilyOriginSummary,
   );
 
   WorldEntryState markBorn() {
@@ -62,6 +70,8 @@ class WorldEntryState {
       householdId: householdId,
       roomId: roomId,
       caregiverId: caregiverId,
+      caregiverRole: caregiverRole,
+      familyOriginSummary: familyOriginSummary,
     );
   }
 
@@ -73,6 +83,9 @@ class WorldEntryState {
     if (householdId != null) 'household_id': householdId!,
     if (roomId != null) 'room_id': roomId!,
     if (caregiverId != null) 'caregiver_id': caregiverId!,
+    if (caregiverRole != null) 'caregiver_role': caregiverRole!,
+    if (familyOriginSummary != null)
+      'family_origin_summary': familyOriginSummary!,
   };
 
   factory WorldEntryState.fromJson(Map<String, Object?> json) =>
@@ -84,6 +97,8 @@ class WorldEntryState {
         householdId: json['household_id'] as String?,
         roomId: json['room_id'] as String?,
         caregiverId: json['caregiver_id'] as String?,
+        caregiverRole: json['caregiver_role'] as String?,
+        familyOriginSummary: json['family_origin_summary'] as String?,
       );
 }
 
@@ -106,6 +121,8 @@ class BirthSiteCandidate {
     this.waterQuantity,
     this.fuelQuantity,
     this.risks = const <String>[],
+    this.caregiverRole,
+    this.familyOriginSummary,
   });
 
   final String siteId;
@@ -124,4 +141,6 @@ class BirthSiteCandidate {
   final int? waterQuantity;
   final int? fuelQuantity;
   final List<String> risks;
+  final String? caregiverRole;
+  final String? familyOriginSummary;
 }

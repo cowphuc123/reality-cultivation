@@ -21,6 +21,9 @@ class HouseholdState {
     this.wellbeing = false,
     this.adultIllness = false,
     this.workSubstitution = false,
+    this.birthCaregiverRole,
+    this.familyOriginSummary,
+    this.birthGenesisFingerprint,
   });
 
   final String id;
@@ -50,6 +53,11 @@ class HouseholdState {
 
   /// Hộ có thể chuyển ca việc cố định của người nghỉ bệnh cho người khác.
   final bool workSubstitution;
+
+  /// Metadata nguồn gốc chỉ xuất hiện ở hộ được phép đón P00.
+  final String? birthCaregiverRole;
+  final String? familyOriginSummary;
+  final String? birthGenesisFingerprint;
 
   bool canUse(String personId, String itemId) =>
       authorizedUsersByItemId[itemId]?.contains(personId) ?? false;
@@ -153,6 +161,9 @@ class HouseholdState {
     wellbeing: wellbeing,
     adultIllness: adultIllness,
     workSubstitution: workSubstitution,
+    birthCaregiverRole: birthCaregiverRole,
+    familyOriginSummary: familyOriginSummary,
+    birthGenesisFingerprint: birthGenesisFingerprint,
   );
 
   Map<String, Object?> toJson() {
@@ -191,6 +202,12 @@ class HouseholdState {
       if (wellbeing) 'wellbeing': true,
       if (adultIllness) 'adult_illness': true,
       if (workSubstitution) 'work_substitution': true,
+      if (birthCaregiverRole != null)
+        'birth_caregiver_role': birthCaregiverRole!,
+      if (familyOriginSummary != null)
+        'family_origin_summary': familyOriginSummary!,
+      if (birthGenesisFingerprint != null)
+        'birth_genesis_fingerprint': birthGenesisFingerprint!,
     };
   }
 
@@ -234,6 +251,9 @@ class HouseholdState {
       wellbeing: json['wellbeing'] as bool? ?? false,
       adultIllness: json['adult_illness'] as bool? ?? false,
       workSubstitution: json['work_substitution'] as bool? ?? false,
+      birthCaregiverRole: json['birth_caregiver_role'] as String?,
+      familyOriginSummary: json['family_origin_summary'] as String?,
+      birthGenesisFingerprint: json['birth_genesis_fingerprint'] as String?,
     );
   }
 }

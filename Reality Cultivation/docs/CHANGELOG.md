@@ -1,5 +1,14 @@
 # Nhật ký dự án
 
+## 2026-09-10 — K5.27: V2.20 sinh hộ và quan hệ gia đình
+
+- Thêm `BirthHouseholdGenerator`: cùng seed + bản đồ + lịch sử tạo cùng hai kế hoạch hộ ở đồng/chợ và fingerprint; đầu vào lệch provenance bị từ chối.
+- Chuyển tên hộ/phòng, tên và tuổi người chăm, kỹ năng, bốn kho cùng vai trò gia đình của H02/H03 khỏi fixture client sang lõi sinh xác định.
+- Thêm metadata nguồn gốc tùy chọn cho hộ và `WorldEntryState`; validator nơi sinh đưa vai trò cùng câu chuyện lên giao diện.
+- Khi P00 sinh, tạo quan hệ hai chiều trong `PersonState`: mẹ/cha/người giám hộ ở phía trẻ và con/con nuôi ở phía người lớn; save/load giữ nguyên.
+- Giao diện chọn nơi sinh hiện quan hệ và nguồn gốc; hồ sơ thế giới hiện gia đình sau sinh trên điện thoại và máy tính.
+- Thêm runner V2.20, 16 điều kiện catalog và tài liệu [[K5_27_V2_20_SINH_HO_VA_QUAN_HE_GIA_DINH]]. Tổng 25 runner, 18 widget test và 491 điều kiện chạy được; runner V2.19 giữ hash `491d7f5e50d4d551`.
+
 ## 2026-09-10 — K5.26: V2.19 nhiều hộ và hoàn cảnh sinh
 
 - Vật chất hóa H02 ở Đồng ngoài và H03 tại Chợ An Khê, mỗi hộ có phòng, người chăm, bốn kho tài nguyên và khăn quấn riêng; thế giới trước sinh tăng từ bốn lên sáu NPC chi tiết.

@@ -145,8 +145,34 @@ void main() {
       find.byKey(const Key('birth-risk-SITE-FIELD-0')),
       findsOneWidget,
     );
-    expect(find.textContaining('Lâm Thị Sương'), findsOneWidget);
-    expect(find.textContaining('Trần Bách'), findsOneWidget);
+    final GeneratedWorld generated = WorldGenerator.generate(
+      rootSeed: 20260907,
+    );
+    final GeneratedWorldHistory generatedHistory =
+        WorldHistoryGenerator.generate(
+          rootSeed: generated.rootSeed,
+          worldFingerprint: generated.fingerprint,
+        );
+    final GeneratedBirthHouseholds generatedFamilies =
+        BirthHouseholdGenerator.generate(
+          world: generated,
+          history: generatedHistory,
+        );
+    for (final GeneratedBirthHousehold family
+        in generatedFamilies.households) {
+      expect(
+        find.byKey(Key('birth-caregiver-${family.siteId}')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(Key('birth-family-role-${family.siteId}')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(Key('birth-family-origin-${family.siteId}')),
+        findsOneWidget,
+      );
+    }
     expect(
       tester
           .widget<FilledButton>(find.byKey(const Key('choose-birth-SITE-HOME')))
@@ -200,16 +226,29 @@ void main() {
     expect(repository.value, contains('"selected_site_id": "SITE-FIELD"'));
     expect(repository.value, contains('"household_id": "H02"'));
     expect(repository.value, contains('"caregiver_id": "N05"'));
+    expect(repository.value, contains('"family_relationships"'));
     expect(repository.value, contains('"world_history"'));
     expect(repository.value, contains('"historical_legacy"'));
     expect(repository.value, contains('"formula_version": "v2.18.0"'));
     expect(repository.value, contains('"plan_fingerprint": "582235ed607d383c"'));
     await tester.tap(find.byKey(const Key('nav-2')));
     await tester.pumpAndSettle();
-    expect(find.text('Hộ giữ đồng'), findsOneWidget);
+    final String selectedHouseholdName = generatedFamilies.households
+        .singleWhere(
+          (GeneratedBirthHousehold value) => value.householdId == 'H02',
+        )
+        .householdName;
+    expect(find.text(selectedHouseholdName), findsOneWidget);
     await tester.tap(find.byKey(const Key('nav-4')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('world-history-summary')), findsOneWidget);
+    await tester.ensureVisible(find.text('Vô Danh · P00'));
+    await tester.tap(find.text('Vô Danh · P00'));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('family-relationships-P00')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('new world seed regenerates and persists the map', (

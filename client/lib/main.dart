@@ -136,6 +136,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       rootSeed: seed,
       worldFingerprint: generated.fingerprint,
     );
+    final GeneratedBirthHouseholds birthHouseholds =
+        BirthHouseholdGenerator.generate(world: generated, history: history);
     final WorldSite home = generated.site('SITE-HOME');
     final WorldSite river = generated.site('SITE-RIVER');
     final WorldSite field = generated.site('SITE-FIELD');
@@ -458,45 +460,17 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'enable_v2_13': true,
         'infant_id': 'P00',
         'caregiver_id': 'N01',
+        'birth_caregiver_role': 'mother',
+        'family_origin_summary':
+            'Người chăm sóc là mẹ ruột; đứa trẻ sinh vào hộ ven suối đã tồn tại từ thời lập cư.',
         'production_actor_id': 'N03',
         'supply_carrier_id': 'N04',
         'supply_route_id': 'RT-ANKHE',
       },
     );
 
-    _scheduleBirthHousehold(
-      simulation: simulation,
-      site: field,
-      householdId: 'H02',
-      householdName: 'Hộ giữ đồng',
-      personId: 'N05',
-      personName: 'Lâm Thị Sương',
-      careSkill: 560,
-      roomId: 'ROOM-FIELD-HOME',
-      roomName: 'Chòi giữ đồng',
-      itemPrefix: 'H02',
-      foodQuantity: 26000,
-      waterQuantity: 15000,
-      fuelQuantity: 2400,
-      infantFeedQuantity: 4200,
-    );
-    _scheduleBirthHousehold(
-      simulation: simulation,
-      site: market,
-      householdId: 'H03',
-      householdName: 'Hộ quán trọ chợ',
-      personId: 'N06',
-      personName: 'Trần Bách',
-      careSkill: 860,
-      roomId: 'ROOM-MARKET-LOFT',
-      roomName: 'Gác quán trọ',
-      itemPrefix: 'H03',
-      foodQuantity: 9000,
-      waterQuantity: 36000,
-      fuelQuantity: 7000,
-      infantFeedQuantity: 7500,
-    );
     simulation
+      ..materializeBirthHouseholds(birthHouseholds, history: history)
       ..simulatePrehistory(history, applyLegacy: true)
       ..openWorldEntry();
 
@@ -996,124 +970,6 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           : null,
     );
   }
-}
-
-/// Vật chất hóa một hộ có đủ dữ liệu thật để validator nhập thế kiểm tra.
-void _scheduleBirthHousehold({
-  required Simulation simulation,
-  required WorldSite site,
-  required String householdId,
-  required String householdName,
-  required String personId,
-  required String personName,
-  required int careSkill,
-  required String roomId,
-  required String roomName,
-  required String itemPrefix,
-  required int foodQuantity,
-  required int waterQuantity,
-  required int fuelQuantity,
-  required int infantFeedQuantity,
-}) {
-  simulation
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'room_created',
-      payload: <String, Object?>{
-        'room_id': roomId,
-        'name': roomName,
-        'household_id': householdId,
-        'anchor_position_mm': site.center.xMm,
-        'anchor_position_y_mm': site.center.yMm,
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'person_created',
-      payload: <String, Object?>{
-        'person_id': personId,
-        'name': personName,
-        'birth_seconds': -32 * 365 * gameSecondsPerDay,
-        'position_mm': site.center.xMm,
-        'position_y_mm': site.center.yMm,
-        'room_id': roomId,
-        'household_id': householdId,
-        'caregiver_agent': true,
-        'care_skill': careSkill,
-        'current_activity': 'trông nom nhà cửa',
-        'adult_body': const <String, Object?>{'mass_g': 52000},
-      },
-    );
-  final Map<String, (String, int, String)> resources =
-      <String, (String, int, String)>{
-        'food': ('staple_food', foodQuantity, 'g'),
-        'water': ('clean_water', waterQuantity, 'ml'),
-        'fuel': ('firewood', fuelQuantity, 'g'),
-        'infant_feed': ('infant_feed', infantFeedQuantity, 'ml'),
-      };
-  final Map<String, String> resourceItemIds = <String, String>{};
-  final Map<String, List<String>> authorizedUsers = <String, List<String>>{};
-  for (final MapEntry<String, (String, int, String)> resource
-      in resources.entries) {
-    final String itemId = 'I-$itemPrefix-${resource.key.toUpperCase()}';
-    resourceItemIds[resource.key] = itemId;
-    authorizedUsers[itemId] = <String>[personId];
-    simulation.schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'item_created',
-      payload: <String, Object?>{
-        'item_id': itemId,
-        'kind': resource.value.$1,
-        'position_mm': site.center.xMm,
-        'position_y_mm': site.center.yMm,
-        'room_id': roomId,
-        'quantity': resource.value.$2,
-        'unit': resource.value.$3,
-        if (resource.key == 'infant_feed') ...<String, Object?>{
-          'energy_kj_per_100ml': 300,
-          'water_ml_per_100ml': 92,
-        },
-        'owner_household_id': householdId,
-      },
-    );
-  }
-  final String clothId = 'I-$itemPrefix-CLOTH';
-  authorizedUsers[clothId] = <String>[personId];
-  simulation
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'item_created',
-      payload: <String, Object?>{
-        'item_id': clothId,
-        'kind': 'swaddling_cloth',
-        'position_mm': site.center.xMm,
-        'position_y_mm': site.center.yMm,
-        'room_id': roomId,
-        'quantity': 1,
-        'condition': 850,
-        'owner_household_id': householdId,
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'household_created',
-      payload: <String, Object?>{
-        'household_id': householdId,
-        'name': householdName,
-        'member_ids': <String>[personId],
-        'resource_item_ids': resourceItemIds,
-        'authorized_users_by_item_id': authorizedUsers,
-        'scheduled_work_seconds_by_person': const <String, int>{},
-        'meal_actor_id': personId,
-        'infant_id': 'P00',
-        'caregiver_id': personId,
-      },
-    );
 }
 
 /// Nhịp sống hằng ngày của hộ ven suối. Giờ giấc và mức ưu tiên là fixture
@@ -2289,6 +2145,22 @@ class _BirthSiteCard extends StatelessWidget {
                 key: Key('birth-caregiver-${candidate.siteId}'),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              if (candidate.caregiverRole != null) ...<Widget>[
+                const SizedBox(height: 5),
+                Text(
+                  'Quan hệ: ${_familyRoleLabel(candidate.caregiverRole!)}',
+                  key: Key('birth-family-role-${candidate.siteId}'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+              if (candidate.familyOriginSummary != null) ...<Widget>[
+                const SizedBox(height: 5),
+                Text(
+                  candidate.familyOriginSummary!,
+                  key: Key('birth-family-origin-${candidate.siteId}'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
               const SizedBox(height: 7),
               Wrap(
                 spacing: 10,
@@ -2501,6 +2373,14 @@ class _PersonProfileCard extends StatelessWidget {
                     'Chăm sóc: ${person.available == false ? 'đang gián đoạn' : 'sẵn sàng'}'
                     ' · kỹ năng ${person.careSkill}/1000',
                   ),
+                if (person.familyRelationships.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Gia đình: ${person.familyRelationships.entries.map((MapEntry<String, String> value) => '${_familyRoleLabel(value.value)} ${value.key}').join(' · ')}',
+                    key: Key('family-relationships-${person.id}'),
+                    style: small,
+                  ),
+                ],
                 if (person.illnessKind != null) ...<Widget>[
                   Text(
                     'Sức khỏe: ${_illnessKindLabel(person.illnessKind!)}'
@@ -2693,6 +2573,15 @@ String _resolutionLabel(String resolution) => switch (resolution) {
   _ => resolution,
 };
 
+String _familyRoleLabel(String role) => switch (role) {
+  'mother' => 'mẹ ruột',
+  'father' => 'cha ruột',
+  'guardian' => 'người giám hộ',
+  'child' => 'con',
+  'ward' => 'con nuôi',
+  _ => role,
+};
+
 class _RoadmapCard extends StatelessWidget {
   const _RoadmapCard();
 
@@ -2716,7 +2605,7 @@ class _RoadmapCard extends StatelessWidget {
           const _RoadmapLine(
             icon: Icons.map_outlined,
             title: 'Bản đồ và thế giới sinh',
-            detail: 'Chưa mở trong bản hiện tại',
+            detail: 'Đã mở vùng, địa điểm, seed và tiền sử vĩ mô',
           ),
           const _RoadmapLine(
             icon: Icons.self_improvement_outlined,
@@ -2726,7 +2615,7 @@ class _RoadmapCard extends StatelessWidget {
           const _RoadmapLine(
             icon: Icons.groups_outlined,
             title: 'Quan hệ và tổ chức',
-            detail: 'Chưa mở trong bản hiện tại',
+            detail: 'Đã mở gia đình tối thiểu; xã hội sâu đang chờ',
           ),
         ],
       ),

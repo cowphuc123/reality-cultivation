@@ -4,6 +4,7 @@ export 'src/clock.dart';
 export 'src/adult_body.dart';
 export 'src/agenda.dart';
 export 'src/care.dart';
+export 'src/birth_household_generation.dart';
 export 'src/domestic.dart';
 export 'src/geometry.dart';
 export 'src/infancy.dart';

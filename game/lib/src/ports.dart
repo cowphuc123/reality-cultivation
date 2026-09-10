@@ -364,6 +364,7 @@ class PersonProfileView {
     required this.skills,
     required this.agenda,
     required this.body,
+    required this.familyRelationships,
   });
 
   final String id;
@@ -389,6 +390,9 @@ class PersonProfileView {
 
   /// Cơ thể người lớn, nếu đã được vật chất hóa.
   final AdultBodyState? body;
+
+  /// Tên người thân -> vai trò của người đó đối với hồ sơ này.
+  final Map<String, String> familyRelationships;
 
   bool get inHousehold => householdId != null;
 }
@@ -807,6 +811,13 @@ class SimulationHost implements CommandPort, QueryPort {
               skills: person.skills,
               agenda: person.agenda,
               body: person.body,
+              familyRelationships:
+                  Map<String, String>.unmodifiable(<String, String>{
+                    for (final MapEntry<String, String> relationship
+                        in person.familyRelationships.entries)
+                      state.people[relationship.key]?.name ?? relationship.key:
+                          relationship.value,
+                  }),
             );
           }(),
       ]),

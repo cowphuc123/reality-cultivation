@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-20-seeded-birth-families",
+  "conditions": [
+    {"id":"V220-SEED-001","title":"Cùng seed và lịch sử sinh cùng gia đình","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"Repeated generation has identical plan data and fingerprint"},
+    {"id":"V220-SEED-002","title":"Seed khác đổi dấu vết gia đình","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"A different root seed produces a different family fingerprint"},
+    {"id":"V220-LINK-001","title":"Bộ sinh từ chối bản đồ và lịch sử lệch nhau","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"History fingerprint must belong to the supplied generated map"},
+    {"id":"V220-GEN-001","title":"Bộ sinh tạo hộ tại đồng và chợ","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"SITE-FIELD and SITE-MARKET receive deterministic household plans"},
+    {"id":"V220-GEN-002","title":"Tên tuổi tay nghề do stream xác định sinh","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"Caregiver identity age and skill are plan fields derived from seed and history"},
+    {"id":"V220-GEN-003","title":"Bốn kho do seed và chỉ số lịch sử sinh","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"Food water fuel and infant feed are generated quantities"},
+    {"id":"V220-MATERIAL-001","title":"Hai người chăm tồn tại trước P00","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"N05 and N06 are materialized while P00 remains absent"},
+    {"id":"V220-MATERIAL-002","title":"Tiền sử tác động tám kho của hai hộ sinh","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"Historical legacy records eight generated household resource adjustments"},
+    {"id":"V220-ORIGIN-001","title":"Mỗi nơi sinh có vai trò người chăm","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"Every feasible generated candidate exposes mother father or guardian"},
+    {"id":"V220-ORIGIN-002","title":"Mỗi nơi sinh có tóm tắt nguồn gốc","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"Every feasible generated candidate exposes a non-empty family origin summary"},
+    {"id":"V220-REL-001","title":"P00 ghi đúng cha mẹ hoặc người giám hộ","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"The child stores the selected caregiver and generated family role"},
+    {"id":"V220-REL-002","title":"Người chăm ghi quan hệ ngược với P00","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"The adult stores child or ward according to the generated role"},
+    {"id":"V220-SAVE-001","title":"Save load giữ nguyên quan hệ gia đình","status":"automated","runner":"tool/verify_v2_20_seeded_birth_families.dart","oracle":"Round trip preserves relationship maps and semantic hash"},
+    {"id":"V220-UI-001","title":"Thẻ nơi sinh hiện vai trò và nguồn gốc","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Mobile birth cards expose generated relationship and origin text"},
+    {"id":"V220-UI-002","title":"Hồ sơ P00 hiện quan hệ sau sinh","status":"automated","runner":"../client/test/widget_test.dart","oracle":"The player profile exposes the materialized family relationship"},
+    {"id":"V220-REGRESSION-001","title":"Hai mươi bốn runner V0 đến V2.19 vẫn đạt","status":"automated","runner":"tool/verify_v0.dart through tool/verify_v2_19_multiple_birth_households.dart","oracle":"All earlier runners pass and V2.19 keeps hash 491d7f5e50d4d551"}
+  ]
+}
