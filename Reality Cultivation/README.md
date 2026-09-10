@@ -16,6 +16,7 @@ Game text mô phỏng thế giới tu tiên liên tục, ưu tiên chiều sâu 
 | Tài liệu | Công dụng |
 | --- | --- |
 | [Chuyển giao cho trợ lý khác](docs/CHUYEN_GIAO.md) | Đọc đầu tiên khi có người/trợ lý mới tiếp nhận dự án |
+| [Công việc đang hoạt động](docs/ACTIVE_WORK.md) | Chủ lượt, nhánh, commit và phần đang làm dở giữa Codex/Claude |
 | [Trạng thái hiện tại](docs/STATE.md) | Đang làm gì, đã xong gì, tiếp theo làm gì |
 | [Kế hoạch tổng thể](docs/MASTER_PLAN.md) | Tầm nhìn, hệ thống, phạm vi đề xuất và lộ trình |
 | [Quyết định và câu hỏi mở](docs/DECISIONS.md) | Yêu cầu của người dùng, đề xuất chưa chốt |
@@ -52,6 +53,7 @@ Game text mô phỏng thế giới tu tiên liên tục, ưu tiên chiều sâu 
 - [[docs/K5_24_V2_17_EPOCH_TIEN_SU_VI_MO|K5.24 — V2.17 epoch tiền sử vĩ mô]]
 - [[docs/K5_25_V2_18_HAU_QUA_LICH_SU_VAO_SNAPSHOT|K5.25 — V2.18 hậu quả lịch sử vào snapshot]]
 - [[docs/K5_26_V2_19_NHIEU_HO_VA_HOAN_CANH_SINH|K5.26 — V2.19 nhiều hộ và hoàn cảnh sinh]]
+- [[docs/K5_27_V2_20_SINH_HO_VA_QUAN_HE_GIA_DINH|K5.27 — V2.20 sinh hộ và quan hệ gia đình]]
 - Mã chạy được nằm trong thư mục `game/` ở gốc dự án.
 - Shell Flutter responsive nằm trong `client/`; bản web release được tạo tại `client/build/web`.
 

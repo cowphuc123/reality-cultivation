@@ -4,10 +4,11 @@
 
 Hồ sơ chính nằm trong vault Obsidian `Reality Cultivation/`, không phải thư mục `docs/` ở gốc dự án.
 
-1. Đọc `Reality Cultivation/docs/STATE.md` để biết giai đoạn hiện tại và việc tiếp theo.
-2. Đọc `Reality Cultivation/docs/DECISIONS.md` để phân biệt yêu cầu đã xác nhận với đề xuất.
-3. Đọc `Reality Cultivation/docs/MASTER_PLAN.md` trước khi thiết kế hoặc thay đổi hệ thống game.
-4. Đọc `Reality Cultivation/docs/CHANGELOG.md` khi cần lịch sử thay đổi.
+1. Đọc `Reality Cultivation/docs/ACTIVE_WORK.md` để biết chủ lượt, nhánh và việc đang dở.
+2. Đọc `Reality Cultivation/docs/STATE.md` để biết giai đoạn hiện tại và việc tiếp theo.
+3. Đọc `Reality Cultivation/docs/DECISIONS.md` để phân biệt yêu cầu đã xác nhận với đề xuất.
+4. Đọc `Reality Cultivation/docs/MASTER_PLAN.md` trước khi thiết kế hoặc thay đổi hệ thống game.
+5. Đọc `Reality Cultivation/docs/CHANGELOG.md` khi cần lịch sử thay đổi.
 
 ## Quy tắc dự án
 
@@ -22,4 +23,5 @@ Hồ sơ chính nằm trong vault Obsidian `Reality Cultivation/`, không phải
 - Giữ file này ngắn; đặt thiết kế chi tiết trong `Reality Cultivation/docs/`. Chỉ tách thêm tài liệu hệ thống khi thực sự cần.
 - Dùng vault Obsidian hiện có làm nguồn tài liệu duy nhất; không duy trì bản sao hồ sơ ở gốc dự án. Giữ nguyên cấu hình `.obsidian` và ghi chú riêng của người dùng. Dùng liên kết nội bộ và metadata đơn giản để hỗ trợ tra cứu.
 - Chỉ dẫn mới của người dùng có ưu tiên hơn những giả định cũ trong hồ sơ.
-- Sau khi hoàn tất trọn một lát cắt và mọi kiểm tra đạt, tự commit và push lên GitHub. Không đẩy trạng thái đang dở hoặc đang lỗi.
+- Sau khi hoàn tất trọn một lát cắt và mọi kiểm tra đạt, tự commit và push lên GitHub. Không đẩy trạng thái đang dở hoặc đang lỗi lên `master`.
+- Ngoại lệ chuyển trợ lý: nếu Codex hoặc Claude sắp hết giới hạn khi lát cắt còn dở, cập nhật `Reality Cultivation/docs/ACTIVE_WORK.md`, commit với tiền tố `WIP:` lên nhánh `handoff/<tên-lát-cắt>` và push nhánh đó. Trợ lý tiếp theo phải tiếp tục đúng nhánh; chỉ hợp nhất vào `master` sau khi hoàn tất và kiểm tra đạt.

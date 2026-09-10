@@ -52,6 +52,7 @@ Hiện có **25/25 runner**, **18/18 widget test** và **491 điều kiện cata
 Web đang chạy: **https://cowphuc123.github.io/reality-cultivation/** — tự động build lại mỗi lần đẩy `client/` lên GitHub (`.github/workflows/deploy-web.yml`). Bản cũ trên Sites (`chatgpt.site`) vẫn còn, chưa gỡ.
 
 **Cách làm từ 2026-09-09:** sau khi hoàn tất trọn một lát cắt, chạy kiểm tra, cập nhật hồ sơ Obsidian, rồi tự commit và push. Không đẩy trạng thái đang dở hoặc đang lỗi. GitHub Actions tự build web khi `client/` thay đổi.
+**Chuyển giao Codex ↔ Claude từ 2026-09-10:** đọc [[ACTIVE_WORK]] để nhận lượt. Nếu sắp hết giới hạn khi còn dở, commit `WIP:` và push lên nhánh `handoff/...`; không đưa WIP vào `master`. Xem [[CHUYEN_GIAO]].
 Mở tại máy: `MO_GAME.bat` ở gốc dự án; hướng dẫn tại [[HUONG_DAN_MO_BAN_TEST]].
 Làm tiếp từ điện thoại: ưu tiên Remote vào chính PC; xem [[HUONG_DAN_LAM_TIEP_TREN_DIEN_THOAI]].
 

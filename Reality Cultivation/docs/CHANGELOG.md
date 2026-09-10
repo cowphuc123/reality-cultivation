@@ -1,5 +1,13 @@
 # Nhật ký dự án
 
+## 2026-09-10 — Quy trình chuyển giao Codex ↔ Claude
+
+- Viết lại [[CHUYEN_GIAO]] theo trạng thái V2.20 và quy trình Git/Obsidian làm nguồn sự thật chung.
+- Thêm [[ACTIVE_WORK]] làm khóa phối hợp: chủ lượt, nhánh, commit, file dở, kiểm tra và bước tiếp theo.
+- Thêm `CLAUDE.md` ở gốc để Claude đọc cùng quy tắc với `AGENTS.md`; sửa chỉ dẫn vault đã lỗi thời.
+- Cho phép bàn giao việc dở bằng commit `WIP:` trên nhánh `handoff/...`; `master` vẫn chỉ nhận lát cắt hoàn chỉnh đã kiểm tra.
+- Ghi yêu cầu đã xác nhận thành U017 trong [[DECISIONS]]. Không đổi mã game hoặc semantic hash.
+
 ## 2026-09-10 — K5.27: V2.20 sinh hộ và quan hệ gia đình
 
 - Thêm `BirthHouseholdGenerator`: cùng seed + bản đồ + lịch sử tạo cùng hai kế hoạch hộ ở đồng/chợ và fingerprint; đầu vào lệch provenance bị từ chối.

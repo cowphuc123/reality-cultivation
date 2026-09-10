@@ -22,6 +22,7 @@ Cập nhật: 2026-09-10.
 | U014 | Người chơi điều khiển nhân vật ngay từ lúc sơ sinh; không tóm lược hoặc bỏ qua tuổi thơ | Người dùng xác nhận, 2026-09-06 |
 | U015 | Ưu tiên làm GUI đẹp và đầy đủ trước khi tiếp tục mở rộng mô phỏng | Người dùng yêu cầu, 2026-09-07; tiếp tục 2026-09-08 |
 | U016 | Sau khi hoàn tất trọn một lát cắt và kiểm tra đạt, trợ lý tự commit và push lên GitHub; không đẩy việc đang dở/lỗi | Người dùng xác nhận, 2026-09-09 |
+| U017 | Codex và Claude dùng GitHub + vault Obsidian làm nguồn chung để thay phiên; việc dở được bàn giao qua nhánh `handoff/...`, không đưa lên `master` | Người dùng yêu cầu cập nhật chuyển giao, 2026-09-10 |
 
 ## Đề xuất của trợ lý — chưa được người dùng chốt
 
@@ -44,6 +45,8 @@ Trừ những gì ghi trong bảng U ở trên, **mọi tên, con số, ngưỡn
 Lịch sử đầy đủ từng lượt việc — tài liệu nào thêm gì, số điều kiện tăng ra sao — nằm trong [[CHANGELOG]] và trong phần mở đầu của mỗi tài liệu K tương ứng. Không cần chép lại ở đây.
 
 ## Diễn biến gần nhất
+
+Ngày 2026-09-10: người dùng yêu cầu cập nhật chuyển giao để Codex và Claude thay phiên khi hết giới hạn phiên. Đã thêm `CLAUDE.md`, [[ACTIVE_WORK]] và viết lại [[CHUYEN_GIAO]] tới V2.20. Ngoại lệ U016 được làm rõ: WIP có thể commit/push lên nhánh `handoff/...` để trợ lý khác tiếp tục, nhưng không được đưa lên `master` trước khi hoàn tất và kiểm tra đạt.
 
 Ngày 2026-09-10: hoàn thành V2.20 tại [[K5_27_V2_20_SINH_HO_VA_QUAN_HE_GIA_DINH]]. H02/H03 không còn được viết tay trong client: `BirthHouseholdGenerator` dùng seed, fingerprint lịch sử và chỉ số cohort cuối tiền sử để sinh tên hộ/phòng, người chăm, tuổi, tay nghề, bốn kho, vai trò mẹ/cha/người giám hộ và tóm tắt nguồn gốc. Khi P00 sinh, quan hệ được lưu hai chiều trong hai `PersonState`, giữ qua save/load và hiện trong hồ sơ. Đây là triển khai mới, không biến tên, công thức hoặc vai trò mẫu thành quyết định cân bằng/văn hóa đã duyệt. Fingerprint gia đình seed mặc định `9555c85967aed7fa`; hash runner `4dc1efdae4d7e0b3`; hash V2.19 giữ nguyên.
 
