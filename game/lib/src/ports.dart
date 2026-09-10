@@ -4,6 +4,7 @@ import 'care.dart';
 import 'domestic.dart';
 import 'geometry.dart';
 import 'household.dart';
+import 'historical_legacy.dart';
 import 'infancy.dart';
 import 'region.dart';
 import 'route.dart';
@@ -65,9 +66,10 @@ class WorldEntryView {
 }
 
 class WorldHistoryView {
-  const WorldHistoryView(this.state);
+  const WorldHistoryView(this.state, {this.legacy});
 
   final WorldHistoryState state;
+  final HistoricalLegacyState? legacy;
 
   int get completedEpochCount => state.epochs.length;
   int get expectedEpochCount => state.expectedEpochCount;
@@ -639,7 +641,9 @@ class SimulationHost implements CommandPort, QueryPort {
   @override
   WorldHistoryView? worldHistory() {
     final WorldHistoryState? history = simulation.state.worldHistory;
-    return history == null ? null : WorldHistoryView(history);
+    return history == null
+        ? null
+        : WorldHistoryView(history, legacy: simulation.state.historicalLegacy);
   }
 
   @override

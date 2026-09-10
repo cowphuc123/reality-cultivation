@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-18-historical-legacy",
+  "conditions": [
+    {"id":"V218-PROVENANCE-001","title":"Di sản giữ fingerprint lịch sử và phiên bản công thức","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"Legacy points to the completed history fingerprint and formula v2.18.0"},
+    {"id":"V218-DETERMINISM-001","title":"Seed mặc định cho bộ hệ số hậu quả xác định","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"Default seed yields the published reserve, supply and flood multipliers"},
+    {"id":"V218-CAUSE-001","title":"Đất canh tác và giao thương đổi dự trữ lương thực","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"Food reserve multiplier is derived from land, trade and resource pressure"},
+    {"id":"V218-CAUSE-002","title":"Lũ và áp lực tài nguyên đổi dự trữ nước","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"Water reserve multiplier includes accumulated flood damage and pressure"},
+    {"id":"V218-CAUSE-003","title":"Áp lực khai thác đổi dự trữ củi","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"Fuel reserve multiplier responds to trade reach and resource pressure"},
+    {"id":"V218-CAUSE-004","title":"Giao thương đổi năng lực mỗi chuyến tiếp tế","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"Supply delivery multiplier responds to historical trade reach"},
+    {"id":"V218-ITEM-001","title":"Bốn kho vật chất nhận lượng trước và sau","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"Food, water, fuel and infant feed items receive auditable adjustments"},
+    {"id":"V218-ITEM-002","title":"Lượng vật phẩm thật đổi theo hệ số lịch sử","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"Default present inventory equals the published adjusted quantities"},
+    {"id":"V218-SUPPLY-001","title":"Chuyến tiếp tế giao đúng lượng đã nhân hệ số","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"A real delivery adds 8272g food, 33090ml water and 1654ml infant feed"},
+    {"id":"V218-ORDER-001","title":"Áp dụng hậu quả sau lịch sử và trước nhập thế","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"Legacy fact follows history completion and precedes world entry"},
+    {"id":"V218-ENTRY-001","title":"Validator giữ ít nhất một nơi sinh khả thi","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"Default legacy leaves one feasible birth site before P00 exists"},
+    {"id":"V218-ENTRY-002","title":"Snapshot mất nơi sinh cuối cùng bị từ chối","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"A seed-reduced one-unit feed stock is rejected before legacy commit"},
+    {"id":"V218-SAVE-001","title":"Save và load giữ nguyên di sản lịch sử","status":"automated","runner":"tool/verify_v2_18_historical_legacy.dart","oracle":"Legacy adjustments, formula provenance and semantic hash survive save/load"},
+    {"id":"V218-UI-001","title":"Màn lịch sử hiện hậu quả lên kho và tiếp tế","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Birth screen shows legacy summary, item adjustment and 110.3 percent supply"},
+    {"id":"V218-UI-002","title":"Bản lưu client chứa di sản V2.18","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Saved client world contains historical_legacy and formula v2.18.0"},
+    {"id":"V218-REGRESSION-001","title":"Hai mươi hai runner V0–V2.17 giữ nguyên kết quả","status":"automated","runner":"tool/verify_v0.dart through tool/verify_v2_17_world_history.dart","oracle":"All earlier runners pass with unchanged published hashes"}
+  ]
+}

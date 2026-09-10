@@ -107,6 +107,20 @@ class CareItemState {
 
   bool get usable => quantity > 0 && condition > 0;
 
+  CareItemState withQuantity(int value) => CareItemState(
+    id: id,
+    kind: kind,
+    positionMm: positionMm,
+    positionYMm: positionYMm,
+    quantity: value.clamp(0, 0x7fffffff),
+    condition: condition,
+    energyKjPer100Ml: energyKjPer100Ml,
+    waterMlPer100Ml: waterMlPer100Ml,
+    unit: unit,
+    ownerHouseholdId: ownerHouseholdId,
+    roomId: roomId,
+  );
+
   CareItemState consume(int amount) => CareItemState(
     id: id,
     kind: kind,

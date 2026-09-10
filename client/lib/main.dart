@@ -463,7 +463,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         'supply_route_id': 'RT-ANKHE',
       },
     )
-    ..simulatePrehistory(history)
+    ..simulatePrehistory(history, applyLegacy: true)
     ..openWorldEntry();
 
     simulation.advanceTo(const SimTime(0));
@@ -1925,6 +1925,74 @@ class _WorldHistorySummary extends StatelessWidget {
                 'Dân số trên là cohort vĩ mô; $materializedPersonCount người '
                 'hiện đã có hồ sơ Person chi tiết.',
                 style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            if (history.legacy case final HistoricalLegacyState legacy) ...<Widget>[
+              const SizedBox(height: 12),
+              Container(
+                key: const Key('historical-legacy-summary'),
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xff9a8fc3).withValues(alpha: .09),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xff9a8fc3).withValues(alpha: .28),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Text(
+                      'HẬU QUẢ CÒN LẠI TRONG ĐỜI SỐNG HIỆN TẠI',
+                      style: TextStyle(
+                        color: Color(0xffc6a56a),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.05,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Đất canh tác, giao thương và áp lực tài nguyên đã tác '
+                      'động tới ${legacy.adjustments.length} kho vật chất thật.',
+                    ),
+                    const SizedBox(height: 7),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
+                      children: <Widget>[
+                        Text('Lương thực ${legacy.foodReservePerMille / 10}%'),
+                        Text('Nước ${legacy.waterReservePerMille / 10}%'),
+                        Text('Củi ${legacy.fuelReservePerMille / 10}%'),
+                        Text(
+                          'Sữa trẻ nhỏ '
+                          '${legacy.infantFeedReservePerMille / 10}%',
+                        ),
+                        Text(
+                          'Tiếp tế mỗi chuyến '
+                          '${legacy.supplyDeliveryPerMille / 10}%',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 7),
+                    for (final HistoricalResourceAdjustment adjustment
+                        in legacy.adjustments)
+                      Text(
+                        '${adjustment.resourceKey}: '
+                        '${adjustment.beforeQuantity} → '
+                        '${adjustment.afterQuantity}',
+                        key: Key('legacy-adjustment-${adjustment.itemId}'),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Thiệt hại lũ ${legacy.floodDamagePerMille}/1000 · '
+                      'công thức ${legacy.formulaVersion}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
               ),
             ],
             const SizedBox(height: 10),
@@ -3716,6 +3784,10 @@ String _factDetail(WorldFact fact) {
     'world_history_completed' =>
       'Đã đi hết ${values['years'] ?? '?'} năm tiền sử và giữ '
           '${values['anchors'] ?? '?'} biến cố neo.',
+    'historical_legacy_applied' =>
+      'Lịch sử đã đổi ${values['adjustments'] ?? '?'} kho; năng lực tiếp tế '
+          '${values['supply'] ?? '?'}/1000 và còn '
+          '${values['feasible_birth_sites'] ?? '?'} nơi sinh khả thi.',
     'routine_block_rescheduled' =>
       'Việc bị lùi hết lượt được xếp lại sang ${values['moved_to'] ?? 'giờ khác'}.',
     'routine_block_started' =>
@@ -3831,6 +3903,7 @@ String _factLabel(String kind) => switch (kind) {
   'world_history_started' => 'Bắt đầu mô phỏng tiền sử',
   'historical_epoch_simulated' => 'Một epoch lịch sử hoàn tất',
   'world_history_completed' => 'Tiền sử đi tới hiện tại',
+  'historical_legacy_applied' => 'Lịch sử để lại hậu quả vật chất',
   'skill_improved' => 'Lên tay nghề',
   'body_mass_lost' => 'Sụt cân vì thiếu ăn',
   'body_drank' => 'Uống nước từ kho hộ',

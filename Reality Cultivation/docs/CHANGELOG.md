@@ -1,5 +1,16 @@
 # Nhật ký dự án
 
+## 2026-09-10 — K5.25: V2.18 hậu quả lịch sử vào snapshot
+
+- Thêm `HistoricalLegacyState` gắn fingerprint lịch sử, phiên bản công thức, hệ số dự trữ/tiếp tế, thiệt hại lũ và lượng trước/sau của từng vật phẩm.
+- Đất canh tác, giao thương và áp lực tài nguyên nay chiếu vào lương thực, nước, củi và sữa thật. Seed mặc định đổi kho lần lượt thành 16.695 g, 47.568 ml, 4.248 g và 10.000 ml.
+- Giao thương lịch sử đổi sản lượng của chính sự kiện tiếp tế: fixture mặc định nhân 1.103/1.000, nên một chuyến giao 8.272 g thức ăn, 33.090 ml nước và 1.654 ml sữa.
+- Trước khi ghi di sản, hệ thống dựng tồn kho tạm và chạy lại validator nơi sinh. Runner chứng minh snapshot làm cạn nguồn sữa cuối cùng bị từ chối.
+- Giữ `applyLegacy: false` làm mặc định ở API để V2.17 và save cũ không đổi; client V2.18 mới bật cơ chế này.
+- Màn chọn nơi sinh và trang Hồ sơ hiện các hệ số cùng lượng vật phẩm trước → sau; save thêm `historical_legacy`; nhật ký thêm `historical_legacy_applied`.
+- Runner V2.18 đạt hash `e777dfadd87c172a`; catalog 16 điều kiện. 23/23 runner và 18/18 widget test đạt; toàn bộ 22 hash V0–V2.17 giữ nguyên. Tổng catalog chạy được lên 457 điều kiện.
+- Thêm [[K5_25_V2_18_HAU_QUA_LICH_SU_VAO_SNAPSHOT]].
+
 ## 2026-09-10 — K5.24: V2.17 epoch tiền sử vĩ mô
 
 - Thêm `WorldHistoryGenerator`: seed và fingerprint bản đồ sinh tuổi lịch sử trong ba dải 300–1.000, 1.000–9.999 hoặc 10.000–30.000 năm; seed mặc định sinh 741 năm.

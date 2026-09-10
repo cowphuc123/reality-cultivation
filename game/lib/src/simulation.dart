@@ -6,6 +6,7 @@ import 'care.dart';
 import 'domestic.dart';
 import 'geometry.dart';
 import 'household.dart';
+import 'historical_legacy.dart';
 import 'infancy.dart';
 import 'region.dart';
 import 'route.dart';
@@ -310,6 +311,7 @@ class WorldState {
     this.worldGenesis,
     this.worldEntry,
     this.worldHistory,
+    this.historicalLegacy,
   });
 
   factory WorldState.initial(int seed) => WorldState(
@@ -332,6 +334,7 @@ class WorldState {
     worldGenesis: null,
     worldEntry: null,
     worldHistory: null,
+    historicalLegacy: null,
   );
 
   final int seed;
@@ -363,6 +366,9 @@ class WorldState {
 
   /// Lịch sử vĩ mô đã chạy trước khi nhân vật người chơi ra đời.
   final WorldHistoryState? worldHistory;
+
+  /// Hậu quả vật chất mà tiền sử để lại trong snapshot bắt đầu chơi.
+  final HistoricalLegacyState? historicalLegacy;
 
   Map<String, Object?> toJson() {
     final List<PersonState> sortedPeople = people.values.toList()
@@ -450,6 +456,9 @@ class WorldState {
     }
     if (worldHistory != null) {
       result['world_history'] = worldHistory!.toJson();
+    }
+    if (historicalLegacy != null) {
+      result['historical_legacy'] = historicalLegacy!.toJson();
     }
     return result;
   }
@@ -552,6 +561,11 @@ class WorldState {
           ? null
           : WorldHistoryState.fromJson(
               (json['world_history']! as Map).cast<String, Object?>(),
+            ),
+      historicalLegacy: json['historical_legacy'] == null
+          ? null
+          : HistoricalLegacyState.fromJson(
+              (json['historical_legacy']! as Map).cast<String, Object?>(),
             ),
     );
   }
@@ -664,7 +678,11 @@ class Simulation {
   }
 
   /// Chạy các epoch vĩ mô trước khi mở nhập thế cho người chơi.
-  void simulatePrehistory(GeneratedWorldHistory generated, {SimTime? due}) {
+  void simulatePrehistory(
+    GeneratedWorldHistory generated, {
+    SimTime? due,
+    bool applyLegacy = false,
+  }) {
     if (generated.rootSeed != _state.seed) {
       throw StateError('World history seed does not match simulation seed.');
     }
@@ -722,6 +740,7 @@ class Simulation {
       due: publishAt,
       phase: EventPhase.completion,
       kind: 'world_history_completed',
+      payload: <String, Object?>{if (applyLegacy) 'apply_legacy': true},
     );
   }
 
@@ -749,15 +768,23 @@ class Simulation {
   }
 
   /// Địa điểm được kiểm tra từ trạng thái thật, không lưu cờ khả dụng riêng.
-  List<BirthSiteCandidate> birthSiteCandidates() {
+  List<BirthSiteCandidate> birthSiteCandidates() => _birthSiteCandidates();
+
+  List<BirthSiteCandidate> _birthSiteCandidates({
+    Map<String, CareItemState>? items,
+  }) {
     final List<WorldSite> sites = _state.sites.values.toList()
       ..sort((WorldSite a, WorldSite b) => a.id.compareTo(b.id));
     return <BirthSiteCandidate>[
-      for (final WorldSite site in sites) _evaluateBirthSite(site),
+      for (final WorldSite site in sites)
+        _evaluateBirthSite(site, items: items ?? _state.items),
     ];
   }
 
-  BirthSiteCandidate _evaluateBirthSite(WorldSite site) {
+  BirthSiteCandidate _evaluateBirthSite(
+    WorldSite site, {
+    required Map<String, CareItemState> items,
+  }) {
     if (site.kind != 'household') {
       return BirthSiteCandidate(
         siteId: site.id,
@@ -820,7 +847,7 @@ class Simulation {
         continue;
       }
       final String? feedId = household.resourceItemIds['infant_feed'];
-      final CareItemState? feed = feedId == null ? null : _state.items[feedId];
+      final CareItemState? feed = feedId == null ? null : items[feedId];
       final PersonState? caregiver = caregivers
           .where(
             (PersonState person) =>
@@ -958,6 +985,7 @@ class Simulation {
         worldGenesis: _state.worldGenesis,
         worldEntry: _state.worldEntry,
         worldHistory: _state.worldHistory,
+        historicalLegacy: _state.historicalLegacy,
       );
       _applyEvent(event);
     }
@@ -3230,10 +3258,16 @@ class Simulation {
     final String householdId = event.payload['household_id']! as String;
     final HouseholdState? household = _state.households[householdId];
     if (household == null) return;
-    const Map<String, int> amounts = <String, int>{
+    const Map<String, int> baseAmounts = <String, int>{
       'food': 7500,
       'water': 30000,
       'infant_feed': 1500,
+    };
+    final HistoricalLegacyState? legacy = _state.historicalLegacy;
+    final int supplyMultiplier = legacy?.supplyDeliveryPerMille ?? 1000;
+    final Map<String, int> amounts = <String, int>{
+      for (final MapEntry<String, int> entry in baseAmounts.entries)
+        entry.key: entry.value * supplyMultiplier ~/ 1000,
     };
     final Map<String, CareItemState> items = <String, CareItemState>{
       ..._state.items,
@@ -3255,7 +3289,11 @@ class Simulation {
         _fact(
           'household_supply_delivered',
           householdId,
-          'food_g=7500 water_ml=30000 infant_feed_ml=1500',
+          legacy == null
+              ? 'food_g=7500 water_ml=30000 infant_feed_ml=1500'
+              : 'food_g=${amounts['food']} water_ml=${amounts['water']} '
+                    'infant_feed_ml=${amounts['infant_feed']} '
+                    'history_multiplier=$supplyMultiplier',
         ),
       ],
     );
@@ -4274,6 +4312,27 @@ class Simulation {
       throw StateError('A player appeared before prehistory completed.');
     }
     final WorldHistoryState complete = history.markComplete();
+    final bool applyLegacy = event.payload['apply_legacy'] == true;
+    GeneratedHistoricalLegacy? generatedLegacy;
+    int feasibleBirthSites = 0;
+    if (applyLegacy) {
+      if (_state.historicalLegacy != null) {
+        throw StateError('Historical legacy has already been applied.');
+      }
+      generatedLegacy = HistoricalLegacyGenerator.generate(
+        history: complete,
+        households: _state.households,
+        items: _state.items,
+      );
+      feasibleBirthSites = _birthSiteCandidates(
+        items: generatedLegacy.items,
+      ).where((BirthSiteCandidate candidate) => candidate.feasible).length;
+      if (feasibleBirthSites == 0) {
+        throw StateError(
+          'Historical legacy leaves no feasible birth site in the present.',
+        );
+      }
+    }
     _replace(
       worldHistory: complete,
       facts: <WorldFact>[
@@ -4284,7 +4343,18 @@ class Simulation {
           'years=${complete.totalYears} anchors=${complete.anchors.length} '
               'fingerprint=${complete.planFingerprint}',
         ),
+        if (generatedLegacy != null)
+          _fact(
+            'historical_legacy_applied',
+            complete.worldFingerprint,
+            'adjustments=${generatedLegacy.state.adjustments.length} '
+                'supply=${generatedLegacy.state.supplyDeliveryPerMille} '
+                'flood=${generatedLegacy.state.floodDamagePerMille} '
+                'feasible_birth_sites=$feasibleBirthSites',
+          ),
       ],
+      items: generatedLegacy?.items,
+      historicalLegacy: generatedLegacy?.state,
     );
   }
 
@@ -4406,6 +4476,7 @@ class Simulation {
     WorldGenesisRecord? worldGenesis,
     WorldEntryState? worldEntry,
     WorldHistoryState? worldHistory,
+    HistoricalLegacyState? historicalLegacy,
   }) {
     _state = WorldState(
       seed: _state.seed,
@@ -4437,6 +4508,7 @@ class Simulation {
       worldGenesis: worldGenesis ?? _state.worldGenesis,
       worldEntry: worldEntry ?? _state.worldEntry,
       worldHistory: worldHistory ?? _state.worldHistory,
+      historicalLegacy: historicalLegacy ?? _state.historicalLegacy,
     );
   }
 }

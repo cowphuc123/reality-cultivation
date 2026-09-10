@@ -43,7 +43,7 @@ void main() {
     await tester.tap(find.byKey(const Key('nav-2')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('household-panel')), findsOneWidget);
-    expect(find.text('15000 g'), findsWidgets);
+    expect(find.text('16695 g'), findsWidgets);
     expect(find.byKey(const Key('member-profile-N01')), findsOneWidget);
     expect(find.byKey(const Key('item-profile-I-FOOD-01')), findsOneWidget);
     await tester.tap(find.byKey(const Key('nav-4')));
@@ -117,7 +117,13 @@ void main() {
     expect(find.byKey(const Key('birth-site-selection')), findsOneWidget);
     expect(find.text('Chọn nơi bạn sẽ chào đời'), findsOneWidget);
     expect(find.byKey(const Key('world-history-summary')), findsOneWidget);
+    expect(find.byKey(const Key('historical-legacy-summary')), findsOneWidget);
+    expect(
+      find.byKey(const Key('legacy-adjustment-I-FOOD-01')),
+      findsOneWidget,
+    );
     expect(find.textContaining('741 năm tiền sử'), findsOneWidget);
+    expect(find.textContaining('Tiếp tế mỗi chuyến 110.3%'), findsOneWidget);
     expect(
       find.byKey(const Key('history-epoch-EPOCH-FOUNDING')),
       findsOneWidget,
@@ -169,6 +175,8 @@ void main() {
     expect(repository.value, contains('"status": "born"'));
     expect(repository.value, contains('"selected_site_id": "SITE-HOME"'));
     expect(repository.value, contains('"world_history"'));
+    expect(repository.value, contains('"historical_legacy"'));
+    expect(repository.value, contains('"formula_version": "v2.18.0"'));
     expect(repository.value, contains('"plan_fingerprint": "582235ed607d383c"'));
     await tester.tap(find.byKey(const Key('nav-4')));
     await tester.pumpAndSettle();
