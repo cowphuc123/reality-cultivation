@@ -24,6 +24,8 @@ class HouseholdState {
     this.birthCaregiverRole,
     this.familyOriginSummary,
     this.birthGenesisFingerprint,
+    this.birthFamilyRolesByPersonId = const <String, String>{},
+    this.familyCareScheduling = false,
   });
 
   final String id;
@@ -58,6 +60,10 @@ class HouseholdState {
   final String? birthCaregiverRole;
   final String? familyOriginSummary;
   final String? birthGenesisFingerprint;
+  final Map<String, String> birthFamilyRolesByPersonId;
+
+  /// Nếu bật, ca việc blocking và quyền dùng sữa tham gia chọn người chăm.
+  final bool familyCareScheduling;
 
   bool canUse(String personId, String itemId) =>
       authorizedUsersByItemId[itemId]?.contains(personId) ?? false;
@@ -164,6 +170,8 @@ class HouseholdState {
     birthCaregiverRole: birthCaregiverRole,
     familyOriginSummary: familyOriginSummary,
     birthGenesisFingerprint: birthGenesisFingerprint,
+    birthFamilyRolesByPersonId: birthFamilyRolesByPersonId,
+    familyCareScheduling: familyCareScheduling,
   );
 
   Map<String, Object?> toJson() {
@@ -208,6 +216,11 @@ class HouseholdState {
         'family_origin_summary': familyOriginSummary!,
       if (birthGenesisFingerprint != null)
         'birth_genesis_fingerprint': birthGenesisFingerprint!,
+      if (birthFamilyRolesByPersonId.isNotEmpty)
+        'birth_family_roles_by_person_id': _sortedMap(
+          birthFamilyRolesByPersonId,
+        ),
+      if (familyCareScheduling) 'family_care_scheduling': true,
     };
   }
 
@@ -254,6 +267,11 @@ class HouseholdState {
       birthCaregiverRole: json['birth_caregiver_role'] as String?,
       familyOriginSummary: json['family_origin_summary'] as String?,
       birthGenesisFingerprint: json['birth_genesis_fingerprint'] as String?,
+      birthFamilyRolesByPersonId:
+          (json['birth_family_roles_by_person_id'] as Map?)
+              ?.cast<String, String>() ??
+          const <String, String>{},
+      familyCareScheduling: json['family_care_scheduling'] as bool? ?? false,
     );
   }
 }

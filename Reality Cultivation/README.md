@@ -54,6 +54,7 @@ Game text mô phỏng thế giới tu tiên liên tục, ưu tiên chiều sâu 
 - [[docs/K5_25_V2_18_HAU_QUA_LICH_SU_VAO_SNAPSHOT|K5.25 — V2.18 hậu quả lịch sử vào snapshot]]
 - [[docs/K5_26_V2_19_NHIEU_HO_VA_HOAN_CANH_SINH|K5.26 — V2.19 nhiều hộ và hoàn cảnh sinh]]
 - [[docs/K5_27_V2_20_SINH_HO_VA_QUAN_HE_GIA_DINH|K5.27 — V2.20 sinh hộ và quan hệ gia đình]]
+- [[docs/K5_28_V2_21_HO_NHIEU_THANH_VIEN_VA_LICH_CHAM_TRE|K5.28 — V2.21 hộ nhiều thành viên và lịch chăm trẻ]]
 - Mã chạy được nằm trong thư mục `game/` ở gốc dự án.
 - Shell Flutter responsive nằm trong `client/`; bản web release được tạo tại `client/build/web`.
 

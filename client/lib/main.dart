@@ -137,7 +137,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       worldFingerprint: generated.fingerprint,
     );
     final GeneratedBirthHouseholds birthHouseholds =
-        BirthHouseholdGenerator.generate(world: generated, history: history);
+        BirthHouseholdGenerator.generate(
+          world: generated,
+          history: history,
+          includeFamilyMembers: true,
+        );
     final WorldSite home = generated.site('SITE-HOME');
     final WorldSite river = generated.site('SITE-RIVER');
     final WorldSite field = generated.site('SITE-FIELD');
@@ -2160,6 +2164,29 @@ class _BirthSiteCard extends StatelessWidget {
                   key: Key('birth-family-origin-${candidate.siteId}'),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+              ],
+              if (candidate.familyMembers.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 8),
+                Text(
+                  'Người lớn trong nhà',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                const SizedBox(height: 4),
+                for (final BirthFamilyMemberSummary member
+                    in candidate.familyMembers)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 3),
+                    child: Text(
+                      '${member.name} · ${_familyRoleLabel(member.roleToChild)} '
+                      '· chăm sóc ${member.careSkill}/1000 · '
+                      '${member.currentActivity ?? 'đang rảnh'} · '
+                      '${member.canUseInfantFeed ? 'có quyền dùng sữa' : 'không có quyền dùng sữa'}',
+                      key: Key(
+                        'birth-family-member-${candidate.siteId}-${member.personId}',
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
               ],
               const SizedBox(height: 7),
               Wrap(

@@ -46,8 +46,9 @@ Lịch sử đầy đủ từng lượt việc nằm trong [[CHANGELOG]]. Tóm t
 | V2.18 | Hậu quả tiền sử đổi tồn kho, tiếp tế và được validator giữ nơi sinh | [[K5_25_V2_18_HAU_QUA_LICH_SU_VAO_SNAPSHOT]] · `e777dfadd87c172a` |
 | V2.19 | Ba hộ tạo ba hoàn cảnh sinh với nguồn lực, người chăm và rủi ro khác nhau | [[K5_26_V2_19_NHIEU_HO_VA_HOAN_CANH_SINH]] · `491d7f5e50d4d551` |
 | V2.20 | Hộ ở đồng/chợ sinh từ seed và lịch sử; P00 có cha mẹ hoặc người giám hộ hai chiều | [[K5_27_V2_20_SINH_HO_VA_QUAN_HE_GIA_DINH]] · `4dc1efdae4d7e0b3` |
+| V2.21 | Hộ sinh có hai người lớn, quan hệ nội bộ; lịch và quyền tài nguyên chọn người chăm thật | [[K5_28_V2_21_HO_NHIEU_THANH_VIEN_VA_LICH_CHAM_TRE]] · `a3e5fd6ed1915a27` |
 
-Hiện có **25/25 runner**, **18/18 widget test** và **491 điều kiện catalog chạy được**; đây là bộ kiểm chứng triển khai riêng, không cộng vào 1.860 điều kiện thiết kế chưa chạy.
+Hiện có **26/26 runner**, **18/18 widget test** và **509 điều kiện catalog chạy được**; đây là bộ kiểm chứng triển khai riêng, không cộng vào 1.860 điều kiện thiết kế chưa chạy.
 
 Web đang chạy: **https://cowphuc123.github.io/reality-cultivation/** — tự động build lại mỗi lần đẩy `client/` lên GitHub (`.github/workflows/deploy-web.yml`). Bản cũ trên Sites (`chatgpt.site`) vẫn còn, chưa gỡ.
 
@@ -63,14 +64,14 @@ Làm tiếp từ điện thoại: ưu tiên Remote vào chính PC; xem [[HUONG_D
 - Chưa có: giải phẫu đa bộ phận, thương tích, già đi, chết; diễn biến cơ thể trong ngày (cơ thể người lớn chạy theo ngày); nước bẩn và bệnh do nước; khẩu phần riêng từng người; quan hệ xã hội có mức thân thiết/nghĩa vụ/xung đột; hậu quả xã hội của việc từ chối; mục tiêu cá nhân dài hạn; lây bệnh và thuốc; chuỗi game sau tháng đầu.
 - Nghỉ bệnh vẫn là **tất cả hoặc không có gì**: chưa có làm nhẹ hay nửa buổi. Ca nay có thể chuyển nguyên khối cho một người khác, nhưng chưa chia ca, đổi công hay tạo nghĩa vụ bù; xem [[K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH]].
 - Seed đã sinh được kích thước một vùng cùng tọa độ/bán kính năm địa điểm; người/phòng/vật và tuyến client bám kết quả đó. Tên, loại và số lượng địa điểm vẫn là template An Khê: chưa có ô đất, độ cao, khí hậu, tài nguyên, biên giới, sinh dân số hay lịch sử tiền game. Đồ thị đường đi chưa sinh từ địa hình.
-- Đã tách thế giới khỏi P00 và có ba hoàn cảnh sinh thật tại H01/H02/H03. H02/H03 nay sinh xác định từ seed + chỉ số lịch sử; tên, tuổi, tay nghề, kho, vai trò cha/mẹ/người giám hộ và tóm tắt nguồn gốc được vật chất hóa. Mỗi hộ mới vẫn chỉ có một người lớn trong hai slot template; chưa có phả hệ nhiều thế hệ, ký ức chung hoặc đời sống họ hàng.
+- Đã tách thế giới khỏi P00 và có ba hoàn cảnh sinh thật tại H01/H02/H03. H02/H03 nay sinh xác định từ seed + chỉ số lịch sử; mỗi hộ có hai người lớn, quan hệ nội bộ, ca bận và quyền dùng sữa ảnh hưởng trực tiếp tới người chăm trẻ. H01 vẫn viết tay và chỉ có một người lớn; chưa có phả hệ nhiều thế hệ, ký ức chung, mức thân thiết hoặc đời sống họ hàng.
 - Tiền sử đã chạy 300–30.000 năm theo seed qua ba epoch và cohort vùng; đất, giao thương, áp lực tài nguyên và lũ nay đổi lượng bốn kho cùng sản lượng tiếp tế thật. Sáu loại anchor, số hộ và loại hàng vẫn là template An Khê; 183 dân ước tính ở seed mặc định mới là cohort, chỉ sáu NPC trước sinh có hồ sơ `Person` chi tiết. Lịch sử chưa mô phỏng từng lần sinh/xóa hộ, địa điểm, nghề, quyền hay quan hệ qua các epoch; chưa có tạm dừng/tiếp tục giữa worldgen.
 - Thân nhiệt người lớn **cố ý chưa làm**: chưa có mùa, thời tiết hay nhiệt độ môi trường để nó phản ứng lại; xem [[K5_15_V2_8_NUOC_VA_CON_KHAT]].
 - Kho git đã có commit đầu và đẩy lên `github.com/cowphuc123/reality-cultivation` (công khai); chưa thiết lập sao lưu tự động ngoài GitHub.
 
 ## Bước tiếp theo đề xuất
 
-Ưu tiên V2.21 để sinh hộ nhiều thành viên và quan hệ nội bộ trước P00, rồi cho lịch và nguồn lực của từng người ảnh hưởng việc chăm trẻ. Nhánh gần khác là làm việc nhẹ/nửa buổi khi hồi bệnh. Thân nhiệt nên chờ có khí hậu/mùa.
+Ưu tiên V2.22 để quan hệ gia đình có nghĩa vụ và ký ức tương tác, khiến việc liên tục gánh ca chăm trẻ đổi mệt mỏi, tình cảm và quyết định nhận việc. Nhánh gần khác là làm việc nhẹ/nửa buổi khi hồi bệnh. Thân nhiệt nên chờ có khí hậu/mùa.
 
 Shared fixture V1 chưa chạy parity PWA. TN01–TN08 ([[LUA_CHON_TRAI_NGHIEM]]) và ADR công nghệ ACCEPTED vẫn mở.
 

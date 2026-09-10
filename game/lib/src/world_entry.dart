@@ -123,6 +123,7 @@ class BirthSiteCandidate {
     this.risks = const <String>[],
     this.caregiverRole,
     this.familyOriginSummary,
+    this.familyMembers = const <BirthFamilyMemberSummary>[],
   });
 
   final String siteId;
@@ -143,4 +144,23 @@ class BirthSiteCandidate {
   final List<String> risks;
   final String? caregiverRole;
   final String? familyOriginSummary;
+  final List<BirthFamilyMemberSummary> familyMembers;
+}
+
+class BirthFamilyMemberSummary {
+  const BirthFamilyMemberSummary({
+    required this.personId,
+    required this.name,
+    required this.roleToChild,
+    required this.careSkill,
+    required this.currentActivity,
+    required this.canUseInfantFeed,
+  });
+
+  final String personId;
+  final String name;
+  final String roleToChild;
+  final int careSkill;
+  final String? currentActivity;
+  final bool canUseInfantFeed;
 }

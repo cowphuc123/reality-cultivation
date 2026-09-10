@@ -19,18 +19,18 @@ Cập nhật: 2026-09-10.
 | Chủ lượt | Chưa có — sẵn sàng cho Codex hoặc Claude nhận việc tiếp theo |
 | Trạng thái | Không có mã đang làm dở |
 | Nhánh ổn định | `master` |
-| Commit game ổn định | `ae3d740` — V2.20 sinh hộ và quan hệ gia đình |
+| Commit game ổn định | V2.21 — hộ nhiều thành viên và lịch chăm trẻ; xem `HEAD` của `master` |
 | Nhánh bàn giao | Không có |
-| Lát cắt hoàn tất gần nhất | [[K5_27_V2_20_SINH_HO_VA_QUAN_HE_GIA_DINH]] |
-| Việc đề xuất tiếp theo | V2.21 — hộ nhiều thành viên, quan hệ nội bộ và lịch chăm trẻ |
+| Lát cắt hoàn tất gần nhất | [[K5_28_V2_21_HO_NHIEU_THANH_VIEN_VA_LICH_CHAM_TRE]] |
+| Việc đề xuất tiếp theo | V2.22 — nghĩa vụ và ký ức tương tác trong gia đình |
 
 ## Kết quả kiểm tra tại mốc ổn định
 
-- 25/25 runner đạt.
+- 26/26 runner đạt.
 - 18/18 widget test đạt.
 - `dart analyze` và `flutter analyze` không báo lỗi.
 - Flutter web release build thành công.
-- 491 điều kiện catalog triển khai.
+- 509 điều kiện catalog triển khai.
 - Web: https://cowphuc123.github.io/reality-cultivation/
 
 ## File đang sửa dở

@@ -832,8 +832,38 @@ class Simulation {
           'care_skill': plan.caregiverSkill,
           'current_activity': 'trông nom nhà cửa',
           'adult_body': const <String, Object?>{'mass_g': 52000},
+          if (plan.caregiverRoutine.isNotEmpty) 'routine': plan.caregiverRoutine,
+          if (plan.familyMembers.isNotEmpty)
+            'family_relationships': <String, String>{
+              for (final GeneratedFamilyMember member in plan.familyMembers)
+                member.id: member.relationshipToCaregiver,
+            },
         },
       );
+      for (final GeneratedFamilyMember member in plan.familyMembers) {
+        schedule(
+          due: publishAt,
+          phase: EventPhase.completion,
+          kind: 'person_created',
+          payload: <String, Object?>{
+            'person_id': member.id,
+            'name': member.name,
+            'birth_seconds': -member.ageYears * 365 * gameSecondsPerDay,
+            'position_mm': site.center.xMm,
+            'position_y_mm': site.center.yMm,
+            'room_id': plan.roomId,
+            'household_id': plan.householdId,
+            'caregiver_agent': true,
+            'care_skill': member.careSkill,
+            'current_activity': 'trông nom nhà cửa',
+            'adult_body': const <String, Object?>{'mass_g': 52000},
+            'routine': member.routine,
+            'family_relationships': <String, String>{
+              plan.caregiverId: member.relationshipToCaregiver,
+            },
+          },
+        );
+      }
       final Map<String, (String, int, String)> resources =
           <String, (String, int, String)>{
             'food': ('staple_food', plan.foodQuantity, 'g'),
@@ -849,6 +879,11 @@ class Simulation {
             'I-${plan.householdId}-${resource.key.toUpperCase()}';
         itemIds[resource.key] = itemId;
         rights[itemId] = <String>[plan.caregiverId];
+        for (final GeneratedFamilyMember member in plan.familyMembers) {
+          if (member.authorizedResourceKeys.contains(resource.key)) {
+            rights[itemId]!.add(member.id);
+          }
+        }
         schedule(
           due: publishAt,
           phase: EventPhase.completion,
@@ -871,6 +906,9 @@ class Simulation {
       }
       final String clothId = 'I-${plan.householdId}-CLOTH';
       rights[clothId] = <String>[plan.caregiverId];
+      for (final GeneratedFamilyMember member in plan.familyMembers) {
+        rights[clothId]!.add(member.id);
+      }
       schedule(
         due: publishAt,
         phase: EventPhase.completion,
@@ -893,7 +931,10 @@ class Simulation {
         payload: <String, Object?>{
           'household_id': plan.householdId,
           'name': plan.householdName,
-          'member_ids': <String>[plan.caregiverId],
+          'member_ids': <String>[
+            plan.caregiverId,
+            ...plan.familyMembers.map((GeneratedFamilyMember value) => value.id),
+          ],
           'resource_item_ids': itemIds,
           'authorized_users_by_item_id': rights,
           'scheduled_work_seconds_by_person': const <String, int>{},
@@ -903,6 +944,14 @@ class Simulation {
           'birth_caregiver_role': plan.caregiverRole,
           'family_origin_summary': plan.familyOriginSummary,
           'birth_genesis_fingerprint': generated.fingerprint,
+          if (plan.familyMembers.isNotEmpty) ...<String, Object?>{
+            'birth_family_roles_by_person_id': <String, String>{
+              plan.caregiverId: plan.caregiverRole,
+              for (final GeneratedFamilyMember member in plan.familyMembers)
+                member.id: member.roleToChild,
+            },
+            'family_care_scheduling': true,
+          },
         },
       );
     }
@@ -1060,8 +1109,29 @@ class Simulation {
         waterQuantity: waterQuantity,
         fuelQuantity: fuelQuantity,
         risks: List<String>.unmodifiable(risks),
-        caregiverRole: household.birthCaregiverRole,
+        caregiverRole:
+            household.birthFamilyRolesByPersonId[caregiver.id] ??
+            household.birthCaregiverRole,
         familyOriginSummary: household.familyOriginSummary,
+        familyMembers: List<BirthFamilyMemberSummary>.unmodifiable(
+          <BirthFamilyMemberSummary>[
+            for (final MapEntry<String, String> relation
+                in household.birthFamilyRolesByPersonId.entries)
+              if (_state.people[relation.key] case final PersonState member)
+                BirthFamilyMemberSummary(
+                  personId: member.id,
+                  name: member.name,
+                  roleToChild: relation.value,
+                  careSkill: member.caregiverAgent?.careSkill ?? 0,
+                  currentActivity: member.routine?.currentActivity ??
+                      member.caregiverAgent?.currentActivity,
+                  canUseInfantFeed: household.canUse(member.id, usableFeed.id),
+                ),
+          ]..sort(
+              (BirthFamilyMemberSummary a, BirthFamilyMemberSummary b) =>
+                  a.personId.compareTo(b.personId),
+            ),
+        ),
       );
     }
     return BirthSiteCandidate(
@@ -1218,18 +1288,28 @@ class Simulation {
             _state.worldEntry?.playerPersonId == personId
             ? _state.worldEntry!.markBorn()
             : _state.worldEntry;
-        final String? caregiverRole =
-            event.payload['caregiver_role'] as String?;
-        final PersonState? caregiver = _state.people[caregiverId];
-        final String childRole = caregiverRole == 'guardian' ? 'ward' : 'child';
+        final String? caregiverRole = event.payload['caregiver_role'] as String?;
+        final Map<String, String> familyRoles = household
+                    ?.birthFamilyRolesByPersonId.isNotEmpty ==
+                true
+            ? household!.birthFamilyRolesByPersonId
+            : caregiverRole == null || caregiverId.isEmpty
+            ? const <String, String>{}
+            : <String, String>{caregiverId: caregiverRole};
+        final Map<String, PersonState> people = <String, PersonState>{
+          ..._state.people,
+        };
+        for (final MapEntry<String, String> relation in familyRoles.entries) {
+          final PersonState? adult = people[relation.key];
+          if (adult == null) continue;
+          people[adult.id] = adult.withFamilyRelationship(
+            personId,
+            relation.value == 'guardian' ? 'ward' : 'child',
+          );
+        }
         _replace(
           people: <String, PersonState>{
-            ..._state.people,
-            if (caregiver != null && caregiverRole != null)
-              caregiverId: caregiver.withFamilyRelationship(
-                personId,
-                childRole,
-              ),
+            ...people,
             personId: PersonState(
               id: personId,
               name: name,
@@ -1239,9 +1319,7 @@ class Simulation {
               positionYMm: event.payload['position_y_mm'] as int? ?? 0,
               householdId: householdId,
               roomId: event.payload['room_id'] as String?,
-              familyRelationships: caregiverRole == null || caregiverId.isEmpty
-                  ? const <String, String>{}
-                  : <String, String>{caregiverId: caregiverRole},
+              familyRelationships: familyRoles,
             ),
           },
           facts: <WorldFact>[
@@ -1318,6 +1396,10 @@ class Simulation {
                       (event.payload['adult_body']! as Map)
                           .cast<String, Object?>(),
                     ),
+              familyRelationships:
+                  (event.payload['family_relationships'] as Map?)
+                      ?.cast<String, String>() ??
+                  const <String, String>{},
             ),
           },
           facts: <WorldFact>[
@@ -2879,6 +2961,11 @@ class Simulation {
       familyOriginSummary: event.payload['family_origin_summary'] as String?,
       birthGenesisFingerprint:
           event.payload['birth_genesis_fingerprint'] as String?,
+      birthFamilyRolesByPersonId:
+          (event.payload['birth_family_roles_by_person_id'] as Map?)
+              ?.cast<String, String>() ??
+          const <String, String>{},
+      familyCareScheduling: event.payload['family_care_scheduling'] == true,
     );
     _replace(
       households: <String, HouseholdState>{
@@ -4324,9 +4411,22 @@ class Simulation {
     PersonState infant,
     String preferredId,
   ) {
+    final HouseholdState? household = infant.householdId == null
+        ? null
+        : _state.households[infant.householdId];
+    bool canProvideCare(PersonState person) {
+      if (person.caregiverAgent?.available != true ||
+          person.caregiverAgent!.careSkill < 400) {
+        return false;
+      }
+      if (household?.familyCareScheduling != true) return true;
+      if (person.routine?.blockingActivity != null) return false;
+      final String? feedId = household!.resourceItemIds['infant_feed'];
+      return feedId != null && household.canUse(person.id, feedId);
+    }
+
     final PersonState? preferred = _state.people[preferredId];
-    if (preferred?.caregiverAgent?.available == true &&
-        preferred!.caregiverAgent!.careSkill >= 400) {
+    if (preferred != null && canProvideCare(preferred)) {
       return preferred;
     }
     final List<PersonState> candidates =
@@ -4335,8 +4435,7 @@ class Simulation {
               (PersonState person) =>
                   person.householdId == infant.householdId &&
                   person.id != infant.id &&
-                  person.caregiverAgent?.available == true &&
-                  person.caregiverAgent!.careSkill >= 400,
+                  canProvideCare(person),
             )
             .toList()
           ..sort((PersonState a, PersonState b) {

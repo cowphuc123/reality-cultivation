@@ -46,6 +46,8 @@ Lịch sử đầy đủ từng lượt việc — tài liệu nào thêm gì, s
 
 ## Diễn biến gần nhất
 
+Ngày 2026-09-10: hoàn thành V2.21 tại [[K5_28_V2_21_HO_NHIEU_THANH_VIEN_VA_LICH_CHAM_TRE]]. H02/H03 mỗi hộ có thêm một người lớn với quan hệ nội bộ trước P00, ca bận khác nhau và quyền dùng sữa thật. P00 liên kết hai chiều với cả hai người lớn; lúc người chính bận, người rảnh đủ quyền thực sự thay ca chăm. Các vai trò, ca, ngưỡng kỹ năng và quyền mẫu là fixture kỹ thuật chưa được duyệt thành luật cân bằng hay văn hóa. Chế độ V2.20 mặc định và hai hash V2.19–V2.20 giữ nguyên.
+
 Ngày 2026-09-10: người dùng yêu cầu cập nhật chuyển giao để Codex và Claude thay phiên khi hết giới hạn phiên. Đã thêm `CLAUDE.md`, [[ACTIVE_WORK]] và viết lại [[CHUYEN_GIAO]] tới V2.20. Ngoại lệ U016 được làm rõ: WIP có thể commit/push lên nhánh `handoff/...` để trợ lý khác tiếp tục, nhưng không được đưa lên `master` trước khi hoàn tất và kiểm tra đạt.
 
 Ngày 2026-09-10: hoàn thành V2.20 tại [[K5_27_V2_20_SINH_HO_VA_QUAN_HE_GIA_DINH]]. H02/H03 không còn được viết tay trong client: `BirthHouseholdGenerator` dùng seed, fingerprint lịch sử và chỉ số cohort cuối tiền sử để sinh tên hộ/phòng, người chăm, tuổi, tay nghề, bốn kho, vai trò mẹ/cha/người giám hộ và tóm tắt nguồn gốc. Khi P00 sinh, quan hệ được lưu hai chiều trong hai `PersonState`, giữ qua save/load và hiện trong hồ sơ. Đây là triển khai mới, không biến tên, công thức hoặc vai trò mẫu thành quyết định cân bằng/văn hóa đã duyệt. Fingerprint gia đình seed mặc định `9555c85967aed7fa`; hash runner `4dc1efdae4d7e0b3`; hash V2.19 giữ nguyên.

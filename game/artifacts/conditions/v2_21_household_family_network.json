@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v2-21-household-family-network",
+  "conditions": [
+    {"id":"V221-SEED-001","title":"Cùng seed sinh cùng hộ nhiều thành viên","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Repeated extended generation has the same family fingerprint"},
+    {"id":"V221-SEED-002","title":"Seed khác đổi mạng gia đình","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"A different root seed changes the extended family fingerprint"},
+    {"id":"V221-COMPAT-001","title":"Chế độ mặc định giữ nguyên bộ sinh V2.20","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Legacy generation keeps version v2.20.0 and fingerprint 9555c85967aed7fa"},
+    {"id":"V221-GEN-001","title":"Mỗi hộ mở rộng có hai người lớn","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Each generated household contains a primary and supporting caregiver"},
+    {"id":"V221-GEN-002","title":"Hai người lớn có ca bận khác nhau","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Primary and supporting routines occupy complementary daily shifts"},
+    {"id":"V221-GEN-003","title":"Mã người trong các hộ không trùng","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Generated family validation rejects overlapping person identifiers"},
+    {"id":"V221-REL-001","title":"Quan hệ nội bộ tồn tại trước P00","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Adults hold reciprocal spouse or sibling relations before world entry"},
+    {"id":"V221-REL-002","title":"P00 liên kết với mọi người lớn trong hộ","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"The child stores both generated parent or guardian roles"},
+    {"id":"V221-REL-003","title":"Mọi người lớn ghi quan hệ ngược với P00","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Each adult stores child or ward after birth"},
+    {"id":"V221-HOUSE-001","title":"Sổ hộ chứa đủ thành viên sinh","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Generated adults are members of their household before P00"},
+    {"id":"V221-RIGHT-001","title":"Người hỗ trợ có quyền dùng sữa","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Supporting caregiver is authorized for the household infant feed item"},
+    {"id":"V221-CARE-001","title":"Người đang trong ca chặn không nhận chăm trẻ","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"An active blocking routine excludes the preferred caregiver"},
+    {"id":"V221-CARE-002","title":"Người rảnh đủ nghề và đủ quyền thay ca","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"N07 responds when N05 is occupied at 07:00"},
+    {"id":"V221-CARE-003","title":"Lần thay ca được ghi vào hộ và sự kiện","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Care substitution increments the household counter and emits a fact"},
+    {"id":"V221-ENTRY-001","title":"Ứng viên nơi sinh công bố đủ thành viên gia đình","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Each generated birth candidate exposes two adult summaries"},
+    {"id":"V221-SAVE-001","title":"Save load giữ mạng gia đình và lịch chăm","status":"automated","runner":"tool/verify_v2_21_household_family_network.dart","oracle":"Round trip preserves semantic hash and family care scheduling"},
+    {"id":"V221-UI-001","title":"Thẻ nơi sinh hiện từng người lớn và ca hiện tại","status":"automated","runner":"../client/test/widget_test.dart","oracle":"Birth cards expose adult identity role skill activity and feed permission"},
+    {"id":"V221-REGRESSION-001","title":"Hai mươi lăm runner V0 đến V2.20 vẫn đạt","status":"automated","runner":"tool/verify_v0.dart through tool/verify_v2_20_seeded_birth_families.dart","oracle":"All earlier runners pass and V2.19 and V2.20 keep their published hashes"}
+  ]
+}

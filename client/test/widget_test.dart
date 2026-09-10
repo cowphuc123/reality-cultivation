@@ -136,7 +136,7 @@ void main() {
       find.byKey(const Key('history-anchor-ANCHOR-ROUTE-ESTABLISHED')),
       findsOneWidget,
     );
-    expect(find.textContaining('6 cư dân nền'), findsOneWidget);
+    expect(find.textContaining('8 cư dân nền'), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-HOME')), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-RIVER')), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-FIELD')), findsOneWidget);
@@ -157,6 +157,7 @@ void main() {
         BirthHouseholdGenerator.generate(
           world: generated,
           history: generatedHistory,
+          includeFamilyMembers: true,
         );
     for (final GeneratedBirthHousehold family
         in generatedFamilies.households) {
@@ -172,6 +173,14 @@ void main() {
         find.byKey(Key('birth-family-origin-${family.siteId}')),
         findsOneWidget,
       );
+      for (final GeneratedFamilyMember member in family.familyMembers) {
+        expect(
+          find.byKey(
+            Key('birth-family-member-${family.siteId}-${member.id}'),
+          ),
+          findsOneWidget,
+        );
+      }
     }
     expect(
       tester
@@ -226,6 +235,8 @@ void main() {
     expect(repository.value, contains('"selected_site_id": "SITE-FIELD"'));
     expect(repository.value, contains('"household_id": "H02"'));
     expect(repository.value, contains('"caregiver_id": "N05"'));
+    expect(repository.value, contains('"N07"'));
+    expect(repository.value, contains('"family_care_scheduling": true'));
     expect(repository.value, contains('"family_relationships"'));
     expect(repository.value, contains('"world_history"'));
     expect(repository.value, contains('"historical_legacy"'));
@@ -480,6 +491,8 @@ void main() {
       'N04',
       'N05',
       'N06',
+      'N07',
+      'N08',
     ]) {
       expect(find.byKey(Key('person-profile-$id')), findsOneWidget);
     }

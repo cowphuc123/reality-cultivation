@@ -1,5 +1,15 @@
 # Nhật ký dự án
 
+## 2026-09-10 — K5.28: V2.21 hộ nhiều thành viên và lịch chăm trẻ
+
+- Mở rộng bộ sinh H02/H03 bằng một người lớn hỗ trợ cho mỗi hộ, có tuổi, kỹ năng, vai trò với P00, quan hệ nội bộ và ca sinh hoạt riêng; cả bốn người tồn tại trước khi P00 sinh.
+- `HouseholdState` lưu vai trò của mọi người lớn với trẻ và cờ lịch chăm gia đình; sổ hộ cùng quyền tài nguyên chứa người hỗ trợ.
+- Khi P00 sinh, quan hệ được nối hai chiều với mọi người lớn. Save/load giữ nguyên mạng gia đình và semantic hash.
+- Việc chọn người chăm nay xét ca `blocking` và quyền dùng sữa đối với hộ V2.21. Kịch bản 07:00 tại H02 khiến N07 thực sự thay N05 đang bận và ghi hậu quả vào hộ.
+- Màn chọn nơi sinh hiện từng người lớn, vai trò, kỹ năng, hoạt động hiện tại và quyền dùng sữa trên điện thoại lẫn máy tính.
+- Chế độ mở rộng là opt-in ở lõi và được client bật; chế độ mặc định giữ fingerprint V2.20 `9555c85967aed7fa`, hash V2.20 `4dc1efdae4d7e0b3` và V2.19 `491d7f5e50d4d551`.
+- Thêm runner V2.21, 18 điều kiện catalog và tài liệu [[K5_28_V2_21_HO_NHIEU_THANH_VIEN_VA_LICH_CHAM_TRE]]. Tổng 26 runner, 18 widget test và 509 điều kiện chạy được.
+
 ## 2026-09-10 — Quy trình chuyển giao Codex ↔ Claude
 
 - Viết lại [[CHUYEN_GIAO]] theo trạng thái V2.20 và quy trình Git/Obsidian làm nguồn sự thật chung.

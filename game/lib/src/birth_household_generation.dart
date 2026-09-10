@@ -4,6 +4,40 @@ import 'world_generation.dart';
 import 'world_history.dart';
 
 const String birthHouseholdGeneratorVersion = 'v2.20.0';
+const String extendedBirthHouseholdGeneratorVersion = 'v2.21.0';
+
+class GeneratedFamilyMember {
+  const GeneratedFamilyMember({
+    required this.id,
+    required this.name,
+    required this.ageYears,
+    required this.careSkill,
+    required this.relationshipToCaregiver,
+    required this.roleToChild,
+    required this.routine,
+    required this.authorizedResourceKeys,
+  });
+
+  final String id;
+  final String name;
+  final int ageYears;
+  final int careSkill;
+  final String relationshipToCaregiver;
+  final String roleToChild;
+  final List<Map<String, Object?>> routine;
+  final List<String> authorizedResourceKeys;
+
+  Map<String, Object> toJson() => <String, Object>{
+    'id': id,
+    'name': name,
+    'age_years': ageYears,
+    'care_skill': careSkill,
+    'relationship_to_caregiver': relationshipToCaregiver,
+    'role_to_child': roleToChild,
+    'routine': routine,
+    'authorized_resource_keys': authorizedResourceKeys,
+  };
+}
 
 /// Một hộ nền có thể đón nhân vật người chơi khi chào đời.
 class GeneratedBirthHousehold {
@@ -23,6 +57,8 @@ class GeneratedBirthHousehold {
     required this.waterQuantity,
     required this.fuelQuantity,
     required this.infantFeedQuantity,
+    this.caregiverRoutine = const <Map<String, Object?>>[],
+    this.familyMembers = const <GeneratedFamilyMember>[],
   });
 
   final String siteId;
@@ -42,6 +78,8 @@ class GeneratedBirthHousehold {
   final int waterQuantity;
   final int fuelQuantity;
   final int infantFeedQuantity;
+  final List<Map<String, Object?>> caregiverRoutine;
+  final List<GeneratedFamilyMember> familyMembers;
 
   Map<String, Object> toJson() => <String, Object>{
     'site_id': siteId,
@@ -59,6 +97,11 @@ class GeneratedBirthHousehold {
     'water_quantity': waterQuantity,
     'fuel_quantity': fuelQuantity,
     'infant_feed_quantity': infantFeedQuantity,
+    if (caregiverRoutine.isNotEmpty) 'caregiver_routine': caregiverRoutine,
+    if (familyMembers.isNotEmpty)
+      'family_members': familyMembers
+          .map((GeneratedFamilyMember value) => value.toJson())
+          .toList(),
   };
 }
 
@@ -68,17 +111,22 @@ class GeneratedBirthHouseholds {
     required this.worldFingerprint,
     required this.historyFingerprint,
     required List<GeneratedBirthHousehold> households,
+    this.generatorVersion = birthHouseholdGeneratorVersion,
   }) : households = List<GeneratedBirthHousehold>.unmodifiable(households) {
     final Set<String> siteIds = <String>{};
     final Set<String> householdIds = <String>{};
     final Set<String> roomIds = <String>{};
     final Set<String> caregiverIds = <String>{};
+    final Set<String> personIds = <String>{};
     for (final GeneratedBirthHousehold value in this.households) {
       if (!siteIds.add(value.siteId) ||
           !householdIds.add(value.householdId) ||
           !roomIds.add(value.roomId) ||
           !caregiverIds.add(value.caregiverId)) {
         throw ArgumentError('Generated birth household identifiers overlap.');
+      }
+      if (!personIds.add(value.caregiverId)) {
+        throw ArgumentError('Generated birth family person identifiers overlap.');
       }
       if (!const <String>{'mother', 'father', 'guardian'}
               .contains(value.caregiverRole) ||
@@ -93,12 +141,28 @@ class GeneratedBirthHouseholds {
           value.infantFeedQuantity <= 0) {
         throw ArgumentError('Generated birth household data is invalid.');
       }
+      for (final GeneratedFamilyMember member in value.familyMembers) {
+        if (!personIds.add(member.id) ||
+            member.name.isEmpty ||
+            member.ageYears < 18 ||
+            member.careSkill < 0 ||
+            member.careSkill > 1000 ||
+            !const <String>{'mother', 'father', 'guardian'}.contains(
+              member.roleToChild,
+            ) ||
+            !const <String>{'spouse', 'sibling'}.contains(
+              member.relationshipToCaregiver,
+            ) ||
+            !member.authorizedResourceKeys.contains('infant_feed')) {
+          throw ArgumentError('Generated birth family member data is invalid.');
+        }
+      }
     }
     fingerprint = _fingerprint(<String, Object?>{
       'root_seed': rootSeed,
       'world_fingerprint': worldFingerprint,
       'history_fingerprint': historyFingerprint,
-      'generator_version': birthHouseholdGeneratorVersion,
+      'generator_version': generatorVersion,
       'households': this.households
           .map((GeneratedBirthHousehold value) => value.toJson())
           .toList(),
@@ -109,6 +173,7 @@ class GeneratedBirthHouseholds {
   final String worldFingerprint;
   final String historyFingerprint;
   final List<GeneratedBirthHousehold> households;
+  final String generatorVersion;
   late final String fingerprint;
 }
 
@@ -119,6 +184,7 @@ class BirthHouseholdGenerator {
   static GeneratedBirthHouseholds generate({
     required GeneratedWorld world,
     required GeneratedWorldHistory history,
+    bool includeFamilyMembers = false,
   }) {
     if (world.rootSeed != history.rootSeed ||
         world.fingerprint != history.worldFingerprint) {
@@ -131,6 +197,9 @@ class BirthHouseholdGenerator {
       rootSeed: world.rootSeed,
       worldFingerprint: world.fingerprint,
       historyFingerprint: history.fingerprint,
+      generatorVersion: includeFamilyMembers
+          ? extendedBirthHouseholdGeneratorVersion
+          : birthHouseholdGeneratorVersion,
       households: <GeneratedBirthHousehold>[
         _generate(
           world: world,
@@ -156,6 +225,8 @@ class BirthHouseholdGenerator {
           waterBase: 12500,
           fuelBase: 1900,
           feedBase: 3200,
+          includeFamilyMembers: includeFamilyMembers,
+          supportingCaregiverId: 'N07',
         ),
         _generate(
           world: world,
@@ -181,6 +252,8 @@ class BirthHouseholdGenerator {
           waterBase: 27000,
           fuelBase: 5200,
           feedBase: 6000,
+          includeFamilyMembers: includeFamilyMembers,
+          supportingCaregiverId: 'N08',
         ),
       ],
     );
@@ -202,6 +275,8 @@ class BirthHouseholdGenerator {
     required int waterBase,
     required int fuelBase,
     required int feedBase,
+    required bool includeFamilyMembers,
+    required String supportingCaregiverId,
   }) {
     final _SeedStream stream = _SeedStream.derived(
       world.rootSeed,
@@ -221,6 +296,58 @@ class BirthHouseholdGenerator {
       _ =>
         '$name nhận nuôi và là người giám hộ đầu tiên của đứa trẻ tại $householdName.',
     };
+    final String supporterRole = switch (role) {
+      'mother' => 'father',
+      'father' => 'mother',
+      _ => 'guardian',
+    };
+    final String relationship = role == 'guardian' ? 'sibling' : 'spouse';
+    final List<Map<String, Object?>> primaryRoutine = includeFamilyMembers
+        ? <Map<String, Object?>>[
+            <String, Object?>{
+              'id': 'R-$caregiverId-MORNING',
+              'activity': siteId == 'SITE-FIELD'
+                  ? 'làm việc ngoài ruộng'
+                  : 'trông quầy buổi sáng',
+              'start_second_of_day': 6 * 3600,
+              'duration_seconds': 6 * 3600,
+              'room_id': roomId,
+              'priority': 70,
+              'blocking': true,
+            },
+          ]
+        : const <Map<String, Object?>>[];
+    final List<GeneratedFamilyMember> familyMembers = includeFamilyMembers
+        ? <GeneratedFamilyMember>[
+            GeneratedFamilyMember(
+              id: supportingCaregiverId,
+              name: _distinctName(stream, name),
+              ageYears: 22 + stream.nextInt(27),
+              careSkill: (400 + stream.nextInt(61)).clamp(0, 1000),
+              relationshipToCaregiver: relationship,
+              roleToChild: supporterRole,
+              routine: <Map<String, Object?>>[
+                <String, Object?>{
+                  'id': 'R-$supportingCaregiverId-AFTERNOON',
+                  'activity': siteId == 'SITE-FIELD'
+                      ? 'gánh nước cuối ngày'
+                      : 'trông quầy buổi chiều',
+                  'start_second_of_day': 12 * 3600,
+                  'duration_seconds': 6 * 3600,
+                  'room_id': roomId,
+                  'priority': 70,
+                  'blocking': true,
+                },
+              ],
+              authorizedResourceKeys: const <String>[
+                'food',
+                'water',
+                'fuel',
+                'infant_feed',
+              ],
+            ),
+          ]
+        : const <GeneratedFamilyMember>[];
     return GeneratedBirthHousehold(
       siteId: siteId,
       householdId: householdId,
@@ -250,7 +377,17 @@ class BirthHouseholdGenerator {
             1200,
             14000,
           ),
+      caregiverRoutine: primaryRoutine,
+      familyMembers: familyMembers,
     );
+  }
+
+  static String _distinctName(_SeedStream stream, String existing) {
+    String result = _names[stream.nextInt(_names.length)];
+    while (result == existing) {
+      result = _names[stream.nextInt(_names.length)];
+    }
+    return result;
   }
 }
 
