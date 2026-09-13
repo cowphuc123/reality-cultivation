@@ -11,7 +11,7 @@ tags:
 
 # Chuyển giao dự án giữa Codex và Claude
 
-Cập nhật: 2026-09-10. Tài liệu này là quy trình chung để Codex và Claude thay phiên làm Reality Cultivation qua GitHub mà không phụ thuộc lịch sử trò chuyện riêng.
+Cập nhật: 2026-09-13. Tài liệu này là quy trình chung để Codex và Claude thay phiên làm Reality Cultivation qua GitHub mà không phụ thuộc lịch sử trò chuyện riêng.
 
 ## Nguyên tắc
 
@@ -32,8 +32,9 @@ Không dùng một câu trả lời cũ của trợ lý để ghi đè file hi�
 4. [[STATE]] — phiên bản thật hiện tại.
 5. [[DECISIONS]] — yêu cầu đã xác nhận và đề xuất chưa duyệt.
 6. [[MASTER_PLAN]] trước khi thiết kế hoặc thay đổi hệ thống.
-7. Tài liệu K5 mới nhất; hiện tại là [[K5_27_V2_20_SINH_HO_VA_QUAN_HE_GIA_DINH]].
-8. [[CHANGELOG]] khi cần tra nguyên nhân thay đổi cũ.
+7. [[LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC]] trước khi đặt số hoặc chọn lát cắt.
+8. Tài liệu K5 phát hành mới nhất; hiện tại là [[K5_29_V3_LANG_NHO_TU_VAN_HANH_30_NGAY]].
+9. [[CHANGELOG]] khi cần tra nguyên nhân thay đổi cũ.
 
 Sau đó kiểm tra nhánh, commit và working tree. Nếu thông tin trong `ACTIVE_WORK.md` không khớp Git, dừng sửa mã và xác minh trạng thái thật trước.
 
@@ -41,17 +42,17 @@ Sau đó kiểm tra nhánh, commit và working tree. Nếu thông tin trong `ACT
 
 | Mục | Giá trị |
 | --- | --- |
-| Phiên bản | V2.20 |
-| Commit game | `ae3d740` |
+| Phiên bản phát hành | V3 — làng nhỏ tự vận hành 30 ngày |
+| Commit game | `HEAD` của `master` |
 | Nhánh | `master` |
-| Runner | 25/25 đạt |
-| Widget test | 18/18 đạt |
-| Catalog triển khai | 491 điều kiện |
-| Hash V2.20 chờ chọn | `4dc1efdae4d7e0b3` |
+| Runner | 27/27 đạt |
+| Widget test | 20/20 đạt |
+| Catalog triển khai | 530 điều kiện |
+| Hash V3 | `8b27413973a433d7` |
 | Hash V2.19 phải giữ | `491d7f5e50d4d551` |
 | Web | https://cowphuc123.github.io/reality-cultivation/ |
 
-Mã chạy được nằm trong `game/` và GUI Flutter trong `client/`. 1.860 điều kiện K0–K4 là thiết kế trên giấy, không được cộng vào 491 điều kiện triển khai.
+Mã chạy được nằm trong `game/` và GUI Flutter trong `client/`. 1.860 điều kiện K0–K4 là thiết kế trên giấy, không được cộng vào 530 điều kiện triển khai. V3 đã đóng; nền `V4.0-dev.1` đã viết sớm nhưng V4 chưa bắt đầu chính thức; xem [[ACTIVE_WORK]].
 
 ## Nhận và khóa một lượt làm
 
@@ -77,7 +78,7 @@ Mỗi lát cắt triển khai vẫn gồm năm phần:
 4. GUI và widget test trong `client/`;
 5. tài liệu K5 cùng STATE, DECISIONS, CHANGELOG và README liên quan.
 
-Chạy kiểm tra phù hợp trong lúc phát triển. Trước khi kết thúc lát cắt, chạy phân tích tĩnh, toàn bộ runner, toàn bộ widget test và build web nếu client thay đổi. Cập nhật [[ACTIVE_WORK]] về trạng thái sẵn sàng, sau đó commit và push `master`. GitHub Actions tự triển khai web.
+Mỗi lát cắt phải phục vụ cổng của phiên bản lớn trong [[LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC]]. Khi người dùng chỉ yêu cầu viết mã, chỉ chạy kiểm tra hẹp nếu cần và ghi rõ là chưa kiểm chứng phát hành. Khi người dùng yêu cầu kiểm chứng/GitHub, chạy phân tích tĩnh, toàn bộ runner, toàn bộ widget test và build web nếu client thay đổi; sau đó hoàn thiện catalog/hồ sơ, cập nhật [[ACTIVE_WORK]], commit và push `master`. GitHub Actions tự triển khai web.
 
 ## Bàn giao giữa chừng khi sắp hết giới hạn
 
@@ -130,5 +131,6 @@ Nếu không có việc dở, thêm:
 - [[STATE]]
 - [[DECISIONS]]
 - [[MASTER_PLAN]]
+- [[LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC]]
 - [[CHANGELOG]]
 - [[HUONG_DAN_LAM_TIEP_TREN_DIEN_THOAI]]

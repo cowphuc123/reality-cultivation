@@ -21,8 +21,13 @@ Cập nhật: 2026-09-10.
 | U013 | Khi tạo bản lưu, game sinh thế giới rồi mô phỏng hàng trăm, hàng nghìn hoặc hàng vạn năm không có nhân vật chính; sau đó người chơi chọn vị trí trên bản đồ và nhân vật mới sinh/nhập thế | Người dùng xác nhận, 2026-09-06 |
 | U014 | Người chơi điều khiển nhân vật ngay từ lúc sơ sinh; không tóm lược hoặc bỏ qua tuổi thơ | Người dùng xác nhận, 2026-09-06 |
 | U015 | Ưu tiên làm GUI đẹp và đầy đủ trước khi tiếp tục mở rộng mô phỏng | Người dùng yêu cầu, 2026-09-07; tiếp tục 2026-09-08 |
-| U016 | Sau khi hoàn tất trọn một lát cắt và kiểm tra đạt, trợ lý tự commit và push lên GitHub; không đẩy việc đang dở/lỗi | Người dùng xác nhận, 2026-09-09 |
+| U016 | ~~Sau mỗi lát cắt hoàn tất thì tự kiểm tra, commit và push~~ — đã được U018 thay thế | Người dùng xác nhận, 2026-09-09; thay thế 2026-09-10 |
 | U017 | Codex và Claude dùng GitHub + vault Obsidian làm nguồn chung để thay phiên; việc dở được bàn giao qua nhánh `handoff/...`, không đưa lên `master` | Người dùng yêu cầu cập nhật chuyển giao, 2026-09-10 |
+| U018 | ~~Ưu tiên làm mã trước; kiểm chứng/push theo mỗi năm số phiên bản~~ — phần lịch cố định đã được U019 thay thế | Người dùng nêu 2026-09-10; thay thế cùng ngày |
+| U019 | Chỉ làm kiểm chứng phát hành, commit/push GitHub và triển khai web khi người dùng chủ động yêu cầu; kiểm tra cú pháp hẹp vẫn được dùng để tiếp tục viết mã | Người dùng xác nhận, 2026-09-10 |
+| U020 | Mỗi phiên bản lớn phải có mục đích và điều kiện kết thúc đã ghi; dừng kéo dài V2, phân loại phần mã hiện có về đúng V3/V4/V5/V10 rồi tiếp tục theo lộ trình | Người dùng xác nhận, 2026-09-10 |
+| U021 | Tránh tự sinh nội dung vô tận làm phiên bản không bao giờ kết thúc; chỉ phát triển phần thật sự cần để vượt cổng đã định, đưa ý tưởng mở rộng không bắt buộc vào backlog | Người dùng yêu cầu kiểm tra lại phạm vi, 2026-09-13 |
+| U022 | Thực hiện kiểm chứng đầy đủ, test, commit/push GitHub và triển khai web cho V3 đã khóa phạm vi | Người dùng yêu cầu, 2026-09-13 |
 
 ## Đề xuất của trợ lý — chưa được người dùng chốt
 
@@ -45,6 +50,14 @@ Trừ những gì ghi trong bảng U ở trên, **mọi tên, con số, ngưỡn
 Lịch sử đầy đủ từng lượt việc — tài liệu nào thêm gì, số điều kiện tăng ra sao — nằm trong [[CHANGELOG]] và trong phần mở đầu của mỗi tài liệu K tương ứng. Không cần chép lại ở đây.
 
 ## Diễn biến gần nhất
+
+Ngày 2026-09-13: theo U022, V3 đã chạy đủ cổng phát hành và được đóng tại [[K5_29_V3_LANG_NHO_TU_VAN_HANH_30_NGAY]]. Bảy cổng đạt bằng runner 30 ngày, parity save/replay và hai bố cục GUI. Các ý tưởng xã hội ngoài cổng vẫn ở backlog theo U021; không mở `V3.0-dev.21`.
+
+Ngày 2026-09-13: người dùng yêu cầu kiểm tra lại phần thật sự cần thiết để tránh dự án bị kéo dài bởi các lát cắt do trợ lý tự đề xuất. Áp dụng U021: đóng băng tính năng V3 tại nền đã có tới `V3.0-dev.20`; danh tiếng gián tiếp và các mở rộng xã hội khác chuyển vào backlog. Việc còn lại của V3 là tạo bằng chứng cho bảy cổng hiện hành, chỉ sửa những lỗi mà kịch bản đóng cổng làm lộ ra.
+
+Ngày 2026-09-10: người dùng hỏi và xác nhận sửa sai hệ thống phiên bản. Kế hoạch K4 vốn đã định V2 là “một hộ sống”, nhưng chuỗi V2.x bị kéo dài qua phạm vi làng, tuổi thơ, worldgen và lịch sử. [[LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC]] nay là cổng đánh số bắt buộc: V2 đóng về chức năng tại V2.3; mã cục bộ từng mang nhãn V2.22–V2.30 được phân loại thành nền `V3.0-dev.1`–`dev.9`, phần trẻ học kỳ vọng từng gọi V2.31 thành `V4.0-dev.1`. Bước chính tiếp theo là V3.0 bộ sinh làng 20–50 NPC chi tiết. U019 cũng thay lịch phát hành cố định: chỉ kiểm chứng/push khi người dùng yêu cầu.
+
+Ngày 2026-09-10: người dùng điều chỉnh U018 sang nhịp năm phiên bản. Các mốc đánh số chia hết cho 5 (`V2.25`, `V2.30`, ...) mới chạy kiểm chứng đầy đủ, hoàn thiện catalog/hồ sơ phát hành, commit/push `master` và triển khai web. Vì V2.21 đã phát hành trước khi đổi quy tắc, cụm chuyển tiếp hiện tại là V2.22–V2.25; người dùng chỉ rõ làm thêm V2.24 và V2.25 rồi đẩy. Kiểm tra hẹp chỉ dùng khi cần tiếp tục lập trình và không được ghi nhận thành kiểm chứng phát hành. Ngoại lệ bàn giao WIP của U017 vẫn giữ.
 
 Ngày 2026-09-10: hoàn thành V2.21 tại [[K5_28_V2_21_HO_NHIEU_THANH_VIEN_VA_LICH_CHAM_TRE]]. H02/H03 mỗi hộ có thêm một người lớn với quan hệ nội bộ trước P00, ca bận khác nhau và quyền dùng sữa thật. P00 liên kết hai chiều với cả hai người lớn; lúc người chính bận, người rảnh đủ quyền thực sự thay ca chăm. Các vai trò, ca, ngưỡng kỹ năng và quyền mẫu là fixture kỹ thuật chưa được duyệt thành luật cân bằng hay văn hóa. Chế độ V2.20 mặc định và hai hash V2.19–V2.20 giữ nguyên.
 

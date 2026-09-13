@@ -1,3 +1,5 @@
+import 'family.dart';
+
 class HouseholdState {
   const HouseholdState({
     required this.id,
@@ -26,6 +28,24 @@ class HouseholdState {
     this.birthGenesisFingerprint,
     this.birthFamilyRolesByPersonId = const <String, String>{},
     this.familyCareScheduling = false,
+    this.familyMemory = false,
+    this.familyCareNegotiation = false,
+    this.familyCareSupport = false,
+    this.familyCareResilience = false,
+    this.familyCareBurdenEnabled = false,
+    this.familyCareConflictEnabled = false,
+    this.familyCarePromiseEnabled = false,
+    this.familyCareReliabilityEnabled = false,
+    this.familyCareWitnessMemory = false,
+    this.infantAttachmentLearning = false,
+    this.familyCareSubjectId,
+    this.familyCarePlan,
+    this.familyCareSupportRequests = const <FamilyCareSupportRequestState>[],
+    this.familyCareBurdenByPersonId = const <String, FamilyCareBurdenState>{},
+    this.familyCareConflicts = const <FamilyCareConflictState>[],
+    this.familyCarePromises = const <FamilyCarePromiseState>[],
+    this.familyCareReliabilityByPersonId =
+        const <String, FamilyCareReliabilityState>{},
   });
 
   final String id;
@@ -64,6 +84,47 @@ class HouseholdState {
 
   /// Nếu bật, ca việc blocking và quyền dùng sữa tham gia chọn người chăm.
   final bool familyCareScheduling;
+
+  /// Nếu bật, chăm sóc tạo ký ức quan hệ và hao sức của người thực hiện.
+  final bool familyMemory;
+
+  /// Nếu bật, hộ chia lại ca chăm dựa trên trạng thái từng thành viên mỗi ngày.
+  final bool familyCareNegotiation;
+  final bool familyCareSupport;
+  final bool familyCareResilience;
+  final bool familyCareBurdenEnabled;
+  final bool familyCareConflictEnabled;
+  final bool familyCarePromiseEnabled;
+  final bool familyCareReliabilityEnabled;
+  final bool familyCareWitnessMemory;
+  final bool infantAttachmentLearning;
+  final String? familyCareSubjectId;
+  final FamilyCarePlanState? familyCarePlan;
+  final List<FamilyCareSupportRequestState> familyCareSupportRequests;
+  final Map<String, FamilyCareBurdenState> familyCareBurdenByPersonId;
+  final List<FamilyCareConflictState> familyCareConflicts;
+  final List<FamilyCarePromiseState> familyCarePromises;
+  final Map<String, FamilyCareReliabilityState> familyCareReliabilityByPersonId;
+
+  int get brokenCareShifts => familyCareSupportRequests.length;
+  int get fulfilledCareSupportRequests => familyCareSupportRequests
+      .where(
+        (FamilyCareSupportRequestState request) =>
+            request.status == FamilyCareSupportStatus.fulfilled,
+      )
+      .length;
+  int get pendingCareSupportRequests => familyCareSupportRequests
+      .where(
+        (FamilyCareSupportRequestState request) =>
+            request.status == FamilyCareSupportStatus.pending,
+      )
+      .length;
+  int get expiredCareSupportRequests => familyCareSupportRequests
+      .where(
+        (FamilyCareSupportRequestState request) =>
+            request.status == FamilyCareSupportStatus.expired,
+      )
+      .length;
 
   bool canUse(String personId, String itemId) =>
       authorizedUsersByItemId[itemId]?.contains(personId) ?? false;
@@ -104,6 +165,146 @@ class HouseholdState {
   HouseholdState recordCaregiverSubstitution() =>
       _copy(caregiverSubstitutions: caregiverSubstitutions + 1);
 
+  HouseholdState withFamilyCarePlan(FamilyCarePlanState value) =>
+      _copy(familyCarePlan: value);
+
+  HouseholdState recordFamilyCareSupport(
+    FamilyCareSupportRequestState request,
+  ) => _copy(
+    familyCareSupportRequests: <FamilyCareSupportRequestState>[
+      ...familyCareSupportRequests,
+      request,
+    ].skip(familyCareSupportRequests.length >= 32 ? 1 : 0).toList(),
+  );
+
+  HouseholdState updateFamilyCareSupport(
+    FamilyCareSupportRequestState request,
+  ) => _copy(
+    familyCareSupportRequests: <FamilyCareSupportRequestState>[
+      for (final FamilyCareSupportRequestState existing
+          in familyCareSupportRequests)
+        if (existing.id == request.id) request else existing,
+    ],
+  );
+
+  HouseholdState recordEmergencyCareBurden({
+    required String? plannedCaregiverId,
+    required String supporterId,
+    required int atSeconds,
+    required int delaySeconds,
+  }) {
+    if (!familyCareBurdenEnabled || plannedCaregiverId == supporterId) {
+      return this;
+    }
+    final Map<String, FamilyCareBurdenState> burdens =
+        <String, FamilyCareBurdenState>{...familyCareBurdenByPersonId};
+    burdens[supporterId] =
+        (burdens[supporterId] ?? const FamilyCareBurdenState())
+            .recordEmergencyShift(
+              atSeconds: atSeconds,
+              delaySeconds: delaySeconds,
+            );
+    final Map<String, FamilyCareReliabilityState> reliability =
+        <String, FamilyCareReliabilityState>{
+          ...familyCareReliabilityByPersonId,
+        };
+    if (familyCareReliabilityEnabled) {
+      reliability[supporterId] =
+          (reliability[supporterId] ?? const FamilyCareReliabilityState())
+              .recordEmergencyResponse(atSeconds);
+    }
+    if (plannedCaregiverId != null) {
+      burdens[plannedCaregiverId] =
+          (burdens[plannedCaregiverId] ?? const FamilyCareBurdenState())
+              .recordMissedShift(atSeconds: atSeconds);
+    }
+    return _copy(
+      familyCareBurdenByPersonId: burdens,
+      familyCareReliabilityByPersonId: reliability,
+    );
+  }
+
+  HouseholdState settleFamilyCareBurden(Map<String, int> assignedShifts) {
+    if (!familyCareBurdenEnabled) return this;
+    return _copy(
+      familyCareBurdenByPersonId: <String, FamilyCareBurdenState>{
+        for (final String personId in <String>{
+          ...familyCareBurdenByPersonId.keys,
+          ...assignedShifts.keys,
+        })
+          personId:
+              (familyCareBurdenByPersonId[personId] ??
+                      const FamilyCareBurdenState())
+                  .afterDailyPlan(assignedShifts[personId] ?? 0),
+      },
+    );
+  }
+
+  HouseholdState recordFamilyCareConflict(FamilyCareConflictState conflict) =>
+      _copy(
+        familyCareConflicts: <FamilyCareConflictState>[
+          ...familyCareConflicts,
+          conflict,
+        ].skip(familyCareConflicts.length >= 24 ? 1 : 0).toList(),
+      );
+
+  HouseholdState updateFamilyCareConflict(FamilyCareConflictState conflict) =>
+      _copy(
+        familyCareConflicts: <FamilyCareConflictState>[
+          for (final FamilyCareConflictState existing in familyCareConflicts)
+            if (existing.id == conflict.id) conflict else existing,
+        ],
+      );
+
+  HouseholdState recordFamilyCarePromise(FamilyCarePromiseState promise) {
+    final Map<String, FamilyCareReliabilityState> reliability =
+        <String, FamilyCareReliabilityState>{
+          ...familyCareReliabilityByPersonId,
+        };
+    if (familyCareReliabilityEnabled) {
+      reliability[promise.debtorId] =
+          (reliability[promise.debtorId] ?? const FamilyCareReliabilityState())
+              .recordPromiseMade(promise.madeAtSeconds);
+    }
+    return _copy(
+      familyCarePromises: <FamilyCarePromiseState>[
+        ...familyCarePromises,
+        promise,
+      ].skip(familyCarePromises.length >= 24 ? 1 : 0).toList(),
+      familyCareReliabilityByPersonId: reliability,
+    );
+  }
+
+  HouseholdState updateFamilyCarePromises(
+    List<FamilyCarePromiseState> promises,
+  ) {
+    final Map<String, FamilyCareReliabilityState> reliability =
+        <String, FamilyCareReliabilityState>{
+          ...familyCareReliabilityByPersonId,
+        };
+    if (familyCareReliabilityEnabled) {
+      for (final FamilyCarePromiseState next in promises) {
+        final FamilyCarePromiseState? previous = familyCarePromises
+            .where((FamilyCarePromiseState value) => value.id == next.id)
+            .firstOrNull;
+        if (previous?.status != FamilyCarePromiseStatus.active ||
+            next.status == FamilyCarePromiseStatus.active) {
+          continue;
+        }
+        reliability[next.debtorId] =
+            (reliability[next.debtorId] ?? const FamilyCareReliabilityState())
+                .recordPromiseResult(
+                  atSeconds: next.resolvedAtSeconds ?? next.madeAtSeconds,
+                  kept: next.status == FamilyCarePromiseStatus.fulfilled,
+                );
+      }
+    }
+    return _copy(
+      familyCarePromises: promises,
+      familyCareReliabilityByPersonId: reliability,
+    );
+  }
+
   HouseholdState addMember(String personId) {
     if (memberIds.contains(personId)) return this;
     return _copy(memberIds: <String>[...memberIds, personId]);
@@ -140,6 +341,12 @@ class HouseholdState {
     int? supplyDeliveries,
     int? productionRuns,
     int? caregiverSubstitutions,
+    FamilyCarePlanState? familyCarePlan,
+    List<FamilyCareSupportRequestState>? familyCareSupportRequests,
+    Map<String, FamilyCareBurdenState>? familyCareBurdenByPersonId,
+    List<FamilyCareConflictState>? familyCareConflicts,
+    List<FamilyCarePromiseState>? familyCarePromises,
+    Map<String, FamilyCareReliabilityState>? familyCareReliabilityByPersonId,
   }) => HouseholdState(
     id: id,
     name: name,
@@ -172,6 +379,26 @@ class HouseholdState {
     birthGenesisFingerprint: birthGenesisFingerprint,
     birthFamilyRolesByPersonId: birthFamilyRolesByPersonId,
     familyCareScheduling: familyCareScheduling,
+    familyMemory: familyMemory,
+    familyCareNegotiation: familyCareNegotiation,
+    familyCareSupport: familyCareSupport,
+    familyCareResilience: familyCareResilience,
+    familyCareBurdenEnabled: familyCareBurdenEnabled,
+    familyCareConflictEnabled: familyCareConflictEnabled,
+    familyCarePromiseEnabled: familyCarePromiseEnabled,
+    familyCareReliabilityEnabled: familyCareReliabilityEnabled,
+    familyCareWitnessMemory: familyCareWitnessMemory,
+    infantAttachmentLearning: infantAttachmentLearning,
+    familyCareSubjectId: familyCareSubjectId,
+    familyCarePlan: familyCarePlan ?? this.familyCarePlan,
+    familyCareSupportRequests:
+        familyCareSupportRequests ?? this.familyCareSupportRequests,
+    familyCareBurdenByPersonId:
+        familyCareBurdenByPersonId ?? this.familyCareBurdenByPersonId,
+    familyCareConflicts: familyCareConflicts ?? this.familyCareConflicts,
+    familyCarePromises: familyCarePromises ?? this.familyCarePromises,
+    familyCareReliabilityByPersonId:
+        familyCareReliabilityByPersonId ?? this.familyCareReliabilityByPersonId,
   );
 
   Map<String, Object?> toJson() {
@@ -221,6 +448,43 @@ class HouseholdState {
           birthFamilyRolesByPersonId,
         ),
       if (familyCareScheduling) 'family_care_scheduling': true,
+      if (familyMemory) 'family_memory': true,
+      if (familyCareNegotiation) 'family_care_negotiation': true,
+      if (familyCareSupport) 'family_care_support': true,
+      if (familyCareResilience) 'family_care_resilience': true,
+      if (familyCareBurdenEnabled) 'family_care_burden_enabled': true,
+      if (familyCareConflictEnabled) 'family_care_conflict_enabled': true,
+      if (familyCarePromiseEnabled) 'family_care_promise_enabled': true,
+      if (familyCareReliabilityEnabled) 'family_care_reliability_enabled': true,
+      if (familyCareWitnessMemory) 'family_care_witness_memory': true,
+      if (infantAttachmentLearning) 'infant_attachment_learning': true,
+      if (familyCareSubjectId != null)
+        'family_care_subject_id': familyCareSubjectId,
+      if (familyCarePlan != null) 'family_care_plan': familyCarePlan!.toJson(),
+      if (familyCareSupportRequests.isNotEmpty)
+        'family_care_support_requests': familyCareSupportRequests
+            .map((FamilyCareSupportRequestState request) => request.toJson())
+            .toList(),
+      if (familyCareBurdenByPersonId.isNotEmpty)
+        'family_care_burden_by_person_id': <String, Object?>{
+          for (final String personId
+              in familyCareBurdenByPersonId.keys.toList()..sort())
+            personId: familyCareBurdenByPersonId[personId]!.toJson(),
+        },
+      if (familyCareConflicts.isNotEmpty)
+        'family_care_conflicts': familyCareConflicts
+            .map((FamilyCareConflictState value) => value.toJson())
+            .toList(),
+      if (familyCarePromises.isNotEmpty)
+        'family_care_promises': familyCarePromises
+            .map((FamilyCarePromiseState value) => value.toJson())
+            .toList(),
+      if (familyCareReliabilityByPersonId.isNotEmpty)
+        'family_care_reliability_by_person_id': <String, Object?>{
+          for (final String personId
+              in familyCareReliabilityByPersonId.keys.toList()..sort())
+            personId: familyCareReliabilityByPersonId[personId]!.toJson(),
+        },
     };
   }
 
@@ -272,6 +536,73 @@ class HouseholdState {
               ?.cast<String, String>() ??
           const <String, String>{},
       familyCareScheduling: json['family_care_scheduling'] as bool? ?? false,
+      familyMemory: json['family_memory'] as bool? ?? false,
+      familyCareNegotiation: json['family_care_negotiation'] as bool? ?? false,
+      familyCareSupport: json['family_care_support'] as bool? ?? false,
+      familyCareResilience: json['family_care_resilience'] as bool? ?? false,
+      familyCareBurdenEnabled:
+          json['family_care_burden_enabled'] as bool? ?? false,
+      familyCareConflictEnabled:
+          json['family_care_conflict_enabled'] as bool? ?? false,
+      familyCarePromiseEnabled:
+          json['family_care_promise_enabled'] as bool? ?? false,
+      familyCareReliabilityEnabled:
+          json['family_care_reliability_enabled'] as bool? ?? false,
+      familyCareWitnessMemory:
+          json['family_care_witness_memory'] as bool? ?? false,
+      infantAttachmentLearning:
+          json['infant_attachment_learning'] as bool? ?? false,
+      familyCareSubjectId: json['family_care_subject_id'] as String?,
+      familyCarePlan: json['family_care_plan'] == null
+          ? null
+          : FamilyCarePlanState.fromJson(
+              (json['family_care_plan']! as Map).cast<String, Object?>(),
+            ),
+      familyCareSupportRequests:
+          (json['family_care_support_requests'] as List<Object?>? ??
+                  const <Object?>[])
+              .map(
+                (Object? value) => FamilyCareSupportRequestState.fromJson(
+                  (value! as Map).cast<String, Object?>(),
+                ),
+              )
+              .toList(),
+      familyCareBurdenByPersonId: <String, FamilyCareBurdenState>{
+        for (final MapEntry<String, Object?> entry
+            in ((json['family_care_burden_by_person_id'] as Map?)
+                        ?.cast<String, Object?>() ??
+                    const <String, Object?>{})
+                .entries)
+          entry.key: FamilyCareBurdenState.fromJson(
+            (entry.value! as Map).cast<String, Object?>(),
+          ),
+      },
+      familyCareConflicts:
+          (json['family_care_conflicts'] as List<Object?>? ?? const <Object?>[])
+              .map(
+                (Object? value) => FamilyCareConflictState.fromJson(
+                  (value! as Map).cast<String, Object?>(),
+                ),
+              )
+              .toList(),
+      familyCarePromises:
+          (json['family_care_promises'] as List<Object?>? ?? const <Object?>[])
+              .map(
+                (Object? value) => FamilyCarePromiseState.fromJson(
+                  (value! as Map).cast<String, Object?>(),
+                ),
+              )
+              .toList(),
+      familyCareReliabilityByPersonId: <String, FamilyCareReliabilityState>{
+        for (final MapEntry<String, Object?> entry
+            in ((json['family_care_reliability_by_person_id'] as Map?)
+                        ?.cast<String, Object?>() ??
+                    const <String, Object?>{})
+                .entries)
+          entry.key: FamilyCareReliabilityState.fromJson(
+            (entry.value! as Map).cast<String, Object?>(),
+          ),
+      },
     );
   }
 }

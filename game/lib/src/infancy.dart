@@ -17,6 +17,95 @@ enum InfantIntent {
   );
 }
 
+/// Điều trẻ học được về mức nhất quán của một người chăm cụ thể.
+class InfantCareExpectationState {
+  const InfantCareExpectationState({
+    required this.caregiverId,
+    this.successfulResponses = 0,
+    this.delayedResponses = 0,
+    this.missedResponses = 0,
+    this.averageResponseSeconds = 0,
+    this.safety = 500,
+    this.predictability = 500,
+    this.lastResponseAtSeconds,
+    this.lastOutcome,
+  });
+
+  final String caregiverId;
+  final int successfulResponses;
+  final int delayedResponses;
+  final int missedResponses;
+  final int averageResponseSeconds;
+  final int safety;
+  final int predictability;
+  final int? lastResponseAtSeconds;
+  final String? lastOutcome;
+
+  InfantCareExpectationState recordResponse({
+    required int atSeconds,
+    required int delaySeconds,
+  }) {
+    final int nextCount = successfulResponses + 1;
+    final int nextAverage =
+        (averageResponseSeconds * successfulResponses + delaySeconds) ~/
+        nextCount;
+    final bool delayed = delaySeconds > 15 * 60;
+    return InfantCareExpectationState(
+      caregiverId: caregiverId,
+      successfulResponses: nextCount,
+      delayedResponses: delayedResponses + (delayed ? 1 : 0),
+      missedResponses: missedResponses,
+      averageResponseSeconds: nextAverage,
+      safety: (safety + (delayed ? 4 : 18)).clamp(0, 1000),
+      predictability: (predictability + (delayed ? -8 : 14)).clamp(0, 1000),
+      lastResponseAtSeconds: atSeconds,
+      lastOutcome: delayed ? 'arrived_late' : 'arrived',
+    );
+  }
+
+  InfantCareExpectationState recordMissed({
+    required int atSeconds,
+    required int delaySeconds,
+  }) => InfantCareExpectationState(
+    caregiverId: caregiverId,
+    successfulResponses: successfulResponses,
+    delayedResponses: delayedResponses,
+    missedResponses: missedResponses + 1,
+    averageResponseSeconds: averageResponseSeconds,
+    safety: (safety - 55 - delaySeconds ~/ 300).clamp(0, 1000),
+    predictability: (predictability - 70).clamp(0, 1000),
+    lastResponseAtSeconds: atSeconds,
+    lastOutcome: 'missed',
+  );
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'caregiver_id': caregiverId,
+    if (successfulResponses > 0) 'successful_responses': successfulResponses,
+    if (delayedResponses > 0) 'delayed_responses': delayedResponses,
+    if (missedResponses > 0) 'missed_responses': missedResponses,
+    if (averageResponseSeconds > 0)
+      'average_response_seconds': averageResponseSeconds,
+    'safety': safety,
+    'predictability': predictability,
+    if (lastResponseAtSeconds != null)
+      'last_response_at_seconds': lastResponseAtSeconds,
+    if (lastOutcome != null) 'last_outcome': lastOutcome,
+  };
+
+  factory InfantCareExpectationState.fromJson(Map<String, Object?> json) =>
+      InfantCareExpectationState(
+        caregiverId: json['caregiver_id']! as String,
+        successfulResponses: json['successful_responses'] as int? ?? 0,
+        delayedResponses: json['delayed_responses'] as int? ?? 0,
+        missedResponses: json['missed_responses'] as int? ?? 0,
+        averageResponseSeconds: json['average_response_seconds'] as int? ?? 0,
+        safety: json['safety'] as int? ?? 500,
+        predictability: json['predictability'] as int? ?? 500,
+        lastResponseAtSeconds: json['last_response_at_seconds'] as int?,
+        lastOutcome: json['last_outcome'] as String?,
+      );
+}
+
 class InfantNeeds {
   const InfantNeeds({
     required this.hunger,
@@ -127,6 +216,7 @@ class InfantState {
     required this.unmetCareEpisodes,
     required this.careResponsePending,
     required this.body,
+    this.careExpectations = const <String, InfantCareExpectationState>{},
   });
 
   factory InfantState.initial(String caregiverId) => InfantState(
@@ -152,6 +242,7 @@ class InfantState {
   final int unmetCareEpisodes;
   final bool careResponsePending;
   final InfantBodyState? body;
+  final Map<String, InfantCareExpectationState> careExpectations;
 
   static List<InfantIntent> allowedIntents(int ageDays) => <InfantIntent>[
     InfantIntent.attendVoice,
@@ -268,9 +359,39 @@ class InfantState {
   InfantState withCareResponsePending(bool value) =>
       _copy(careResponsePending: value);
 
-  InfantState markCareUnmet() => _copy(
+  InfantState markCareUnmet({int delaySeconds = 0}) => _copy(
     unmetCareEpisodes: unmetCareEpisodes + 1,
+    attachment: _bounded(attachment - (10 + delaySeconds ~/ 300).clamp(0, 120)),
+    crying: true,
     careResponsePending: false,
+  );
+
+  InfantState recordCareResponse({
+    required String caregiverId,
+    required int atSeconds,
+    required int delaySeconds,
+  }) => _copy(
+    careExpectations: <String, InfantCareExpectationState>{
+      ...careExpectations,
+      caregiverId:
+          (careExpectations[caregiverId] ??
+                  InfantCareExpectationState(caregiverId: caregiverId))
+              .recordResponse(atSeconds: atSeconds, delaySeconds: delaySeconds),
+    },
+  );
+
+  InfantState recordMissedCare({
+    required String caregiverId,
+    required int atSeconds,
+    required int delaySeconds,
+  }) => _copy(
+    careExpectations: <String, InfantCareExpectationState>{
+      ...careExpectations,
+      caregiverId:
+          (careExpectations[caregiverId] ??
+                  InfantCareExpectationState(caregiverId: caregiverId))
+              .recordMissed(atSeconds: atSeconds, delaySeconds: delaySeconds),
+    },
   );
 
   InfantState afterIntent(InfantIntent intent) {
@@ -319,6 +440,7 @@ class InfantState {
     int? unmetCareEpisodes,
     bool? careResponsePending,
     InfantBodyState? body,
+    Map<String, InfantCareExpectationState>? careExpectations,
   }) => InfantState(
     caregiverId: caregiverId,
     needs: needs ?? this.needs,
@@ -330,6 +452,7 @@ class InfantState {
     unmetCareEpisodes: unmetCareEpisodes ?? this.unmetCareEpisodes,
     careResponsePending: careResponsePending ?? this.careResponsePending,
     body: body ?? this.body,
+    careExpectations: careExpectations ?? this.careExpectations,
   );
 
   Map<String, Object?> toJson() => <String, Object?>{
@@ -343,6 +466,11 @@ class InfantState {
     'unmet_care_episodes': unmetCareEpisodes,
     'care_response_pending': careResponsePending,
     if (body != null) 'body': body!.toJson(),
+    if (careExpectations.isNotEmpty)
+      'care_expectations': <String, Object?>{
+        for (final String caregiverId in careExpectations.keys.toList()..sort())
+          caregiverId: careExpectations[caregiverId]!.toJson(),
+      },
   };
 
   factory InfantState.fromJson(Map<String, Object?> json) => InfantState(
@@ -367,6 +495,15 @@ class InfantState {
         : InfantBodyState.fromJson(
             (json['body']! as Map).cast<String, Object?>(),
           ),
+    careExpectations: <String, InfantCareExpectationState>{
+      for (final MapEntry<String, Object?> entry
+          in ((json['care_expectations'] as Map?)?.cast<String, Object?>() ??
+                  const <String, Object?>{})
+              .entries)
+        entry.key: InfantCareExpectationState.fromJson(
+          (entry.value! as Map).cast<String, Object?>(),
+        ),
+    },
   );
 }
 

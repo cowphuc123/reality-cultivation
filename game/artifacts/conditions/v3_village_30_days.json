@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v3-village-30-days",
+  "conditions": [
+    {"id":"V3-GEN-001","title":"Làng có từ 20 đến 50 NPC chi tiết","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"Seed 20260907 materializes 50 detailed people"},
+    {"id":"V3-GEN-002","title":"Dân làng sống trong nhiều hộ","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"Every person belongs to one of 12 households"},
+    {"id":"V3-GEN-003","title":"Mỗi NPC có cơ thể nghề kỹ năng lịch và trạng thái cá nhân","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"Every person has body routine skills and agenda state"},
+    {"id":"V3-ECO-001","title":"Trao đổi vật chất giữa các hộ hoàn tất thật","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"The 30-day run completes inter-household exchanges"},
+    {"id":"V3-ECO-002","title":"Không kho vật chất nào có số lượng âm","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"Every materialized item quantity remains non-negative"},
+    {"id":"V3-ECO-003","title":"Không còn chuyến hàng mắc kẹt sau thời gian lắng","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"No exchange remains traveling at day 32"},
+    {"id":"V3-REQ-001","title":"Nhu cầu liên hộ tạo yêu cầu tài nguyên có vòng đời","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"The village records resource requests while resolving shortages"},
+    {"id":"V3-REQ-002","title":"Không còn yêu cầu tài nguyên mắc kẹt sau thời gian lắng","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"Every resource request is inactive at day 32"},
+    {"id":"V3-TIME-001","title":"Người đi hỏi dẫn đường hoặc vận chuyển không bị giữ vô hạn","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"Every personal time commitment is cleared at day 32"},
+    {"id":"V3-KNOW-001","title":"NPC có tri thức riêng từ quan sát hoặc lời kể","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"The village contains person-owned beliefs after real exchanges"},
+    {"id":"V3-KNOW-002","title":"Mỗi bằng chứng giữ nguồn thời điểm và độ tin cậy hợp lệ","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"All beliefs preserve source origin evidence time confidence and transmission count"},
+    {"id":"V3-SOC-001","title":"Quan hệ hình thành giữa người thuộc các hộ khác nhau","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"The final village contains directed cross-household relations"},
+    {"id":"V3-SOC-002","title":"Quan hệ ngoài hộ có tiếp xúc và thời điểm thật","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"Every cross-household relation has an encounter count and last interaction time"},
+    {"id":"V3-SURV-001","title":"Cộng đồng ghi đúng chu kỳ 30 ngày","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"Community survival contains exactly 30 completed daily snapshots"},
+    {"id":"V3-SURV-002","title":"Điều kiện bình thường không cần cứu hộ vô căn cứ","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"The 30-day run records zero unsupported rescue days"},
+    {"id":"V3-SAVE-001","title":"Lưu tải giữa kỳ giữ nguyên trạng thái tại mốc lưu","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"The day-15 save round trip preserves the semantic hash"},
+    {"id":"V3-SAVE-002","title":"Chạy liền và lưu tải giữa kỳ tới cùng kết quả","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"Continuous and restored runs end at hash 8b27413973a433d7"},
+    {"id":"V3-REPLAY-001","title":"Replay cùng seed tới cùng kết quả","status":"automated","runner":"tool/verify_v3_village_30_days.dart","oracle":"A fresh replay ends at hash 8b27413973a433d7"},
+    {"id":"V3-UI-001","title":"Điện thoại xem được sức sống yêu cầu tri thức và quan hệ của làng","status":"automated","runner":"../client/test/widget_test.dart","oracle":"390x844 renders the village audit directory beliefs and social relations without overflow"},
+    {"id":"V3-UI-002","title":"Máy tính xem được làng hộ và luồng vật chất","status":"automated","runner":"../client/test/widget_test.dart","oracle":"1280x800 renders village survival material flow and household views without overflow"},
+    {"id":"V3-REGRESSION-001","title":"Toàn bộ runner từ V0 đến V3 vẫn đạt","status":"automated","runner":"tool/verify_v0.dart through tool/verify_v3_village_30_days.dart","oracle":"All 27 release runners pass in one clean sequence"}
+  ]
+}

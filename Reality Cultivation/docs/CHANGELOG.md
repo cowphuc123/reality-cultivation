@@ -1,5 +1,142 @@
 # Nhật ký dự án
 
+## 2026-09-13 — K5.29: đóng và phát hành V3 làng nhỏ
+
+- Thêm runner tích hợp `verify_v3_village_30_days.dart`: seed `20260907` tạo 50 NPC trong 12 hộ, chạy 30 ngày cộng hai ngày lắng, kiểm tra vật chất, yêu cầu, thời gian, tri thức, quan hệ và cứu hộ.
+- Kết quả: 291 cuộc đổi hàng hoàn tất, 2.333 bằng chứng, 172 quan hệ xuyên hộ, 207 yêu cầu tài nguyên, 0 ngày cứu hộ vô căn cứ; không vật âm hay hành trình/yêu cầu/cam kết mắc kẹt.
+- Chạy liền, save/load ngày 15 và replay cho cùng semantic hash `8b27413973a433d7`.
+- Sửa tính xác định khi hai bằng chứng có cùng điểm bằng quy tắc phá hòa đầy đủ; cân lại dự trữ/sản lượng nghề và luân phiên người vận chuyển theo mệt để fixture làng bình thường tự đứng được.
+- Sửa hồi quy V1: caregiver kiểu cũ không bị yêu cầu kỹ năng của lịch gia đình mới; tiếng khóc giữ cường độ cơ sở đã phát hành.
+- Thêm hai widget test V3 ở 390×844 và 1280×800; cập nhật bốn giả định test cũ từng gắn cứng vào số hộ/người và 50 dòng nhật ký cuối.
+- Kiểm chứng đạt: `dart analyze`, 27/27 runner, `flutter analyze`, 20/20 widget test, 530/530 điều kiện catalog và Flutter web release build.
+- Hoàn tất hồ sơ [[K5_29_V3_LANG_NHO_TU_VAN_HANH_30_NGAY]]; V3 đóng, không phát sinh `dev.21`.
+
+## 2026-09-13 — Kiểm toán và khóa phạm vi đóng V3
+
+- Người dùng yêu cầu dừng xu hướng tự sinh lát cắt khiến dự án không có điểm kết thúc. Ghi U021 vào [[DECISIONS]].
+- Đối chiếu bảy cổng V3 với mã hiện tại: phần chức năng tối thiểu cho dân số/hộ, luồng hàng, tri thức cá nhân, quan hệ xuyên hộ, phản ứng thiếu hàng, save/load và GUI đã có tới `V3.0-dev.20`; chưa có bằng chứng tích hợp để tuyên bố đạt.
+- Hủy bước kế tiếp `V3.0-dev.21` về danh tiếng gián tiếp và chuyển nó vào backlog không chặn V3.
+- Khóa danh sách đóng V3 còn một runner 30 ngày, bất biến tích hợp, parity chạy liền–save/load–replay và hai bố cục GUI. Chỉ sửa lỗi các cổng này phát hiện; không thêm cơ chế mới.
+- Lượt này chỉ kiểm toán mã/hồ sơ và sửa kế hoạch. Không chạy kiểm chứng phát hành, không commit/push và không triển khai web.
+
+## 2026-09-13 — V3 hậu quả xã hội của việc từ chối tài nguyên cục bộ
+
+- Sửa một lối tắt toàn tri trong quyết định đổi hàng: người xin không còn duyệt trước mức sẵn lòng bí mật của mọi hộ rồi chọn thẳng người chắc chắn đồng ý. Họ xếp hạng người sẽ hỏi chỉ bằng quan hệ và tri thức của chính mình; người được chọn sau đó mới quyết định từ quan hệ chiều ngược và áp lực kho nhà họ.
+- Nếu người được chọn từ chối, quan hệ một chiều của người xin ghi đúng mã yêu cầu, người từ chối và thời điểm. Độ khẩn 0–100 quyết định lượng giảm lòng tin đổi hàng/thiện cảm và lượng tăng bất mãn.
+- `SocialRelationState` lưu số lần bị người kia từ chối giúp tài nguyên cùng mã chống áp dụng lặp. Toàn bộ đi qua save/load như các quan hệ khác.
+- Những chỉ số vừa đổi đã nằm trong công thức xếp hạng đối tác và người để hỏi tin, nên lần sau NPC có thể chuyển sang người khác bằng hệ quả mô phỏng thay vì luật viết riêng.
+- Hồ sơ yêu cầu lưu người xin, hộ nguồn và người đã từ chối trước khi chuyển sang thất bại/chờ hai ngày. GUI quan hệ hiện số lần bị từ chối; nhật ký diễn giải người, tài nguyên, độ khẩn và mức bất mãn mới.
+- `dart analyze` và `flutter analyze` đạt như kiểm tra biên dịch hẹp. Chưa chạy mô phỏng chẩn đoán 30 ngày, runner, widget test, catalog, build web hoặc kiểm chứng phát hành.
+- Bước code kế tiếp là để việc giúp hoặc từ chối được kể cho người khác như một bằng chứng có nguồn, tạo danh tiếng gián tiếp mà không làm NPC toàn tri.
+
+## 2026-09-13 — V3 hành trình xã hội chiếm lịch cá nhân cục bộ
+
+- Thêm `PersonalTimeCommitment` có mã, loại, hoạt động, giờ bắt đầu/kết thúc và đối tượng liên quan; trạng thái nằm trên đúng NPC và đi qua save/load.
+- Đi hỏi nguồn giữ thời gian người hỏi. Đi gặp nguồn được giới thiệu giữ đồng thời người hỏi và người dẫn. Mỗi chuyến đổi hàng giữ cả hai người vận chuyển cho tới sự kiện hàng đến hoặc bị hủy.
+- Việc nhận người cho một hành trình được kiểm tra nguyên tử: nếu một người đã có cam kết, đang ốm hoặc không còn làm được thì cả nhóm không khởi hành, tránh trạng thái nửa đoàn đã đi.
+- Hành trình cắt ngang khối nhịp sống đang chạy bằng cơ chế xung đột lịch hiện có. Khối bắt đầu trong lúc NPC vắng mặt phải lùi hoặc bị bỏ; sản lượng của khối đang chạy giảm theo đúng số giây mất.
+- Khi hành trình kết thúc, NPC nối lại nhịp sống, tích mệt và giờ vận động vào cơ thể theo thời gian thật đã đi. GUI hồ sơ ưu tiên hiện hoạt động hành trình; nhật ký có mốc bắt đầu và trả thời gian.
+- `dart analyze` và `flutter analyze` đạt như kiểm tra biên dịch hẹp. Chưa chạy mô phỏng chẩn đoán 30 ngày, runner, widget test, catalog, build web hoặc kiểm chứng phát hành.
+- Bước code kế tiếp là cho NPC ghi nhớ và phản ứng quan hệ khi một người quen từ chối giúp tài nguyên đang cần gấp.
+
+## 2026-09-13 — V3 vòng đời yêu cầu tài nguyên cục bộ
+
+- Thêm `CommunityResourceRequestState` với chín trạng thái từ phát hiện nhu cầu, tìm kiếm, hỏi nguồn, đi giới thiệu, thương lượng, hàng đang vận chuyển tới giải quyết, thất bại hoặc hủy.
+- Ảnh chụp cuối ngày chỉ mở yêu cầu mới khi cùng hộ và tài nguyên không có yêu cầu đang hoạt động, không có chuyến hàng đang đi và đã qua hạn thử lại của thất bại trước.
+- Mã yêu cầu được truyền qua câu hỏi, lời giới thiệu, lần thương lượng và lưu trong `CommunityExchangeState`; save/load giữ cả hồ sơ lẫn sự kiện đang chờ.
+- Mỗi lần thử tăng bộ đếm. Thất bại ghi nguyên nhân và chờ hai ngày trước khi được mở yêu cầu mới; nhu cầu tự hết thì hủy.
+- Chuyến đổi do nhu cầu chuyển yêu cầu sang `goodsInTransit` khi hàng rời kho, nhưng chỉ sự kiện hàng đến thành công mới chuyển sang `resolved`. Chuyến bị hủy chuyển yêu cầu sang thất bại và vẫn hoàn hàng theo cơ chế cũ.
+- GUI hồ sơ làng hiện số yêu cầu đang xử lý, đã giải quyết, thất bại và sáu yêu cầu gần nhất cùng nguồn, số lần thử, nguyên nhân.
+- `dart analyze` và `flutter analyze` đạt như kiểm tra biên dịch hẹp. Chưa chạy chẩn đoán 30 ngày, runner, widget test, catalog, build web hoặc kiểm chứng phát hành.
+- Bước code kế tiếp là cho các hành trình hỏi, giới thiệu và vận chuyển chiếm thời gian thật trong lịch cá nhân NPC.
+
+## 2026-09-13 — V3 giới thiệu nguồn hàng qua hộ thứ ba cục bộ
+
+- Mở việc hỏi nguồn sang mọi bằng chứng trao đổi người quen đang giữ, không chỉ nguồn thuộc chính hộ của họ.
+- Mỗi lời giới thiệu phải chỉ ra đúng hộ nguồn và người vận chuyển từng đại diện hộ đó. Người trung gian chỉ giới thiệu nếu giữa họ và người đại diện vẫn có quan hệ xã hội thật.
+- Sau khi nghe, người hỏi chưa được thương lượng ngay. Người trung gian dẫn họ đi từ nơi đang hỏi tới nơi của hộ nguồn; thời gian dựa trên khoảng cách và tốc độ người chậm hơn.
+- Khi tới nơi, người hỏi và người đại diện nguồn mới ghi lần gặp đầu tiên theo cả hai chiều. Từ đó hệ thống mới cho phép tính mức sẵn lòng của bên cho và tạo chuyến đổi hàng vật chất.
+- Nguồn phải còn phần dư hai ngày và người đại diện phải có quyền lấy đúng kho; nếu trạng thái đổi trong lúc đi, hành động thất bại thay vì tạo hàng.
+- Nhật ký GUI hiện lúc bắt đầu đi giới thiệu và lúc gặp người của hộ nguồn.
+- `dart analyze` và `flutter analyze` đạt như kiểm tra biên dịch hẹp. Chưa chạy chẩn đoán 30 ngày, runner, widget test, catalog, build web hoặc kiểm chứng phát hành.
+- Bước code kế tiếp là lưu vòng đời từng yêu cầu tài nguyên để chặn hỏi hoặc thương lượng lặp vô hạn.
+
+## 2026-09-13 — V3 hỏi người quen trước khi tìm nguồn hàng cục bộ
+
+- Khi người đại diện chưa biết người quen nào có đúng nguồn hàng, họ tìm trong mạng quan hệ của mình một người có bằng chứng rằng chính hộ người đó từng cung cấp tài nguyên cần thiết.
+- Việc hỏi không diễn ra tức thời: thời gian tới gặp được tính từ khoảng cách hai nơi ở và tốc độ người hỏi, có giới hạn như các chuyến đi cộng đồng hiện tại.
+- Người được hỏi chỉ trả lời bằng `BeliefState` thật đang có. Bằng chứng sang người hỏi theo cơ chế lời kể, giảm độ tin cậy và giữ người quan sát gốc, bằng chứng gốc cùng số chặng truyền.
+- Lần gặp được ghi vào cả hai chiều quan hệ; lòng tin lời kể chỉ tăng ở chiều người nhận câu trả lời. Hộ tính lại nhu cầu rồi mới thử thương lượng, nên hàng không xuất hiện từ chính câu hỏi.
+- Nhật ký GUI hiện lúc NPC đi hỏi và lúc người quen trả lời.
+- `dart analyze` và `flutter analyze` đạt như kiểm tra biên dịch hẹp. Chưa chạy chẩn đoán 30 ngày, runner, widget test, catalog, build web hoặc kiểm chứng phát hành.
+- Bước code kế tiếp là cho người quen giới thiệu một nguồn thuộc hộ thứ ba thay vì chỉ trả lời về chính hộ mình.
+
+## 2026-09-13 — V3 hộ tự tìm nguồn hàng qua tri thức và quan hệ cục bộ
+
+- Sau ảnh chụp cuối ngày, hộ có kho chịu áp lực lên lịch phản ứng cho loại tài nguyên gấp nhất; nhu cầu được tính lại khi hành động để tránh đổi hàng đã hết cần.
+- Người đại diện phải là người lớn còn làm được và có quyền lấy hàng đối ứng. Họ chỉ xét người ngoài hộ đã quen và chỉ biết hộ kia cung cấp tài nguyên nếu chính kho bằng chứng của họ chứa một cuộc đổi hàng phù hợp.
+- Người xin xếp hạng đối tác bằng mức quen, hai loại lòng tin, thiện cảm và bất mãn. Người cho quyết định theo quan hệ chiều ngược, độ khan hiếm của hàng phải cho và ích lợi của hàng được nhận; họ có thể từ chối giữ kho nhà mình.
+- Chỉ phần vượt dự phòng hai ngày của cả hai kho được trao đổi. Khi đồng ý, hàng rời hai kho, tồn tại trong chuyến đi, đến nơi mới nhập kho và tiếp tục tạo gặp gỡ, tri thức cùng thay đổi quan hệ.
+- Nhật ký GUI diễn giải lúc bắt đầu, thất bại hoặc hủy phản ứng vì nhu cầu đã tự hết.
+- `dart analyze` và `flutter analyze` đạt như kiểm tra biên dịch hẹp. Chưa chạy chẩn đoán 30 ngày, runner, widget test, catalog, build web hoặc kiểm chứng phát hành.
+- Bước code kế tiếp là cho NPC hỏi người quen khi bản thân chưa biết nguồn hàng phù hợp, thay vì dừng ở thất bại.
+
+## 2026-09-13 — V3 hồ sơ tự duy trì 30 ngày cục bộ
+
+- Thêm `CommunitySurvivalState` cùng ảnh chụp cuối ngày cho toàn làng và từng hộ.
+- Mỗi hộ ghi lượng thức ăn, nước, nhiên liệu, số người lớn còn làm được, số bệnh đang hoạt động, bữa hụt mới và các nhu cầu đã chạm ngưỡng áp lực.
+- Toàn làng ghi số chuyến đổi hàng đang đi và quá hạn. Ngày có hộ hết kho, không còn lao động, hụt bữa hoặc chuyến hàng quá hạn được đánh dấu là cần cơ chế tự cứu.
+- Lịch kiểm tra tự chạy mỗi ngày cho tới đủ 30 bản ghi; trạng thái và lịch còn lại đi qua save/load.
+- GUI hiện tiến độ chu kỳ, số ngày nguy cấp và chi tiết các hộ chịu áp lực gần nhất trên điện thoại/máy tính; nhật ký có sự kiện ngày thường và ngày hoàn tất chu kỳ.
+- `dart analyze` và `flutter analyze` đạt như kiểm tra biên dịch hẹp. Chưa chạy chẩn đoán đủ 30 ngày, runner, widget test, catalog, build web hoặc kiểm chứng phát hành.
+- Bước code kế tiếp là để NPC dùng nhu cầu, tri thức và quan hệ hiện có nhằm tự phản ứng với điểm nguy cấp đầu tiên.
+
+## 2026-09-13 — V3 quan hệ xã hội có hướng giữa các hộ cục bộ
+
+- Thêm `SocialRelationState` theo từng chiều người→người với mức quen, lòng tin đổi hàng, lòng tin lời kể, thiện cảm, bất mãn và số lần tương tác.
+- Quan hệ ngoài hộ chỉ xuất hiện sau cuộc gặp thật của hai người vận chuyển. Đổi hàng thành công hoặc thất bại thay đổi lòng tin và cảm xúc của cả hai chiều; nhận một tin mới chỉ thay đổi chiều người nghe đối với người kể.
+- Mỗi cuộc gặp, giao dịch và bằng chứng truyền tin có mã tác động riêng nên xử lý lại không cộng điểm nhiều lần. Toàn bộ trạng thái quan hệ đi qua save/load.
+- Danh bạ GUI điện thoại/máy tính hiện từng người quen cùng các chỉ số gặp gỡ, đổi hàng và nhận tin; nhật ký nhận diện sự kiện hình thành quan hệ và thay đổi lòng tin giao dịch.
+- `dart analyze` và `flutter analyze` đạt như kiểm tra biên dịch hẹp. Chưa chạy runner, widget test, catalog, build web hoặc kiểm chứng phát hành.
+- Bước code kế tiếp là cho làng tự vận hành đủ 30 ngày, quan sát các điểm cần cứu hộ vô căn cứ rồi sửa cơ chế.
+
+## 2026-09-13 — V3 tri thức riêng và truyền tin qua NPC cục bộ
+
+- Thêm `BeliefState`: mỗi bằng chứng giữ nội dung, chủ thể, thời điểm sự việc, lúc nhận, cách nhận, người kể trực tiếp, người quan sát gốc, mã bằng chứng gốc, độ tin cậy và số chặng truyền.
+- `PersonState` có kho tri thức riêng đi qua save/load. Nghe lại đúng bằng chứng gốc không tăng độ chắc; bản trực tiếp hoặc đường truyền ngắn hơn được ưu tiên.
+- Hai người vận chuyển trực tiếp ghi nhớ lúc hàng đổi rời kho và tới nơi. Khi gặp đối tác hoặc trở về hộ, họ kể một tin thật sự đang biết; mỗi lần kể giảm độ tin cậy và giữ nguyên nguồn gốc.
+- Thêm truy vấn `beliefsOf` và `personKnowsClaim` để lớp quyết định sau này đọc hiểu biết cá nhân thay vì `WorldFact` toàn tri.
+- Danh bạ GUI hiện số bằng chứng, nội dung, nguồn trực tiếp, độ tin cậy và số chặng truyền của từng NPC; nhật ký có loại quan sát và truyền tin riêng.
+- `dart analyze` và `flutter analyze` đạt. Smoke hai ngày với seed mặc định có 16 người biết tin, 34 người chưa biết và 32 bằng chứng lời kể; save/load giữ hash `68f99a6dba483733`. Chưa chạy kiểm chứng phát hành, runner/catalog, build web hoặc GitHub.
+- Bước code kế tiếp là quan hệ xuyên hộ phát sinh từ gặp gỡ, trao đổi và truyền tin.
+
+## 2026-09-13 — V3 dân số chi tiết và đổi hàng liên hộ cục bộ
+
+- Thêm bộ sinh dân làng xác định từ seed, fingerprint lịch sử và cohort cuối: tổng 20–50 NPC chi tiết kể cả tám NPC nền, chia thành nhiều hộ 3–4 người ở đồng, suối, chân đèo và chợ.
+- Mỗi NPC sinh ra với tuổi, nghề, kỹ năng, lịch làm việc, cơ thể, khả năng chăm sóc, xuất thân và quan hệ trong hộ; hồ sơ nghề/xuất thân đi qua save/load và hiện trong danh bạ GUI.
+- Mỗi hộ có phòng, ba kho vật chất, quyền sử dụng và nguồn sống chuyên môn. Sửa kế hoạch nhu cầu để việc phát sinh dùng phòng thuộc chính hộ thay vì sân H01 viết cứng.
+- Thêm hồ sơ đổi hàng liên hộ: hai lượng hàng được rút nguyên tử khỏi kho lúc khởi hành, giữ trong chuyến đang đi và nhập vào kho đối tác khi tới. Chuyến lỗi hoàn hàng; trạng thái traveling/completed/cancelled được lưu.
+- Chu kỳ chợ ghép các hộ có chuyên môn khác nhau, chọn người vận chuyển có quyền và đang khỏe, tính thời gian đi từ khoảng cách hai nơi ở và tốc độ người chậm hơn.
+- Nhật ký GUI phân loại và diễn giải sự kiện hàng rời kho, hoàn tất hoặc bị hủy.
+- Kiểm tra cú pháp hẹp `dart analyze` và `flutter analyze` đạt. Smoke hai ngày với seed mặc định có 50 người, 12 hộ, 8 cuộc đổi hàng hoàn tất và save/load giữ hash `0b016ce7978ec109`; chưa phải kiểm chứng phát hành.
+- Chưa thêm runner/catalog, chưa build web, chưa commit/push. Bước code kế tiếp là thông tin/tri thức truyền qua người và giới hạn hiểu biết NPC.
+
+## 2026-09-10 — Chốt phạm vi V2 và sửa hệ thống đánh số
+
+- Người dùng hỏi tiêu chí kết thúc V2 và xác nhận sửa roadmap sau khi phát hiện chuỗi V2.x đã đi ra ngoài mục đích K4.
+- Thêm [[LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC]]: mỗi phiên bản lớn có mục đích, cổng kết thúc, trạng thái và bước kế cụ thể. V2 “một hộ sống” đóng về chức năng tại V2.3.
+- Giữ V2.4–V2.21 như tên lịch sử đã phát hành; phân loại bản đồ/tiền sử là nền viết sớm cho V5/V10.
+- Đổi provenance mã cục bộ chưa phát hành V2.22–V2.30 thành `V3.0-dev.1`–`dev.9`; đổi V2.31 thành `V4.0-dev.1`. Không xóa chức năng.
+- Chặng chính chuyển sang V3.0: sinh 20–50 NPC chi tiết thuộc nhiều hộ từ seed/cohort, hướng tới cổng làng nhỏ tự duy trì 30 ngày.
+- U019 thay lịch phát hành cố định: chỉ kiểm chứng đầy đủ, hoàn thiện catalog/hồ sơ phát hành, commit/push và triển khai web khi người dùng yêu cầu.
+- Chưa chạy runner/widget/build và chưa commit/push; toàn bộ mã V3/V4 nền vẫn là cục bộ chưa được kiểm chứng phát hành.
+
+## 2026-09-10 — Đổi nhịp phát triển theo mốc năm phiên bản
+
+- Người dùng yêu cầu ưu tiên viết mã trước và chỉ làm kiểm chứng cùng cập nhật GitHub tại V2.25, V2.30, ...
+- U018 thay thế nhịp commit/push mỗi lát cắt của U016. Cụm chuyển tiếp hiện tại là V2.22–V2.25; kiểm chứng phát hành, catalog, commit/push `master` và triển khai web thực hiện tại V2.25.
+- Kiểm tra hẹp vẫn được phép khi cần để tiếp tục lập trình nhưng không được ghi là phiên bản đã kiểm chứng. Cơ chế nhánh `handoff/...` vẫn dùng nếu cần chuyển trợ lý giữa cụm.
+
 ## 2026-09-10 — K5.28: V2.21 hộ nhiều thành viên và lịch chăm trẻ
 
 - Mở rộng bộ sinh H02/H03 bằng một người lớn hỗ trợ cho mỗi hộ, có tuổi, kỹ năng, vai trò với P00, quan hệ nội bộ và ca sinh hoạt riêng; cả bốn người tồn tại trước khi P00 sinh.

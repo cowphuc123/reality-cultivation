@@ -1,14 +1,18 @@
 import 'adult_body.dart';
 import 'agenda.dart';
 import 'care.dart';
+import 'community_survival.dart';
 import 'domestic.dart';
+import 'family.dart';
 import 'geometry.dart';
 import 'household.dart';
 import 'historical_legacy.dart';
 import 'infancy.dart';
+import 'knowledge.dart';
 import 'region.dart';
 import 'route.dart';
 import 'routine.dart';
+import 'social_relation.dart';
 import 'simulation.dart';
 import 'world_generation.dart';
 import 'world_entry.dart';
@@ -44,6 +48,7 @@ class WorldView {
     required this.pendingEventCount,
     required this.factCount,
     required this.semanticHash,
+    required this.communitySurvival,
   });
 
   final SimTime time;
@@ -52,6 +57,7 @@ class WorldView {
   final int pendingEventCount;
   final int factCount;
   final String semanticHash;
+  final CommunitySurvivalState? communitySurvival;
 }
 
 /// Giai đoạn người chơi bước vào thế giới và các nơi sinh được kiểm tra thật.
@@ -160,6 +166,7 @@ class InfantView {
     required this.illnessEnergyCostKj,
     required this.illnessWaterLossMl,
     required this.illnessSleepDisruptionMinutes,
+    required this.careExpectations,
   });
 
   final String caregiverId;
@@ -193,6 +200,7 @@ class InfantView {
   final int? stomachWaterMl;
   final int? bodyTemperatureMilliC;
   final int? bladderMl;
+  final Map<String, InfantCareExpectationState> careExpectations;
   final int? digestiveWasteGrams;
   final int? suckFunction;
   final int? swallowFunction;
@@ -225,6 +233,12 @@ class HouseholdView {
     required this.members,
     required this.items,
     required this.needs,
+    required this.familyCarePlan,
+    required this.familyCareSupportRequests,
+    required this.familyCareBurdenByPersonId,
+    required this.familyCareConflicts,
+    required this.familyCarePromises,
+    required this.familyCareReliabilityByPersonId,
   });
 
   final String id;
@@ -244,6 +258,12 @@ class HouseholdView {
   final List<SupplyJourneyView> supplyJourneys;
   final List<HouseholdMemberView> members;
   final List<HouseholdItemView> items;
+  final FamilyCarePlanState? familyCarePlan;
+  final List<FamilyCareSupportRequestState> familyCareSupportRequests;
+  final Map<String, FamilyCareBurdenState> familyCareBurdenByPersonId;
+  final List<FamilyCareConflictState> familyCareConflicts;
+  final List<FamilyCarePromiseState> familyCarePromises;
+  final Map<String, FamilyCareReliabilityState> familyCareReliabilityByPersonId;
 
   /// Nhu cầu vật chất suy từ tồn kho thật, đã xếp theo mức gấp.
   final List<HouseholdNeed> needs;
@@ -364,7 +384,13 @@ class PersonProfileView {
     required this.skills,
     required this.agenda,
     required this.body,
+    required this.occupationCode,
+    required this.occupationName,
+    required this.originSummary,
+    required this.beliefs,
+    required this.socialRelations,
     required this.familyRelationships,
+    required this.familyBonds,
   });
 
   final String id;
@@ -391,10 +417,30 @@ class PersonProfileView {
   /// Cơ thể người lớn, nếu đã được vật chất hóa.
   final AdultBodyState? body;
 
+  final String? occupationCode;
+  final String? occupationName;
+  final String? originSummary;
+  final Map<String, BeliefState> beliefs;
+
+  /// Tên người khác -> quan hệ một chiều của người trong hồ sơ.
+  final Map<String, SocialRelationState> socialRelations;
+
   /// Tên người thân -> vai trò của người đó đối với hồ sơ này.
   final Map<String, String> familyRelationships;
 
+  /// Tên người thân -> gắn bó, nghĩa vụ và ký ức của chiều quan hệ này.
+  final Map<String, FamilyBondState> familyBonds;
+
   bool get inHousehold => householdId != null;
+
+  List<BeliefState> get recentBeliefs {
+    final List<BeliefState> result = beliefs.values.toList()
+      ..sort((BeliefState a, BeliefState b) {
+        final int byTime = b.learnedAtSeconds.compareTo(a.learnedAtSeconds);
+        return byTime != 0 ? byTime : a.id.compareTo(b.id);
+      });
+    return result.take(5).toList(growable: false);
+  }
 }
 
 /// Hồ sơ một vật phẩm bất kỳ, kể cả vật không nằm trong sổ kho của hộ.
@@ -627,6 +673,7 @@ class SimulationHost implements CommandPort, QueryPort {
       pendingEventCount: state.pendingEvents.length,
       factCount: state.facts.length,
       semanticHash: state.semanticHash(),
+      communitySurvival: state.communitySurvival,
     );
   }
 
@@ -734,6 +781,10 @@ class SimulationHost implements CommandPort, QueryPort {
               illnessWaterLossMl: infancy.body?.illnessWaterLossMl,
               illnessSleepDisruptionMinutes:
                   infancy.body?.illnessSleepDisruptionMinutes,
+              careExpectations:
+                  Map<String, InfantCareExpectationState>.unmodifiable(
+                    infancy.careExpectations,
+                  ),
             ),
       roomName: state.roomId == null
           ? null
@@ -798,6 +849,7 @@ class SimulationHost implements CommandPort, QueryPort {
                   : state.rooms[person.roomId]?.name ?? person.roomId,
               positionMm: person.positionMm,
               activity:
+                  person.timeCommitment?.activity ??
                   person.routine?.currentActivity ??
                   person.caregiverAgent?.currentActivity,
               available: person.caregiverAgent?.available,
@@ -811,6 +863,18 @@ class SimulationHost implements CommandPort, QueryPort {
               skills: person.skills,
               agenda: person.agenda,
               body: person.body,
+              occupationCode: person.occupationCode,
+              occupationName: person.occupationName,
+              originSummary: person.originSummary,
+              beliefs: Map<String, BeliefState>.unmodifiable(person.beliefs),
+              socialRelations: Map<String, SocialRelationState>.unmodifiable(
+                <String, SocialRelationState>{
+                  for (final MapEntry<String, SocialRelationState> relation
+                      in person.socialRelations.entries)
+                    state.people[relation.key]?.name ?? relation.key:
+                        relation.value,
+                },
+              ),
               familyRelationships:
                   Map<String, String>.unmodifiable(<String, String>{
                     for (final MapEntry<String, String> relationship
@@ -818,6 +882,13 @@ class SimulationHost implements CommandPort, QueryPort {
                       state.people[relationship.key]?.name ?? relationship.key:
                           relationship.value,
                   }),
+              familyBonds: Map<String, FamilyBondState>.unmodifiable(
+                <String, FamilyBondState>{
+                  for (final MapEntry<String, FamilyBondState> bond
+                      in person.familyBonds.entries)
+                    state.people[bond.key]?.name ?? bond.key: bond.value,
+                },
+              ),
             );
           }(),
       ]),
@@ -971,6 +1042,25 @@ class SimulationHost implements CommandPort, QueryPort {
       supplyDeliveries: household.supplyDeliveries,
       productionRuns: household.productionRuns,
       caregiverSubstitutions: household.caregiverSubstitutions,
+      familyCarePlan: household.familyCarePlan,
+      familyCareSupportRequests:
+          List<FamilyCareSupportRequestState>.unmodifiable(
+            household.familyCareSupportRequests,
+          ),
+      familyCareBurdenByPersonId:
+          Map<String, FamilyCareBurdenState>.unmodifiable(
+            household.familyCareBurdenByPersonId,
+          ),
+      familyCareConflicts: List<FamilyCareConflictState>.unmodifiable(
+        household.familyCareConflicts,
+      ),
+      familyCarePromises: List<FamilyCarePromiseState>.unmodifiable(
+        household.familyCarePromises,
+      ),
+      familyCareReliabilityByPersonId:
+          Map<String, FamilyCareReliabilityState>.unmodifiable(
+            household.familyCareReliabilityByPersonId,
+          ),
       reassignedBlocks: simulation.state.facts
           .where(
             (WorldFact fact) =>
@@ -1019,6 +1109,7 @@ class SimulationHost implements CommandPort, QueryPort {
                   ? null
                   : simulation.state.rooms[person.roomId]?.name,
               activity:
+                  person.timeCommitment?.activity ??
                   person.routine?.currentActivity ??
                   person.caregiverAgent?.currentActivity,
               available: person.caregiverAgent?.available,

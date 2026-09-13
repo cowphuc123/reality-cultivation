@@ -1,6 +1,6 @@
 # Trạng thái hiện tại
 
-Cập nhật: 2026-09-10.
+Cập nhật: 2026-09-13.
 
 > Trợ lý mới tiếp nhận dự án: đọc [[CHUYEN_GIAO]] trước tiên.
 
@@ -47,13 +47,16 @@ Lịch sử đầy đủ từng lượt việc nằm trong [[CHANGELOG]]. Tóm t
 | V2.19 | Ba hộ tạo ba hoàn cảnh sinh với nguồn lực, người chăm và rủi ro khác nhau | [[K5_26_V2_19_NHIEU_HO_VA_HOAN_CANH_SINH]] · `491d7f5e50d4d551` |
 | V2.20 | Hộ ở đồng/chợ sinh từ seed và lịch sử; P00 có cha mẹ hoặc người giám hộ hai chiều | [[K5_27_V2_20_SINH_HO_VA_QUAN_HE_GIA_DINH]] · `4dc1efdae4d7e0b3` |
 | V2.21 | Hộ sinh có hai người lớn, quan hệ nội bộ; lịch và quyền tài nguyên chọn người chăm thật | [[K5_28_V2_21_HO_NHIEU_THANH_VIEN_VA_LICH_CHAM_TRE]] · `a3e5fd6ed1915a27` |
+| V3 | Làng nhỏ 50 NPC/12 hộ tự vận hành 30 ngày; trao đổi, tri thức và quan hệ xuyên hộ | [[K5_29_V3_LANG_NHO_TU_VAN_HANH_30_NGAY]] · `8b27413973a433d7` |
 
-Hiện có **26/26 runner**, **18/18 widget test** và **509 điều kiện catalog chạy được**; đây là bộ kiểm chứng triển khai riêng, không cộng vào 1.860 điều kiện thiết kế chưa chạy.
+Hiện có **27/27 runner**, **20/20 widget test** và **530 điều kiện catalog chạy được**; đây là bộ kiểm chứng triển khai riêng, không cộng vào 1.860 điều kiện thiết kế chưa chạy.
 
 Web đang chạy: **https://cowphuc123.github.io/reality-cultivation/** — tự động build lại mỗi lần đẩy `client/` lên GitHub (`.github/workflows/deploy-web.yml`). Bản cũ trên Sites (`chatgpt.site`) vẫn còn, chưa gỡ.
 
-**Cách làm từ 2026-09-09:** sau khi hoàn tất trọn một lát cắt, chạy kiểm tra, cập nhật hồ sơ Obsidian, rồi tự commit và push. Không đẩy trạng thái đang dở hoặc đang lỗi. GitHub Actions tự build web khi `client/` thay đổi.
+**Sửa hệ thống phiên bản ngày 2026-09-10:** V2 có mục đích gốc là “một hộ sống” và được đóng về chức năng tại V2.3. Các số V2.4–V2.21 được giữ như lịch sử triển khai nhưng không còn là lý do kéo dài V2. Mã cục bộ từng gọi V2.22–V2.30 nay là nền `V3.0-dev.1`–`dev.9`; phần từng gọi V2.31 là nền `V4.0-dev.1`. Xem [[LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC]].
+**Cách làm hiện tại:** ưu tiên viết mã; chỉ chạy kiểm chứng phát hành, hoàn thiện catalog/hồ sơ phát hành, commit/push `master` và triển khai web khi người dùng yêu cầu. Các lần `dart analyze`/`flutter analyze` hẹp chỉ xác nhận mã tiếp tục biên dịch, chưa chứng nhận hành vi.
 **Chuyển giao Codex ↔ Claude từ 2026-09-10:** đọc [[ACTIVE_WORK]] để nhận lượt. Nếu sắp hết giới hạn khi còn dở, commit `WIP:` và push lên nhánh `handoff/...`; không đưa WIP vào `master`. Xem [[CHUYEN_GIAO]].
+**V3 đã phát hành ngày 2026-09-13:** seed `20260907` sinh 50 NPC chi tiết thuộc 12 hộ. Trong 30 ngày, làng hoàn tất 291 cuộc đổi hàng, tạo 2.333 bằng chứng cá nhân và 172 quan hệ xuyên hộ; 207 yêu cầu tài nguyên có vòng đời, 0 ngày cần cứu hộ vô căn cứ. Sau hai ngày lắng không còn vật âm, chuyến hàng, yêu cầu hoặc cam kết mắc kẹt. Chạy liền, save/load ngày 15 và replay cùng kết thúc ở hash `8b27413973a433d7`. Xem [[K5_29_V3_LANG_NHO_TU_VAN_HANH_30_NGAY]].
 Mở tại máy: `MO_GAME.bat` ở gốc dự án; hướng dẫn tại [[HUONG_DAN_MO_BAN_TEST]].
 Làm tiếp từ điện thoại: ưu tiên Remote vào chính PC; xem [[HUONG_DAN_LAM_TIEP_TREN_DIEN_THOAI]].
 
@@ -61,17 +64,17 @@ Làm tiếp từ điện thoại: ưu tiên Remote vào chính PC; xem [[HUONG_D
 
 - Chưa chọn công nghệ cuối cùng. S2 Dart/Flutter là working stack PROPOSED (ADR chưa ACCEPTED); S1/S3, full workload, APK/EXE chưa chạy.
 - Chưa chốt phạm vi bản đầu, quy tắc tạm dừng, mô phỏng khi đóng game hoặc hệ cảnh giới.
-- Chưa có: giải phẫu đa bộ phận, thương tích, già đi, chết; diễn biến cơ thể trong ngày (cơ thể người lớn chạy theo ngày); nước bẩn và bệnh do nước; khẩu phần riêng từng người; quan hệ xã hội có mức thân thiết/nghĩa vụ/xung đột; hậu quả xã hội của việc từ chối; mục tiêu cá nhân dài hạn; lây bệnh và thuốc; chuỗi game sau tháng đầu.
+- Chưa có: giải phẫu đa bộ phận, thương tích, già đi, chết; diễn biến cơ thể trong ngày (cơ thể người lớn chạy theo ngày); nước bẩn và bệnh do nước; khẩu phần riêng từng người; danh tiếng xã hội gián tiếp từ lời kể về giúp đỡ/từ chối; mục tiêu cá nhân dài hạn; lây bệnh và thuốc; chuỗi game sau tháng đầu.
 - Nghỉ bệnh vẫn là **tất cả hoặc không có gì**: chưa có làm nhẹ hay nửa buổi. Ca nay có thể chuyển nguyên khối cho một người khác, nhưng chưa chia ca, đổi công hay tạo nghĩa vụ bù; xem [[K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH]].
-- Seed đã sinh được kích thước một vùng cùng tọa độ/bán kính năm địa điểm; người/phòng/vật và tuyến client bám kết quả đó. Tên, loại và số lượng địa điểm vẫn là template An Khê: chưa có ô đất, độ cao, khí hậu, tài nguyên, biên giới, sinh dân số hay lịch sử tiền game. Đồ thị đường đi chưa sinh từ địa hình.
+- Seed đã sinh được kích thước một vùng cùng tọa độ/bán kính năm địa điểm; người/phòng/vật và tuyến client bám kết quả đó. Bản V3 đã sinh dân số chi tiết từ cohort. Tên, loại và số lượng địa điểm vẫn là template An Khê: chưa có ô đất, độ cao, khí hậu, tài nguyên, biên giới hay đồ thị đường sinh từ địa hình.
 - Đã tách thế giới khỏi P00 và có ba hoàn cảnh sinh thật tại H01/H02/H03. H02/H03 nay sinh xác định từ seed + chỉ số lịch sử; mỗi hộ có hai người lớn, quan hệ nội bộ, ca bận và quyền dùng sữa ảnh hưởng trực tiếp tới người chăm trẻ. H01 vẫn viết tay và chỉ có một người lớn; chưa có phả hệ nhiều thế hệ, ký ức chung, mức thân thiết hoặc đời sống họ hàng.
-- Tiền sử đã chạy 300–30.000 năm theo seed qua ba epoch và cohort vùng; đất, giao thương, áp lực tài nguyên và lũ nay đổi lượng bốn kho cùng sản lượng tiếp tế thật. Sáu loại anchor, số hộ và loại hàng vẫn là template An Khê; 183 dân ước tính ở seed mặc định mới là cohort, chỉ sáu NPC trước sinh có hồ sơ `Person` chi tiết. Lịch sử chưa mô phỏng từng lần sinh/xóa hộ, địa điểm, nghề, quyền hay quan hệ qua các epoch; chưa có tạm dừng/tiếp tục giữa worldgen.
+- Tiền sử đã chạy 300–30.000 năm theo seed qua ba epoch và cohort vùng; đất, giao thương, áp lực tài nguyên và lũ nay đổi lượng bốn kho cùng sản lượng tiếp tế thật. Sáu loại anchor, số hộ và loại hàng vẫn là template An Khê. Bản V3 đã vật chất hóa 20–50 người từ cohort nhưng lịch sử vẫn chưa mô phỏng từng lần sinh/xóa hộ, địa điểm, nghề, quyền hay quan hệ qua các epoch; chưa có tạm dừng/tiếp tục giữa worldgen.
 - Thân nhiệt người lớn **cố ý chưa làm**: chưa có mùa, thời tiết hay nhiệt độ môi trường để nó phản ứng lại; xem [[K5_15_V2_8_NUOC_VA_CON_KHAT]].
 - Kho git đã có commit đầu và đẩy lên `github.com/cowphuc123/reality-cultivation` (công khai); chưa thiết lập sao lưu tự động ngoài GitHub.
 
-## Bước tiếp theo đề xuất
+## Bước tiếp theo
 
-Ưu tiên V2.22 để quan hệ gia đình có nghĩa vụ và ký ức tương tác, khiến việc liên tục gánh ca chăm trẻ đổi mệt mỏi, tình cảm và quyết định nhận việc. Nhánh gần khác là làm việc nhẹ/nửa buổi khi hồi bệnh. Thân nhiệt nên chờ có khí hậu/mùa.
+**V3 đã kết thúc.** Không thêm `V3.0-dev.21`; danh tiếng gián tiếp và các mở rộng xã hội vẫn ở backlog. Chặng kế tiếp theo roadmap là V4 tuổi thơ. Chỉ bắt đầu V4 khi người dùng yêu cầu, trước hết đối chiếu phần nền `V4.0-dev.1` với các cổng hữu hạn trong [[LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC]], rồi chọn đúng phần còn thiếu thay vì tự sinh lát cắt vô tận.
 
 Shared fixture V1 chưa chạy parity PWA. TN01–TN08 ([[LUA_CHON_TRAI_NGHIEM]]) và ADR công nghệ ACCEPTED vẫn mở.
 

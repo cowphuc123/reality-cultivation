@@ -141,6 +141,22 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           world: generated,
           history: history,
           includeFamilyMembers: true,
+          includeFamilyMemory: true,
+          includeFamilyCareNegotiation: true,
+          includeFamilyCareSupport: true,
+          includeFamilyCareResilience: true,
+          includeFamilyCareBurden: true,
+          includeFamilyCareConflict: true,
+          includeFamilyCarePromise: true,
+          includeFamilyCareReliability: true,
+          includeFamilyCareWitnessMemory: true,
+          includeInfantAttachmentLearning: true,
+        );
+    final GeneratedSettlementPopulation settlementPopulation =
+        SettlementPopulationGenerator.generate(
+          world: generated,
+          history: history,
+          existingDetailedPersonCount: 8,
         );
     final WorldSite home = generated.site('SITE-HOME');
     final WorldSite river = generated.site('SITE-RIVER');
@@ -149,331 +165,332 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     final WorldSite market = generated.site('SITE-MARKET');
     final Simulation simulation = Simulation.fromSeed(seed)
       ..materializeWorld(generated)
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'room_created',
-      payload: <String, Object?>{
-        'room_id': 'ROOM-SLEEP',
-        'name': 'Gian ngủ',
-        'household_id': 'H01',
-        'anchor_position_mm': home.center.xMm,
-        'anchor_position_y_mm': home.center.yMm,
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'room_created',
-      payload: <String, Object?>{
-        'room_id': 'ROOM-KITCHEN',
-        'name': 'Gian bếp',
-        'household_id': 'H01',
-        'anchor_position_mm': home.center.xMm + 5000,
-        'anchor_position_y_mm': home.center.yMm,
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'room_created',
-      payload: <String, Object?>{
-        'room_id': 'ROOM-YARD',
-        'name': 'Sân và kho củi',
-        'household_id': 'H01',
-        'anchor_position_mm': home.center.xMm + 12000,
-        'anchor_position_y_mm': home.center.yMm,
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'route_created',
-      payload: <String, Object?>{
-        'route': <String, Object?>{
-          'id': 'RT-ANKHE',
-          'name': 'Tuyến chợ An Khê',
-          'origin_id': 'WP-CHO',
-          'destination_id': 'WP-SAN',
-          'waypoints': <Map<String, Object?>>[
-            <String, Object?>{
-              'id': 'WP-CHO',
-              'name': 'Chợ An Khê',
-              'position_mm': market.center.xMm,
-              'position_y_mm': market.center.yMm,
-            },
-            <String, Object?>{
-              'id': 'WP-DEO',
-              'name': 'Chân đèo',
-              'position_mm': pass.center.xMm,
-              'position_y_mm': pass.center.yMm,
-            },
-            <String, Object?>{
-              'id': 'WP-SUOI',
-              'name': 'Khúc lội suối',
-              'position_mm': river.center.xMm,
-              'position_y_mm': river.center.yMm,
-            },
-            <String, Object?>{
-              'id': 'WP-DONG',
-              'name': 'Đồng ngoài',
-              'position_mm': field.center.xMm,
-              'position_y_mm': field.center.yMm,
-            },
-            <String, Object?>{
-              'id': 'WP-SAN',
-              'name': 'Sân hộ',
-              'position_mm': home.center.xMm + 12000,
-              'position_y_mm': home.center.yMm,
-            },
-          ],
-          'legs': <Map<String, Object?>>[
-            <String, Object?>{
-              'from_id': 'WP-CHO',
-              'to_id': 'WP-DEO',
-              'terrain': 'duong_bang',
-              'terrain_speed_per_mille': 1000,
-            },
-            <String, Object?>{
-              'from_id': 'WP-DEO',
-              'to_id': 'WP-SUOI',
-              'terrain': 'duong_nui',
-              'terrain_speed_per_mille': 400,
-            },
-            <String, Object?>{
-              'from_id': 'WP-SUOI',
-              'to_id': 'WP-SAN',
-              'terrain': 'loi_suoi',
-              'terrain_speed_per_mille': 600,
-            },
-            // Ngã rẽ: từ chân đèo có thể đi vòng qua đồng ngoài, dài hơn
-            // nhưng bằng phẳng nên thường nhanh hơn.
-            <String, Object?>{
-              'from_id': 'WP-DEO',
-              'to_id': 'WP-DONG',
-              'terrain': 'duong_bang',
-              'terrain_speed_per_mille': 1000,
-            },
-            <String, Object?>{
-              'from_id': 'WP-DONG',
-              'to_id': 'WP-SAN',
-              'terrain': 'duong_bang',
-              'terrain_speed_per_mille': 1000,
-            },
-          ],
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'room_created',
+        payload: <String, Object?>{
+          'room_id': 'ROOM-SLEEP',
+          'name': 'Gian ngủ',
+          'household_id': 'H01',
+          'anchor_position_mm': home.center.xMm,
+          'anchor_position_y_mm': home.center.yMm,
         },
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'person_created',
-      payload: <String, Object?>{
-        'person_id': 'N01',
-        'name': 'Người chăm sóc',
-        'birth_seconds': -25 * 365 * gameSecondsPerDay,
-        'position_mm': home.center.xMm + 5000,
-        'position_y_mm': home.center.yMm,
-        'room_id': 'ROOM-KITCHEN',
-        'household_id': 'H01',
-        'caregiver_agent': true,
-        'hearing_threshold': 300,
-        'movement_speed_mm_per_second': 1000,
-        'current_activity': 'chuẩn bị bữa ăn',
-        'care_skill': 800,
-        'routine': _routineN01,
-        'skills': <String, int>{'fetch_water': 700, 'gather_food': 300},
-        'agenda': <String, Object?>{'fatigue': 0},
-        'adult_body': <String, Object?>{'mass_g': 52000},
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'person_created',
-      payload: <String, Object?>{
-        'person_id': 'N02',
-        'name': 'Người nấu ăn',
-        'birth_seconds': -31 * 365 * gameSecondsPerDay,
-        'position_mm': home.center.xMm + 5000,
-        'position_y_mm': home.center.yMm,
-        'room_id': 'ROOM-KITCHEN',
-        'household_id': 'H01',
-        'caregiver_agent': true,
-        'care_skill': 520,
-        'current_activity': 'chuẩn bị bữa ăn',
-        'routine': _routineN02,
-        'skills': <String, int>{
-          'cook': 900,
-          'gather_fuel': 150,
-          'fetch_water': 400,
-          'gather_food': 400,
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'room_created',
+        payload: <String, Object?>{
+          'room_id': 'ROOM-KITCHEN',
+          'name': 'Gian bếp',
+          'household_id': 'H01',
+          'anchor_position_mm': home.center.xMm + 5000,
+          'anchor_position_y_mm': home.center.yMm,
         },
-        'agenda': <String, Object?>{'fatigue': 0},
-        'adult_body': <String, Object?>{'mass_g': 49000},
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'person_created',
-      payload: <String, Object?>{
-        'person_id': 'N03',
-        'name': 'Người làm công',
-        'birth_seconds': -28 * 365 * gameSecondsPerDay,
-        'position_mm': home.center.xMm + 12000,
-        'position_y_mm': home.center.yMm,
-        'room_id': 'ROOM-YARD',
-        'household_id': 'H01',
-        'routine': _routineN03,
-        'skills': <String, int>{
-          'gather_fuel': 850,
-          'gather_food': 700,
-          'fetch_water': 600,
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'room_created',
+        payload: <String, Object?>{
+          'room_id': 'ROOM-YARD',
+          'name': 'Sân và kho củi',
+          'household_id': 'H01',
+          'anchor_position_mm': home.center.xMm + 12000,
+          'anchor_position_y_mm': home.center.yMm,
         },
-        'agenda': <String, Object?>{'fatigue': 850},
-        'adult_body': <String, Object?>{
-          'mass_g': 55000,
-          'energy_reserve_kj': 30000,
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'route_created',
+        payload: <String, Object?>{
+          'route': <String, Object?>{
+            'id': 'RT-ANKHE',
+            'name': 'Tuyến chợ An Khê',
+            'origin_id': 'WP-CHO',
+            'destination_id': 'WP-SAN',
+            'waypoints': <Map<String, Object?>>[
+              <String, Object?>{
+                'id': 'WP-CHO',
+                'name': 'Chợ An Khê',
+                'position_mm': market.center.xMm,
+                'position_y_mm': market.center.yMm,
+              },
+              <String, Object?>{
+                'id': 'WP-DEO',
+                'name': 'Chân đèo',
+                'position_mm': pass.center.xMm,
+                'position_y_mm': pass.center.yMm,
+              },
+              <String, Object?>{
+                'id': 'WP-SUOI',
+                'name': 'Khúc lội suối',
+                'position_mm': river.center.xMm,
+                'position_y_mm': river.center.yMm,
+              },
+              <String, Object?>{
+                'id': 'WP-DONG',
+                'name': 'Đồng ngoài',
+                'position_mm': field.center.xMm,
+                'position_y_mm': field.center.yMm,
+              },
+              <String, Object?>{
+                'id': 'WP-SAN',
+                'name': 'Sân hộ',
+                'position_mm': home.center.xMm + 12000,
+                'position_y_mm': home.center.yMm,
+              },
+            ],
+            'legs': <Map<String, Object?>>[
+              <String, Object?>{
+                'from_id': 'WP-CHO',
+                'to_id': 'WP-DEO',
+                'terrain': 'duong_bang',
+                'terrain_speed_per_mille': 1000,
+              },
+              <String, Object?>{
+                'from_id': 'WP-DEO',
+                'to_id': 'WP-SUOI',
+                'terrain': 'duong_nui',
+                'terrain_speed_per_mille': 400,
+              },
+              <String, Object?>{
+                'from_id': 'WP-SUOI',
+                'to_id': 'WP-SAN',
+                'terrain': 'loi_suoi',
+                'terrain_speed_per_mille': 600,
+              },
+              // Ngã rẽ: từ chân đèo có thể đi vòng qua đồng ngoài, dài hơn
+              // nhưng bằng phẳng nên thường nhanh hơn.
+              <String, Object?>{
+                'from_id': 'WP-DEO',
+                'to_id': 'WP-DONG',
+                'terrain': 'duong_bang',
+                'terrain_speed_per_mille': 1000,
+              },
+              <String, Object?>{
+                'from_id': 'WP-DONG',
+                'to_id': 'WP-SAN',
+                'terrain': 'duong_bang',
+                'terrain_speed_per_mille': 1000,
+              },
+            ],
+          },
         },
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'person_created',
-      payload: <String, Object?>{
-        'person_id': 'N04',
-        'name': 'Người vận chuyển',
-        'birth_seconds': -34 * 365 * gameSecondsPerDay,
-        'position_mm': market.center.xMm,
-        'position_y_mm': market.center.yMm,
-        'adult_body': <String, Object?>{'mass_g': 54000},
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'item_created',
-      payload: <String, Object?>{
-        'item_id': 'I-FEED-01',
-        'kind': 'infant_feed',
-        'position_mm': home.center.xMm,
-        'position_y_mm': home.center.yMm,
-        'room_id': 'ROOM-SLEEP',
-        'quantity': 10000,
-        'energy_kj_per_100ml': 300,
-        'water_ml_per_100ml': 92,
-        'unit': 'ml',
-        'owner_household_id': 'H01',
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'item_created',
-      payload: <String, Object?>{
-        'item_id': 'I-CLOTH-01',
-        'kind': 'swaddling_cloth',
-        'position_mm': home.center.xMm,
-        'position_y_mm': home.center.yMm,
-        'room_id': 'ROOM-SLEEP',
-        'quantity': 1,
-        'condition': 1000,
-        'owner_household_id': 'H01',
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'item_created',
-      payload: <String, Object?>{
-        'item_id': 'I-FOOD-01',
-        'kind': 'staple_food',
-        'position_mm': home.center.xMm,
-        'position_y_mm': home.center.yMm,
-        'room_id': 'ROOM-SLEEP',
-        'quantity': 15000,
-        'unit': 'g',
-        'owner_household_id': 'H01',
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'item_created',
-      payload: <String, Object?>{
-        'item_id': 'I-WATER-01',
-        'kind': 'clean_water',
-        'position_mm': home.center.xMm,
-        'position_y_mm': home.center.yMm,
-        'room_id': 'ROOM-SLEEP',
-        'quantity': 48000,
-        'unit': 'ml',
-        'owner_household_id': 'H01',
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'item_created',
-      payload: <String, Object?>{
-        'item_id': 'I-FUEL-01',
-        'kind': 'firewood',
-        'position_mm': home.center.xMm,
-        'position_y_mm': home.center.yMm,
-        'room_id': 'ROOM-SLEEP',
-        'quantity': 4500,
-        'unit': 'g',
-        'owner_household_id': 'H01',
-      },
-    )
-    ..schedule(
-      due: const SimTime(0),
-      phase: EventPhase.completion,
-      kind: 'household_created',
-      payload: const <String, Object?>{
-        'household_id': 'H01',
-        'name': 'Hộ ven suối',
-        'member_ids': <String>['N01', 'N02', 'N03'],
-        'resource_item_ids': <String, String>{
-          'food': 'I-FOOD-01',
-          'water': 'I-WATER-01',
-          'fuel': 'I-FUEL-01',
-          'infant_feed': 'I-FEED-01',
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'person_created',
+        payload: <String, Object?>{
+          'person_id': 'N01',
+          'name': 'Người chăm sóc',
+          'birth_seconds': -25 * 365 * gameSecondsPerDay,
+          'position_mm': home.center.xMm + 5000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-KITCHEN',
+          'household_id': 'H01',
+          'caregiver_agent': true,
+          'hearing_threshold': 300,
+          'movement_speed_mm_per_second': 1000,
+          'current_activity': 'chuẩn bị bữa ăn',
+          'care_skill': 800,
+          'routine': _routineN01,
+          'skills': <String, int>{'fetch_water': 700, 'gather_food': 300},
+          'agenda': <String, Object?>{'fatigue': 0},
+          'adult_body': <String, Object?>{'mass_g': 52000},
         },
-        'authorized_users_by_item_id': <String, List<String>>{
-          'I-FOOD-01': <String>['N02', 'N03'],
-          // N03 chưa được ghi quyền lấy nước, nên sẽ khát dần rồi đổ bệnh.
-          'I-WATER-01': <String>['N01', 'N02'],
-          'I-FUEL-01': <String>['N02', 'N03'],
-          'I-FEED-01': <String>['N01', 'N02'],
-          'I-CLOTH-01': <String>['N01', 'N02'],
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'person_created',
+        payload: <String, Object?>{
+          'person_id': 'N02',
+          'name': 'Người nấu ăn',
+          'birth_seconds': -31 * 365 * gameSecondsPerDay,
+          'position_mm': home.center.xMm + 5000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-KITCHEN',
+          'household_id': 'H01',
+          'caregiver_agent': true,
+          'care_skill': 520,
+          'current_activity': 'chuẩn bị bữa ăn',
+          'routine': _routineN02,
+          'skills': <String, int>{
+            'cook': 900,
+            'gather_fuel': 150,
+            'fetch_water': 400,
+            'gather_food': 400,
+          },
+          'agenda': <String, Object?>{'fatigue': 0},
+          'adult_body': <String, Object?>{'mass_g': 49000},
         },
-        'scheduled_work_seconds_by_person': <String, int>{
-          'N01': 28800,
-          'N02': 28800,
-          'N03': 28800,
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'person_created',
+        payload: <String, Object?>{
+          'person_id': 'N03',
+          'name': 'Người làm công',
+          'birth_seconds': -28 * 365 * gameSecondsPerDay,
+          'position_mm': home.center.xMm + 12000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-YARD',
+          'household_id': 'H01',
+          'routine': _routineN03,
+          'skills': <String, int>{
+            'gather_fuel': 850,
+            'gather_food': 700,
+            'fetch_water': 600,
+          },
+          'agenda': <String, Object?>{'fatigue': 850},
+          'adult_body': <String, Object?>{
+            'mass_g': 55000,
+            'energy_reserve_kj': 30000,
+          },
         },
-        'meal_actor_id': 'N02',
-        'enable_v2_1': true,
-        'enable_v2_2': true,
-        'auto_plan': true,
-        'enable_v2_6': true,
-        'enable_v2_11': true,
-        'enable_v2_13': true,
-        'infant_id': 'P00',
-        'caregiver_id': 'N01',
-        'birth_caregiver_role': 'mother',
-        'family_origin_summary':
-            'Người chăm sóc là mẹ ruột; đứa trẻ sinh vào hộ ven suối đã tồn tại từ thời lập cư.',
-        'production_actor_id': 'N03',
-        'supply_carrier_id': 'N04',
-        'supply_route_id': 'RT-ANKHE',
-      },
-    );
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'person_created',
+        payload: <String, Object?>{
+          'person_id': 'N04',
+          'name': 'Người vận chuyển',
+          'birth_seconds': -34 * 365 * gameSecondsPerDay,
+          'position_mm': market.center.xMm,
+          'position_y_mm': market.center.yMm,
+          'adult_body': <String, Object?>{'mass_g': 54000},
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-FEED-01',
+          'kind': 'infant_feed',
+          'position_mm': home.center.xMm,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-SLEEP',
+          'quantity': 10000,
+          'energy_kj_per_100ml': 300,
+          'water_ml_per_100ml': 92,
+          'unit': 'ml',
+          'owner_household_id': 'H01',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-CLOTH-01',
+          'kind': 'swaddling_cloth',
+          'position_mm': home.center.xMm,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-SLEEP',
+          'quantity': 1,
+          'condition': 1000,
+          'owner_household_id': 'H01',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-FOOD-01',
+          'kind': 'staple_food',
+          'position_mm': home.center.xMm,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-SLEEP',
+          'quantity': 15000,
+          'unit': 'g',
+          'owner_household_id': 'H01',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-WATER-01',
+          'kind': 'clean_water',
+          'position_mm': home.center.xMm,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-SLEEP',
+          'quantity': 48000,
+          'unit': 'ml',
+          'owner_household_id': 'H01',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-FUEL-01',
+          'kind': 'firewood',
+          'position_mm': home.center.xMm,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-SLEEP',
+          'quantity': 4500,
+          'unit': 'g',
+          'owner_household_id': 'H01',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'household_created',
+        payload: const <String, Object?>{
+          'household_id': 'H01',
+          'name': 'Hộ ven suối',
+          'member_ids': <String>['N01', 'N02', 'N03'],
+          'resource_item_ids': <String, String>{
+            'food': 'I-FOOD-01',
+            'water': 'I-WATER-01',
+            'fuel': 'I-FUEL-01',
+            'infant_feed': 'I-FEED-01',
+          },
+          'authorized_users_by_item_id': <String, List<String>>{
+            'I-FOOD-01': <String>['N02', 'N03'],
+            // N03 chưa được ghi quyền lấy nước, nên sẽ khát dần rồi đổ bệnh.
+            'I-WATER-01': <String>['N01', 'N02'],
+            'I-FUEL-01': <String>['N02', 'N03'],
+            'I-FEED-01': <String>['N01', 'N02'],
+            'I-CLOTH-01': <String>['N01', 'N02'],
+          },
+          'scheduled_work_seconds_by_person': <String, int>{
+            'N01': 28800,
+            'N02': 28800,
+            'N03': 28800,
+          },
+          'meal_actor_id': 'N02',
+          'enable_v2_1': true,
+          'enable_v2_2': true,
+          'auto_plan': true,
+          'enable_v2_6': true,
+          'enable_v2_11': true,
+          'enable_v2_13': true,
+          'infant_id': 'P00',
+          'caregiver_id': 'N01',
+          'birth_caregiver_role': 'mother',
+          'family_origin_summary':
+              'Người chăm sóc là mẹ ruột; đứa trẻ sinh vào hộ ven suối đã tồn tại từ thời lập cư.',
+          'production_actor_id': 'N03',
+          'supply_carrier_id': 'N04',
+          'supply_route_id': 'RT-ANKHE',
+        },
+      );
 
     simulation
+      ..materializeSettlementPopulation(settlementPopulation, history: history)
       ..materializeBirthHouseholds(birthHouseholds, history: history)
       ..simulatePrehistory(history, applyLegacy: true)
       ..openWorldEntry();
@@ -677,59 +694,55 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     final int? seed = await showDialog<int>(
       context: context,
       builder: (BuildContext context) => StatefulBuilder(
-        builder: (BuildContext context, StateSetter setDialogState) =>
-            AlertDialog(
-              title: const Text('Tạo thế giới mới?'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Text(
-                    'Seed quyết định kích thước vùng, vị trí và bán kính địa điểm. '
-                    'Dùng lại cùng seed sẽ sinh đúng cùng một bản đồ.',
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    key: const Key('world-seed-field'),
-                    onChanged: (String value) => seedText = value,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Seed thế giới',
-                      hintText: seedText,
-                      errorText: seedError,
-                    ),
-                  ),
-                ],
+        builder: (BuildContext context, StateSetter setDialogState) => AlertDialog(
+          title: const Text('Tạo thế giới mới?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Text(
+                'Seed quyết định kích thước vùng, vị trí và bán kính địa điểm. '
+                'Dùng lại cùng seed sẽ sinh đúng cùng một bản đồ.',
               ),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Giữ thế giới cũ'),
+              const SizedBox(height: 14),
+              TextField(
+                key: const Key('world-seed-field'),
+                onChanged: (String value) => seedText = value,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Seed thế giới',
+                  hintText: seedText,
+                  errorText: seedError,
                 ),
-                FilledButton(
-                  key: const Key('confirm-new-world'),
-                  onPressed: () {
-                    final int? value = int.tryParse(seedText.trim());
-                    if (value == null) {
-                      setDialogState(
-                        () => seedError = 'Hãy nhập một số nguyên.',
-                      );
-                      return;
-                    }
-                    if (value < minimumWorldSeed ||
-                        value > maximumWorldSeed) {
-                      setDialogState(
-                        () => seedError =
-                            'Seed từ $minimumWorldSeed đến $maximumWorldSeed.',
-                      );
-                      return;
-                    }
-                    Navigator.pop(context, value);
-                  },
-                  child: const Text('Tạo mới'),
-                ),
-              ],
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Giữ thế giới cũ'),
             ),
+            FilledButton(
+              key: const Key('confirm-new-world'),
+              onPressed: () {
+                final int? value = int.tryParse(seedText.trim());
+                if (value == null) {
+                  setDialogState(() => seedError = 'Hãy nhập một số nguyên.');
+                  return;
+                }
+                if (value < minimumWorldSeed || value > maximumWorldSeed) {
+                  setDialogState(
+                    () => seedError =
+                        'Seed từ $minimumWorldSeed đến $maximumWorldSeed.',
+                  );
+                  return;
+                }
+                Navigator.pop(context, value);
+              },
+              child: const Text('Tạo mới'),
+            ),
+          ],
+        ),
       ),
     );
     if (seed == null || !mounted) return;
@@ -1283,6 +1296,16 @@ class _HeroCard extends StatelessWidget {
               ),
             ],
           ),
+          if (world.communitySurvival
+              case final CommunitySurvivalState audit) ...<Widget>[
+            const SizedBox(height: 10),
+            Text(
+              'Theo dõi làng: ${audit.recordedDays}/${audit.targetDays} ngày · '
+              '${audit.daysRequiringUnsupportedRescue} ngày có điểm nguy cấp',
+              key: const Key('community-survival-progress'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
         ],
       ),
     );
@@ -1611,6 +1634,11 @@ class _ProfilePage extends StatelessWidget {
             ),
           ),
         ),
+        if (world.communitySurvival
+            case final CommunitySurvivalState audit) ...<Widget>[
+          const SizedBox(height: 14),
+          _CommunitySurvivalCard(audit: audit),
+        ],
         const SizedBox(height: 14),
         _WorldMapPanel(worldMap: worldMap),
         if (history != null) ...<Widget>[
@@ -1670,6 +1698,110 @@ class _ProfilePage extends StatelessWidget {
     ),
   );
 }
+
+class _CommunitySurvivalCard extends StatelessWidget {
+  const _CommunitySurvivalCard({required this.audit});
+
+  final CommunitySurvivalState audit;
+
+  @override
+  Widget build(BuildContext context) {
+    final CommunityDaySnapshot? latest = audit.latest;
+    final List<HouseholdSurvivalSnapshot> pressured = latest == null
+        ? const <HouseholdSurvivalSnapshot>[]
+        : latest.households
+              .where(
+                (HouseholdSurvivalSnapshot household) =>
+                    household.underPressure,
+              )
+              .toList();
+    final List<CommunityResourceRequestState> requests =
+        audit.resourceRequests.values.toList()..sort(
+          (CommunityResourceRequestState a, CommunityResourceRequestState b) =>
+              b.updatedAtSeconds.compareTo(a.updatedAtSeconds),
+        );
+    return Card(
+      key: const Key('community-survival-card'),
+      child: Padding(
+        padding: const EdgeInsets.all(17),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const _SectionLabel(label: 'SỨC SỐNG CỦA LÀNG'),
+            const SizedBox(height: 7),
+            Text(
+              '${audit.recordedDays}/${audit.targetDays} ngày đã được ghi'
+              '${audit.complete ? ' · đã đủ chu kỳ' : ' · đang tiếp tục'}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            Text(
+              '${audit.daysRequiringUnsupportedRescue} ngày có điểm nguy cấp cần cơ chế tự giải quyết.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            if (latest != null) ...<Widget>[
+              const SizedBox(height: 9),
+              Text(
+                'Ngày ${latest.day}: ${latest.pressuredHouseholds} hộ chịu áp lực, '
+                '${latest.criticalHouseholds} hộ nguy cấp · '
+                '${latest.travelingExchanges} chuyến hàng đang đi, '
+                '${latest.overdueExchanges} chuyến quá hạn.',
+              ),
+              if (pressured.isEmpty)
+                const Text(
+                  'Không có hộ nào chạm ngưỡng cảnh báo trong ngày này.',
+                )
+              else
+                for (final HouseholdSurvivalSnapshot household
+                    in pressured.take(6))
+                  Text(
+                    '• ${household.householdId}: '
+                    '${household.criticalReasons.isEmpty ? 'áp lực ${household.pressureKinds.join(', ')}' : 'nguy cấp ${household.criticalReasons.join(', ')}'} · '
+                    'người làm ${household.availableAdultWorkers}, '
+                    'ốm ${household.activeIllnesses}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+            ],
+            if (requests.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 10),
+              Text(
+                'Yêu cầu tài nguyên: '
+                '${requests.where((CommunityResourceRequestState value) => value.active).length} đang xử lý · '
+                '${requests.where((CommunityResourceRequestState value) => value.status == CommunityResourceRequestStatus.resolved).length} đã giải quyết · '
+                '${requests.where((CommunityResourceRequestState value) => value.status == CommunityResourceRequestStatus.failed).length} thất bại',
+                key: const Key('community-resource-request-summary'),
+              ),
+              for (final CommunityResourceRequestState request in requests.take(
+                6,
+              ))
+                Text(
+                  '• ${request.householdId} cần ${_needLabel(request.resource)}: '
+                  '${_resourceRequestStatusLabel(request.status)} · '
+                  'đã thử ${request.attemptCount} lần'
+                  '${request.providerHouseholdId == null ? '' : ' · nguồn ${request.providerHouseholdId}'}'
+                  '${request.lastFailureReason == null ? '' : ' · ${request.lastFailureReason}'}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _resourceRequestStatusLabel(CommunityResourceRequestStatus status) =>
+    switch (status) {
+      CommunityResourceRequestStatus.detected => 'vừa phát hiện',
+      CommunityResourceRequestStatus.seeking => 'đang tìm nguồn',
+      CommunityResourceRequestStatus.inquiring => 'đang đi hỏi',
+      CommunityResourceRequestStatus.introductionTravel =>
+        'đang được dẫn tới hộ nguồn',
+      CommunityResourceRequestStatus.negotiating => 'đang thương lượng',
+      CommunityResourceRequestStatus.goodsInTransit => 'hàng đang đi',
+      CommunityResourceRequestStatus.resolved => 'đã nhận hàng',
+      CommunityResourceRequestStatus.failed => 'tạm thất bại',
+      CommunityResourceRequestStatus.cancelled => 'đã hủy',
+    };
 
 class _BirthSelectionScreen extends StatelessWidget {
   const _BirthSelectionScreen({
@@ -1851,7 +1983,9 @@ class _WorldHistorySummary extends StatelessWidget {
   String _effectText(HistoricalEffect effect) {
     final List<String> parts = <String>[];
     if (effect.populationDelta != 0) {
-      parts.add('dân số ${effect.populationDelta > 0 ? '+' : ''}${effect.populationDelta}');
+      parts.add(
+        'dân số ${effect.populationDelta > 0 ? '+' : ''}${effect.populationDelta}',
+      );
     }
     if (effect.cultivatedLandDelta != 0) {
       parts.add(
@@ -1941,7 +2075,8 @@ class _WorldHistorySummary extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
-            if (history.legacy case final HistoricalLegacyState legacy) ...<Widget>[
+            if (history.legacy
+                case final HistoricalLegacyState legacy) ...<Widget>[
               const SizedBox(height: 12),
               Container(
                 key: const Key('historical-legacy-summary'),
@@ -2270,7 +2405,8 @@ class _WorldMapPanel extends StatelessWidget {
               '${worldMap.unplacedPeople} người đang ngoài mọi địa điểm',
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            if (worldMap.genesis case final WorldGenesisRecord genesis) ...<Widget>[
+            if (worldMap.genesis
+                case final WorldGenesisRecord genesis) ...<Widget>[
               const SizedBox(height: 5),
               Text(
                 'Seed ${genesis.rootSeed} · bộ sinh ${genesis.generatorVersion}\n'
@@ -2393,6 +2529,52 @@ class _PersonProfileCard extends StatelessWidget {
                 Text(
                   'Đang làm: ${person.activity ?? 'chưa có việc được giao'}',
                 ),
+                if (person.occupationName != null)
+                  Text('Nghề chính: ${person.occupationName}'),
+                if (person.originSummary != null) ...<Widget>[
+                  const SizedBox(height: 5),
+                  Text(person.originSummary!, style: small),
+                ],
+                if (person.beliefs.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Điều đã biết: ${person.beliefs.length} bằng chứng',
+                    key: Key('knowledge-count-${person.id}'),
+                  ),
+                  for (final BeliefState belief in person.recentBeliefs)
+                    Text(
+                      '• ${belief.summary} · '
+                      '${belief.acquisition == KnowledgeAcquisition.observation ? 'tự thấy' : 'nghe từ ${belief.sourcePersonId}'} · '
+                      'tin cậy ${belief.confidence}/1000 · '
+                      '${belief.transmissionCount} chặng truyền',
+                      style: small,
+                    ),
+                ],
+                if (person.socialRelations.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Quan hệ ngoài hộ: ${person.socialRelations.length} người',
+                    key: Key('social-relations-${person.id}'),
+                  ),
+                  for (final MapEntry<String, SocialRelationState> relation
+                      in person.socialRelations.entries)
+                    Text(
+                      '${relation.key}: quen ${relation.value.familiarity}, '
+                      'tin đổi hàng ${relation.value.tradeTrust}, '
+                      'tin lời ${relation.value.informationTrust}, '
+                      'thiện cảm ${relation.value.goodwill}, '
+                      'bất mãn ${relation.value.resentment} · '
+                      'gặp ${relation.value.encounterCount} lần, '
+                      'đổi thành công ${relation.value.successfulTrades} lần'
+                      '${relation.value.failedTrades > 0 ? ', hỏng ${relation.value.failedTrades} lần' : ''} · '
+                      'nhận ${relation.value.receivedReports} tin'
+                      '${relation.value.refusedResourceAid > 0 ? ' · bị từ chối giúp ${relation.value.refusedResourceAid} lần' : ''}',
+                      key: Key(
+                        'social-relation-${person.id}-${relation.value.otherPersonId}',
+                      ),
+                      style: small,
+                    ),
+                ],
                 if (person.positionMm != null)
                   Text('Vị trí: ${person.positionMm} mm trên trục nhà'),
                 if (person.careSkill != null)
@@ -2407,6 +2589,22 @@ class _PersonProfileCard extends StatelessWidget {
                     key: Key('family-relationships-${person.id}'),
                     style: small,
                   ),
+                ],
+                if (person.familyBonds.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 5),
+                  for (final MapEntry<String, FamilyBondState> bond
+                      in person.familyBonds.entries)
+                    Text(
+                      '${bond.key}: tình cảm ${bond.value.affection}, '
+                      'tin cậy ${bond.value.trust}, nghĩa vụ chăm sóc '
+                      '${bond.value.careObligation} · đã chăm '
+                      '${bond.value.careGiven} lần, được chăm '
+                      '${bond.value.careReceived} lần · chứng kiến giữ lời '
+                      '${bond.value.witnessedPromisesKept}, thất hứa '
+                      '${bond.value.witnessedPromisesBroken}',
+                      key: Key('family-bond-${person.id}-${bond.key}'),
+                      style: small,
+                    ),
                 ],
                 if (person.illnessKind != null) ...<Widget>[
                   Text(
@@ -2608,6 +2806,49 @@ String _familyRoleLabel(String role) => switch (role) {
   'ward' => 'con nuôi',
   _ => role,
 };
+
+String _careAgreementReason(String reason) => switch (reason) {
+  'care_burden_balanced' => 'Chia đều gánh nặng chăm sóc',
+  'highest_care_commitment' => 'Ưu tiên người có cam kết chăm sóc cao nhất',
+  'no_accepted_caregiver' => 'Chưa ai chấp nhận hoặc đủ điều kiện nhận ca',
+  _ => reason,
+};
+
+String _careSupportReason(String reason) => switch (reason) {
+  'care_plan_missing' => 'Chưa có kế hoạch chăm cho giờ này',
+  'shift_uncovered' => 'Ca chưa có người nhận',
+  'planned_caregiver_missing' => 'Người trực không còn trong thế giới',
+  'planned_caregiver_unavailable' => 'Người trực tạm thời không sẵn sàng',
+  'planned_caregiver_busy' => 'Người trực mắc nghĩa vụ khác',
+  'planned_caregiver_ineligible' => 'Người trực không còn đủ điều kiện',
+  _ => reason,
+};
+
+String _careSupportStatus(FamilyCareSupportStatus status) => switch (status) {
+  FamilyCareSupportStatus.pending => 'đang chờ người nhận',
+  FamilyCareSupportStatus.fulfilled => 'đã có người hỗ trợ',
+  FamilyCareSupportStatus.failed => 'không tìm được người hỗ trợ',
+  FamilyCareSupportStatus.expired => 'đã chờ quá hạn',
+};
+
+String _careConflictStatus(FamilyCareConflictStatus status) => switch (status) {
+  FamilyCareConflictStatus.open => 'đang chờ đối thoại',
+  FamilyCareConflictStatus.repaired => 'đã hòa giải',
+  FamilyCareConflictStatus.unresolved => 'chưa giải quyết được',
+};
+
+String _carePromiseStatus(FamilyCarePromiseStatus status) => switch (status) {
+  FamilyCarePromiseStatus.active => 'đang có hiệu lực',
+  FamilyCarePromiseStatus.fulfilled => 'đã giữ lời',
+  FamilyCarePromiseStatus.broken => 'đã thất hứa',
+};
+
+String _householdMemberName(HouseholdView household, String personId) =>
+    household.members
+        .where((HouseholdMemberView member) => member.id == personId)
+        .map((HouseholdMemberView member) => member.name)
+        .firstOrNull ??
+    personId;
 
 class _RoadmapCard extends StatelessWidget {
   const _RoadmapCard();
@@ -2831,6 +3072,27 @@ class _StatusPanel extends StatelessWidget {
             Text('Căng thẳng tổng: ${infancy.distress}/1000'),
             Text('Được chăm sóc: ${infancy.careInteractions} lần'),
             Text('Gắn bó với người chăm sóc: ${infancy.attachment}/1000'),
+            if (infancy.careExpectations.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 12),
+              const _SectionLabel(label: 'KỲ VỌNG VỀ TỪNG NGƯỜI CHĂM'),
+              const SizedBox(height: 6),
+              for (final InfantCareExpectationState expectation
+                  in infancy.careExpectations.values)
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.psychology_alt_outlined),
+                  title: Text('Người chăm ${expectation.caregiverId}'),
+                  subtitle: Text(
+                    'An toàn ${expectation.safety}/1000 · dễ đoán '
+                    '${expectation.predictability}/1000 · đáp ứng '
+                    '${expectation.successfulResponses}, muộn '
+                    '${expectation.delayedResponses}, bỏ lỡ '
+                    '${expectation.missedResponses} · chờ trung bình '
+                    '${expectation.averageResponseSeconds ~/ 60} phút',
+                  ),
+                ),
+            ],
             Text('Tầm nhìn rõ gần: ${infancy.visionRangeMm} mm'),
             Text(
               infancy.caregiverDistanceMm == null
@@ -3026,6 +3288,182 @@ class _HouseholdPanel extends StatelessWidget {
                         ],
                       ),
                     ),
+                  if (value.familyCarePlan
+                      case final FamilyCarePlanState carePlan) ...<Widget>[
+                    const Divider(height: 28),
+                    const _SectionLabel(label: 'PHÂN CA CHĂM TRẺ'),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Ngày ${carePlan.day} · lần thương lượng ${carePlan.revision}',
+                      key: const Key('family-care-plan'),
+                    ),
+                    const SizedBox(height: 8),
+                    for (final FamilyCareShiftState shift in carePlan.shifts)
+                      ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.schedule_outlined),
+                        title: Text(
+                          '${_clock(shift.startSecondOfDay)}–'
+                          '${_clock(shift.endSecondOfDay)} · '
+                          '${value.members.where((HouseholdMemberView member) => member.id == shift.caregiverId).map((HouseholdMemberView member) => member.name).firstOrNull ?? 'Chưa có người nhận'}',
+                        ),
+                        subtitle: Text(
+                          shift.declinedPersonIds.isEmpty
+                              ? _careAgreementReason(shift.reason)
+                              : '${_careAgreementReason(shift.reason)} · '
+                                    '${shift.declinedPersonIds.length} người không nhận được ca',
+                        ),
+                      ),
+                    if (value.familyCareSupportRequests.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: 6),
+                      Text(
+                        'Ca vỡ gần nhất',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      Builder(
+                        builder: (BuildContext context) {
+                          final FamilyCareSupportRequestState request =
+                              value.familyCareSupportRequests.last;
+                          final String supporter =
+                              value.members
+                                  .where(
+                                    (HouseholdMemberView member) =>
+                                        member.id == request.supporterId,
+                                  )
+                                  .map(
+                                    (HouseholdMemberView member) => member.name,
+                                  )
+                                  .firstOrNull ??
+                              _careSupportStatus(request.status);
+                          final int? delay = request.responseDelaySeconds;
+                          return Text(
+                            '${_careSupportReason(request.reason)} · $supporter'
+                            '${delay == null ? '' : ' · chờ ${delay ~/ 60} phút'}'
+                            ' · ${request.attempts} lần tìm',
+                            key: const Key('family-care-support-latest'),
+                          );
+                        },
+                      ),
+                    ],
+                    if (value
+                        .familyCareReliabilityByPersonId
+                        .isNotEmpty) ...<Widget>[
+                      const SizedBox(height: 14),
+                      Text(
+                        'Độ đáng tin khi chăm sóc',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      for (final MapEntry<String, FamilyCareReliabilityState>
+                          entry
+                          in value.familyCareReliabilityByPersonId.entries)
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.verified_user_outlined),
+                          title: Text(_householdMemberName(value, entry.key)),
+                          subtitle: Text(
+                            '${entry.value.score}/1000 · ứng cứu '
+                            '${entry.value.emergencyResponses} · giữ lời '
+                            '${entry.value.promisesKept}/${entry.value.promisesMade} · '
+                            'thất hứa ${entry.value.promisesBroken}',
+                          ),
+                        ),
+                    ],
+                    if (value
+                        .familyCareBurdenByPersonId
+                        .isNotEmpty) ...<Widget>[
+                      const SizedBox(height: 14),
+                      Text(
+                        'Gánh nặng và nghĩa vụ bù',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      for (final MapEntry<String, FamilyCareBurdenState> entry
+                          in value.familyCareBurdenByPersonId.entries)
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.balance_outlined),
+                          title: Text(
+                            value.members
+                                    .where(
+                                      (HouseholdMemberView member) =>
+                                          member.id == entry.key,
+                                    )
+                                    .map(
+                                      (HouseholdMemberView member) =>
+                                          member.name,
+                                    )
+                                    .firstOrNull ??
+                                entry.key,
+                          ),
+                          subtitle: Text(
+                            'Nghĩa vụ bù ${entry.value.careDebt}/1000 · '
+                            'quá tải ${entry.value.strain}/1000 · '
+                            'gánh khẩn cấp ${entry.value.emergencyShiftsTaken} · '
+                            'bỏ ca ${entry.value.missedPlannedShifts}',
+                          ),
+                        ),
+                    ],
+                    if (value.familyCareConflicts.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: 14),
+                      Text(
+                        'Mâu thuẫn do phân ca',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      for (final FamilyCareConflictState conflict
+                          in value.familyCareConflicts.reversed.take(3))
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            conflict.status == FamilyCareConflictStatus.repaired
+                                ? Icons.handshake_outlined
+                                : Icons.record_voice_over_outlined,
+                          ),
+                          title: Text(
+                            '${_householdMemberName(value, conflict.supporterId)} ↔ '
+                            '${_householdMemberName(value, conflict.responsibleId)}',
+                          ),
+                          subtitle: Text(
+                            '${_careConflictStatus(conflict.status)} · '
+                            'mức ${conflict.severity}/1000',
+                          ),
+                        ),
+                    ],
+                    if (value.familyCarePromises.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: 14),
+                      Text(
+                        'Lời hứa bù ca',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: 4),
+                      for (final FamilyCarePromiseState promise
+                          in value.familyCarePromises.reversed.take(3))
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            promise.status == FamilyCarePromiseStatus.fulfilled
+                                ? Icons.task_alt_outlined
+                                : Icons.assignment_outlined,
+                          ),
+                          title: Text(
+                            '${_householdMemberName(value, promise.debtorId)} hứa bù '
+                            '${promise.promisedShifts} ca cho '
+                            '${_householdMemberName(value, promise.beneficiaryId)}',
+                          ),
+                          subtitle: Text(
+                            '${_carePromiseStatus(promise.status)} · '
+                            'hạn ngày ${promise.dueDay} · '
+                            'đã nhận ${promise.assignedShifts}/${promise.promisedShifts}',
+                          ),
+                        ),
+                    ],
+                  ],
                   const Divider(height: 28),
                   const _SectionLabel(label: 'KHO VẬT CHẤT'),
                   const SizedBox(height: 10),
@@ -3116,6 +3554,29 @@ class _HouseholdPanel extends StatelessWidget {
                         label: 'Lần thay người',
                         value: '${value.caregiverSubstitutions}',
                         icon: Icons.swap_horiz,
+                      ),
+                      _MetricTile(
+                        label: 'Ca chăm bị vỡ',
+                        value: '${value.familyCareSupportRequests.length}',
+                        icon: Icons.event_busy_outlined,
+                      ),
+                      _MetricTile(
+                        label: 'Lần gọi hỗ trợ thành công',
+                        value:
+                            '${value.familyCareSupportRequests.where((FamilyCareSupportRequestState request) => request.status == FamilyCareSupportStatus.fulfilled).length}',
+                        icon: Icons.support_agent_outlined,
+                      ),
+                      _MetricTile(
+                        label: 'Đang chờ hỗ trợ',
+                        value:
+                            '${value.familyCareSupportRequests.where((FamilyCareSupportRequestState request) => request.status == FamilyCareSupportStatus.pending).length}',
+                        icon: Icons.hourglass_top_outlined,
+                      ),
+                      _MetricTile(
+                        label: 'Chờ quá hạn',
+                        value:
+                            '${value.familyCareSupportRequests.where((FamilyCareSupportRequestState request) => request.status == FamilyCareSupportStatus.expired).length}',
+                        icon: Icons.person_off_outlined,
                       ),
                       _MetricTile(
                         label: 'Ca được gánh thay',
@@ -3279,6 +3740,14 @@ String _needLabel(String kind) => switch (kind) {
   'water' => 'nước sạch',
   'fuel' => 'củi',
   _ => kind,
+};
+
+String _personalCommitmentLabel(String? kind) => switch (kind) {
+  'resource_inquiry' => 'việc đi hỏi nguồn hàng',
+  'resource_introduction' => 'việc dẫn người đi gặp hộ nguồn',
+  'community_exchange' => 'việc vận chuyển hàng đổi giữa các hộ',
+  'need_driven_exchange' => 'việc mang hàng giải quyết nhu cầu của hộ',
+  _ => 'một hành trình',
 };
 
 String _terrainLabel(String terrain) => switch (terrain) {
@@ -3611,6 +4080,10 @@ class _HistoryPanelState extends State<_HistoryPanel> {
           fact.kind.contains('illness'),
     'household' =>
       fact.kind.startsWith('household') ||
+          fact.kind.startsWith('community_exchange') ||
+          fact.kind.startsWith('community_resource') ||
+          fact.kind.startsWith('community_survival') ||
+          fact.kind.startsWith('social_') ||
           fact.kind.startsWith('supply_journey') ||
           fact.kind.startsWith('route_') ||
           fact.kind == 'supply_route_impassable',
@@ -3623,7 +4096,8 @@ class _HistoryPanelState extends State<_HistoryPanel> {
     'world' =>
       fact.kind == 'birth' ||
           fact.kind == 'person_created' ||
-          fact.kind == 'item_created',
+          fact.kind == 'item_created' ||
+          fact.kind.startsWith('knowledge_'),
     _ => true,
   };
 
@@ -3794,6 +4268,9 @@ Color _factColor(String kind) {
     return const Color(0xff9a8fc3);
   }
   if (kind.contains('illness')) return const Color(0xffd49a68);
+  if (kind.startsWith('knowledge_')) return const Color(0xff80a9c7);
+  if (kind.startsWith('social_')) return const Color(0xffb091c7);
+  if (kind.startsWith('personal_time_')) return const Color(0xffc7a66f);
   if (kind.contains('care') || kind.contains('infant')) {
     return const Color(0xff83b993);
   }
@@ -3811,6 +4288,77 @@ String _factDetail(WorldFact fact) {
     'item_created' =>
       'Ghi nhận ${_itemKindLabel(fact.detail)} (${fact.subjectId}).',
     'household_created' => '${fact.detail} bắt đầu được mô phỏng như một hộ.',
+    'community_exchange_departed' =>
+      'Hai hộ đã giao hàng cho người vận chuyển; hàng đang đi trong '
+          '${values['travel_seconds'] ?? '?'} giây game.',
+    'community_exchange_completed' =>
+      'Đổi hàng hoàn tất: ${values['first'] ?? 'hộ thứ nhất'} nhận '
+          '${values['received'] ?? 'hàng đã thỏa thuận'}.',
+    'community_exchange_cancelled' =>
+      'Chuyến đổi hàng bị hủy; hàng đã rút khỏi kho được hoàn lại.',
+    'knowledge_observed' =>
+      '${values['count'] ?? '?'} người trực tiếp ghi nhớ sự việc.',
+    'knowledge_shared' =>
+      '${values['speaker'] ?? 'Một người'} kể lại tin cho người nghe; '
+          'độ tin cậy còn ${values['confidence'] ?? '?'}/1000.',
+    'social_relation_started' =>
+      '${values['first'] ?? 'Hai người'} và ${values['second'] ?? 'người kia'} '
+          'bắt đầu ghi nhớ nhau sau một lần gặp thật.',
+    'social_encounter_recorded' =>
+      '${values['first'] ?? 'Hai người'} và ${values['second'] ?? 'người kia'} '
+          'ghi thêm một lần gặp thật vào quan hệ.',
+    'social_trade_trust_changed' =>
+      'Kết quả đổi hàng làm lòng tin bạn hàng thay đổi; '
+          'thành công: ${values['succeeded'] ?? '?'}.',
+    'social_resource_aid_refused' =>
+      '${fact.subjectId} ghi nhớ ${values['contact'] ?? 'người quen'} đã từ chối '
+          'giúp ${_needLabel(values['resource'] ?? '')} khi nhu cầu khẩn '
+          '${values['urgency'] ?? '?'}/100; bất mãn hiện là '
+          '${values['resentment'] ?? '?'}/1000.',
+    'community_resource_response_started' =>
+      '${values['actor'] ?? 'Một người'} tìm ${values['contact'] ?? 'người quen'} '
+          'để đổi lấy ${values['received'] ?? '?'} đơn vị '
+          '${_needLabel(values['resource'] ?? '')}.',
+    'community_resource_request_opened' =>
+      'Hộ mở yêu cầu ${_needLabel(values['resource'] ?? '')} ở mức khẩn '
+          '${values['urgency'] ?? '?'}/100.',
+    'community_resource_request_resolved' =>
+      'Hàng của yêu cầu đã tới nơi qua chuyến '
+          '${values['exchange'] ?? '?'}; nhận ${values['amount'] ?? '?'} đơn vị.',
+    'community_resource_response_failed' =>
+      'Hộ cần ${_needLabel(values['resource'] ?? '')} nhưng chưa tự thu xếp được: '
+          '${values['reason'] ?? 'không rõ nguyên nhân'}.',
+    'community_resource_response_cancelled' =>
+      'Nhu cầu ${_needLabel(values['resource'] ?? '')} đã được giải quyết trước khi phải nhờ người quen.',
+    'community_resource_inquiry_started' =>
+      '${values['asker'] ?? 'Một người'} đang tìm đến '
+          '${values['intermediary'] ?? 'người quen'} để hỏi nguồn '
+          '${_needLabel(values['resource'] ?? '')}.',
+    'community_resource_inquiry_answered' =>
+      '${values['intermediary'] ?? 'Người quen'} trả lời từ điều họ thật sự biết; '
+          'người hỏi nhận bằng chứng với độ tin cậy '
+          '${values['confidence'] ?? '?'}/1000.',
+    'community_resource_introduction_started' =>
+      '${values['intermediary'] ?? 'Người quen'} đang dẫn '
+          '${values['asker'] ?? 'người hỏi'} tới gặp '
+          '${values['provider_contact'] ?? 'người của hộ nguồn'}.',
+    'community_resource_introduction_arrived' =>
+      '${values['asker'] ?? 'Người cần hàng'} đã gặp '
+          '${values['provider_contact'] ?? 'người của hộ nguồn'} qua lời giới thiệu; '
+          'hai người bắt đầu ghi nhớ nhau.',
+    'personal_time_committed' =>
+      '${fact.subjectId} dành thời gian cho ${_personalCommitmentLabel(values['kind'])}; '
+          'cam kết kéo dài tới giây ${values['ends_at'] ?? '?'}.',
+    'personal_time_released' =>
+      '${fact.subjectId} kết thúc hành trình sau '
+          '${values['elapsed_seconds'] ?? '?'} giây game và trở lại nhịp sống.',
+    'community_survival_day_recorded' =>
+      'Đã ghi ngày ${values['day'] ?? '?'} của chu kỳ 30 ngày: '
+          '${values['pressured'] ?? '?'} hộ chịu áp lực, '
+          '${values['critical'] ?? '?'} hộ nguy cấp.',
+    'community_survival_audit_completed' =>
+      'Đã ghi đủ chu kỳ cộng đồng; có '
+          '${values['rescue_days'] ?? '?'} ngày xuất hiện điểm cần cứu hộ.',
     'household_meal_completed' =>
       '${values['actor'] ?? 'Một thành viên'} dùng ${values['food_g'] ?? '?'} g lương thực, '
           '${values['water_ml'] ?? '?'} ml nước và ${values['fuel_g'] ?? '?'} g củi.',
@@ -3958,6 +4506,63 @@ String _factDetail(WorldFact fact) {
       '${fact.subjectId} đã tới chỗ ${values['infant'] ?? 'trẻ'}.',
     'caregiver_care' =>
       '${values['caregiver'] ?? 'Người chăm sóc'} giúp trẻ nhận ${values['consumed_ml'] ?? '0'} ml dinh dưỡng.',
+    'family_care_remembered' =>
+      '${fact.subjectId} ghi nhớ lần chăm ${values['infant'] ?? 'trẻ'}'
+          '${values['substitute'] == 'true' ? ' khi gánh thay người khác' : ''}.',
+    'family_care_plan_negotiated' =>
+      'Hộ đã chia lại bốn ca chăm cho ngày ${values['day'] ?? '?'}, '
+          'bản thỏa thuận ${values['revision'] ?? '?'}.',
+    'family_care_offer_refused' =>
+      '${fact.subjectId} từ chối ca chăm vì ngưỡng nhận việc '
+          '${values['floor'] ?? '?'} cao hơn mức ca ${values['priority'] ?? '?'}.',
+    'family_care_shift_broken' =>
+      'Ca ${values['shift'] ?? '?'} bị vỡ vì '
+          '${_careSupportReason(values['reason'] ?? '')}.',
+    'family_care_support_called' =>
+      '${fact.subjectId} được gọi gánh ca chăm ${values['infant'] ?? 'trẻ'}.',
+    'family_care_support_failed' =>
+      'Không tìm được người gánh ca chăm ${values['infant'] ?? 'trẻ'}.',
+    'family_care_support_waiting' =>
+      'Chưa có ai nhận ca; hộ bắt đầu tìm người khác theo từng đợt.',
+    'family_care_support_still_waiting' =>
+      'Hộ vẫn chưa tìm được người hỗ trợ sau ${values['attempts'] ?? '?'} lần.',
+    'family_care_support_arrived_late' =>
+      '${fact.subjectId} nhận ca sau khi trẻ đã chờ '
+          '${((int.tryParse(values['delay_seconds'] ?? '') ?? 0) ~/ 60)} phút.',
+    'family_care_support_expired' =>
+      'Yêu cầu hỗ trợ hết hạn sau '
+          '${((int.tryParse(values['delay_seconds'] ?? '') ?? 0) ~/ 60)} phút.',
+    'infant_care_delayed_harm' =>
+      'Việc bị bỏ chờ làm mức gắn bó đổi từ ${values['attachment'] ?? '?'}.',
+    'family_care_debt_created' =>
+      '${values['supporter'] ?? 'Một người thân'} phải gánh thay '
+          '${values['planned'] ?? 'người trực ca'} và gia đình ghi nhận nghĩa vụ bù.',
+    'family_care_burden_rebalanced' =>
+      'Gánh nặng và nghĩa vụ bù đã tác động tới lịch chăm mới.',
+    'family_care_conflict_opened' =>
+      'Hai thành viên bắt đầu đối chất về ca chăm bị bỏ, mức căng thẳng '
+          '${values['severity'] ?? '?'}/1000.',
+    'family_care_conflict_repaired' =>
+      'Hai thành viên đạt thỏa thuận bù ca và khôi phục một phần lòng tin.',
+    'family_care_conflict_unresolved' =>
+      'Cuộc đối chất không giải quyết được bất đồng; lòng tin và tình cảm giảm.',
+    'family_care_promise_made' =>
+      '${values['debtor'] ?? 'Một thành viên'} hứa nhận '
+          '${values['shifts'] ?? '?'} ca trước ngày ${values['due_day'] ?? '?'}.',
+    'family_care_promise_fulfilled' =>
+      '${values['debtor'] ?? 'Một thành viên'} đã giữ lời bù '
+          '${values['assigned'] ?? '?'} ca chăm.',
+    'family_care_promise_broken' =>
+      '${values['debtor'] ?? 'Một thành viên'} không thực hiện đủ lời hứa; '
+          'lòng tin giữa hai người giảm.',
+    'family_care_reputation_witnessed' =>
+      '${values['witnesses'] ?? '0'} thành viên đã ghi nhớ việc '
+          '${values['status'] == 'fulfilled' ? 'giữ lời' : 'thất hứa'} này.',
+    'infant_caregiver_expectation_updated' =>
+      'Trẻ ghi nhớ ${values['caregiver'] ?? 'người chăm'} đã đáp ứng sau '
+          '${((int.tryParse(values['delay_seconds'] ?? '') ?? 0) ~/ 60)} phút.',
+    'infant_caregiver_expectation_missed' =>
+      'Trẻ ghi nhớ ${values['caregiver'] ?? 'người chăm'} đã không đến.',
     'infant_cry' => 'Căng thẳng đạt ${values['distress'] ?? '?'}/1000.',
     'infant_elimination' =>
       'Bài tiết ${values['urine_ml'] ?? '0'} ml nước tiểu và ${values['stool_g'] ?? '0'} g phân.',
@@ -3980,6 +4585,28 @@ String _factLabel(String kind) => switch (kind) {
   'cry_not_heard' => 'Không ai nghe thấy tiếng khóc',
   'caregiver_arrived' => 'Người chăm sóc đã đến',
   'caregiver_care' => 'Hoàn tất chăm sóc',
+  'family_care_remembered' => 'Gia đình ghi nhớ lần chăm trẻ',
+  'family_care_plan_negotiated' => 'Gia đình phân lại ca chăm trẻ',
+  'family_care_offer_refused' => 'Thành viên từ chối ca chăm',
+  'family_care_shift_broken' => 'Ca chăm bị vỡ',
+  'family_care_support_called' => 'Đã gọi người hỗ trợ',
+  'family_care_support_failed' => 'Không gọi được người hỗ trợ',
+  'family_care_support_waiting' => 'Đang tìm người hỗ trợ',
+  'family_care_support_still_waiting' => 'Vẫn chưa có người hỗ trợ',
+  'family_care_support_arrived_late' => 'Người hỗ trợ đến muộn',
+  'family_care_support_expired' => 'Yêu cầu hỗ trợ hết hạn',
+  'infant_care_delayed_harm' => 'Trẻ chịu hậu quả vì chờ lâu',
+  'family_care_debt_created' => 'Phát sinh nghĩa vụ bù ca',
+  'family_care_burden_rebalanced' => 'Phân lại gánh nặng chăm sóc',
+  'family_care_conflict_opened' => 'Phát sinh mâu thuẫn phân ca',
+  'family_care_conflict_repaired' => 'Gia đình hòa giải',
+  'family_care_conflict_unresolved' => 'Mâu thuẫn chưa được giải quyết',
+  'family_care_promise_made' => 'Đã hứa bù ca',
+  'family_care_promise_fulfilled' => 'Đã giữ lời bù ca',
+  'family_care_promise_broken' => 'Đã thất hứa bù ca',
+  'family_care_reputation_witnessed' => 'Danh tiếng được người thân ghi nhớ',
+  'infant_caregiver_expectation_updated' => 'Trẻ học được sự đáp ứng',
+  'infant_caregiver_expectation_missed' => 'Trẻ ghi nhớ lần không được đáp ứng',
   'caregiver_cannot_reach' => 'Người chăm sóc không thể đến',
   'care_failed_missing_supply' => 'Thiếu vật dụng chăm sóc',
   'care_failed_no_right' => 'Không có quyền dùng vật dụng',
@@ -3992,6 +4619,29 @@ String _factLabel(String kind) => switch (kind) {
   'person_created' => 'Nhân vật tồn tại',
   'item_created' => 'Vật phẩm tồn tại',
   'household_created' => 'Hộ gia đình hình thành',
+  'community_exchange_departed' => 'Hàng đổi đã rời kho',
+  'community_exchange_completed' => 'Đổi hàng liên hộ hoàn tất',
+  'community_exchange_cancelled' => 'Đổi hàng liên hộ bị hủy',
+  'knowledge_observed' => 'NPC trực tiếp quan sát',
+  'knowledge_shared' => 'NPC truyền tin',
+  'social_relation_started' => 'Quan hệ ngoài hộ hình thành',
+  'social_encounter_recorded' => 'Gặp lại người quen',
+  'social_trade_trust_changed' => 'Lòng tin bạn hàng thay đổi',
+  'social_resource_aid_refused' => 'NPC ghi nhớ một lần bị từ chối',
+  'community_resource_response_started' => 'NPC tự tìm người đổi hàng',
+  'community_resource_request_opened' => 'Hộ mở yêu cầu tài nguyên',
+  'community_resource_request_resolved' => 'Yêu cầu tài nguyên đã xong',
+  'community_resource_response_failed' => 'NPC chưa tìm được nguồn hàng',
+  'community_resource_response_cancelled' => 'Nhu cầu đã tự hết',
+  'community_resource_inquiry_started' => 'NPC đi hỏi nguồn hàng',
+  'community_resource_inquiry_answered' => 'Người quen trả lời',
+  'community_resource_introduction_started' =>
+    'Đang đi gặp nguồn được giới thiệu',
+  'community_resource_introduction_arrived' => 'Đã gặp người của hộ nguồn',
+  'personal_time_committed' => 'NPC bắt đầu hành trình',
+  'personal_time_released' => 'NPC kết thúc hành trình',
+  'community_survival_day_recorded' => 'Ghi sức sống cuối ngày',
+  'community_survival_audit_completed' => 'Hoàn tất hồ sơ 30 ngày',
   'household_meal_completed' => 'Hộ hoàn tất bữa ăn',
   'household_meal_deferred' => 'Bữa ăn phải lùi giờ',
   'household_plan_made' => 'Hộ lập kế hoạch trong ngày',

@@ -5,6 +5,16 @@ import 'world_history.dart';
 
 const String birthHouseholdGeneratorVersion = 'v2.20.0';
 const String extendedBirthHouseholdGeneratorVersion = 'v2.21.0';
+const String relationalBirthHouseholdGeneratorVersion = 'v3.0.0-dev.1';
+const String negotiatedBirthHouseholdGeneratorVersion = 'v3.0.0-dev.2';
+const String supportedBirthHouseholdGeneratorVersion = 'v3.0.0-dev.3';
+const String resilientBirthHouseholdGeneratorVersion = 'v3.0.0-dev.4';
+const String burdenedBirthHouseholdGeneratorVersion = 'v3.0.0-dev.5';
+const String conflictedBirthHouseholdGeneratorVersion = 'v3.0.0-dev.6';
+const String promisedBirthHouseholdGeneratorVersion = 'v3.0.0-dev.7';
+const String reliableBirthHouseholdGeneratorVersion = 'v3.0.0-dev.8';
+const String witnessedBirthHouseholdGeneratorVersion = 'v3.0.0-dev.9';
+const String attachedBirthHouseholdGeneratorVersion = 'v4.0.0-dev.1';
 
 class GeneratedFamilyMember {
   const GeneratedFamilyMember({
@@ -59,6 +69,16 @@ class GeneratedBirthHousehold {
     required this.infantFeedQuantity,
     this.caregiverRoutine = const <Map<String, Object?>>[],
     this.familyMembers = const <GeneratedFamilyMember>[],
+    this.familyMemoryEnabled = false,
+    this.familyCareNegotiationEnabled = false,
+    this.familyCareSupportEnabled = false,
+    this.familyCareResilienceEnabled = false,
+    this.familyCareBurdenEnabled = false,
+    this.familyCareConflictEnabled = false,
+    this.familyCarePromiseEnabled = false,
+    this.familyCareReliabilityEnabled = false,
+    this.familyCareWitnessMemoryEnabled = false,
+    this.infantAttachmentLearningEnabled = false,
   });
 
   final String siteId;
@@ -80,6 +100,16 @@ class GeneratedBirthHousehold {
   final int infantFeedQuantity;
   final List<Map<String, Object?>> caregiverRoutine;
   final List<GeneratedFamilyMember> familyMembers;
+  final bool familyMemoryEnabled;
+  final bool familyCareNegotiationEnabled;
+  final bool familyCareSupportEnabled;
+  final bool familyCareResilienceEnabled;
+  final bool familyCareBurdenEnabled;
+  final bool familyCareConflictEnabled;
+  final bool familyCarePromiseEnabled;
+  final bool familyCareReliabilityEnabled;
+  final bool familyCareWitnessMemoryEnabled;
+  final bool infantAttachmentLearningEnabled;
 
   Map<String, Object> toJson() => <String, Object>{
     'site_id': siteId,
@@ -102,6 +132,18 @@ class GeneratedBirthHousehold {
       'family_members': familyMembers
           .map((GeneratedFamilyMember value) => value.toJson())
           .toList(),
+    if (familyMemoryEnabled) 'family_memory_enabled': true,
+    if (familyCareNegotiationEnabled) 'family_care_negotiation_enabled': true,
+    if (familyCareSupportEnabled) 'family_care_support_enabled': true,
+    if (familyCareResilienceEnabled) 'family_care_resilience_enabled': true,
+    if (familyCareBurdenEnabled) 'family_care_burden_enabled': true,
+    if (familyCareConflictEnabled) 'family_care_conflict_enabled': true,
+    if (familyCarePromiseEnabled) 'family_care_promise_enabled': true,
+    if (familyCareReliabilityEnabled) 'family_care_reliability_enabled': true,
+    if (familyCareWitnessMemoryEnabled)
+      'family_care_witness_memory_enabled': true,
+    if (infantAttachmentLearningEnabled)
+      'infant_attachment_learning_enabled': true,
   };
 }
 
@@ -126,10 +168,15 @@ class GeneratedBirthHouseholds {
         throw ArgumentError('Generated birth household identifiers overlap.');
       }
       if (!personIds.add(value.caregiverId)) {
-        throw ArgumentError('Generated birth family person identifiers overlap.');
+        throw ArgumentError(
+          'Generated birth family person identifiers overlap.',
+        );
       }
-      if (!const <String>{'mother', 'father', 'guardian'}
-              .contains(value.caregiverRole) ||
+      if (!const <String>{
+            'mother',
+            'father',
+            'guardian',
+          }.contains(value.caregiverRole) ||
           value.caregiverName.isEmpty ||
           value.familyOriginSummary.isEmpty ||
           value.caregiverAgeYears < 18 ||
@@ -147,12 +194,15 @@ class GeneratedBirthHouseholds {
             member.ageYears < 18 ||
             member.careSkill < 0 ||
             member.careSkill > 1000 ||
-            !const <String>{'mother', 'father', 'guardian'}.contains(
-              member.roleToChild,
-            ) ||
-            !const <String>{'spouse', 'sibling'}.contains(
-              member.relationshipToCaregiver,
-            ) ||
+            !const <String>{
+              'mother',
+              'father',
+              'guardian',
+            }.contains(member.roleToChild) ||
+            !const <String>{
+              'spouse',
+              'sibling',
+            }.contains(member.relationshipToCaregiver) ||
             !member.authorizedResourceKeys.contains('infant_feed')) {
           throw ArgumentError('Generated birth family member data is invalid.');
         }
@@ -185,6 +235,16 @@ class BirthHouseholdGenerator {
     required GeneratedWorld world,
     required GeneratedWorldHistory history,
     bool includeFamilyMembers = false,
+    bool includeFamilyMemory = false,
+    bool includeFamilyCareNegotiation = false,
+    bool includeFamilyCareSupport = false,
+    bool includeFamilyCareResilience = false,
+    bool includeFamilyCareBurden = false,
+    bool includeFamilyCareConflict = false,
+    bool includeFamilyCarePromise = false,
+    bool includeFamilyCareReliability = false,
+    bool includeFamilyCareWitnessMemory = false,
+    bool includeInfantAttachmentLearning = false,
   }) {
     if (world.rootSeed != history.rootSeed ||
         world.fingerprint != history.worldFingerprint) {
@@ -197,7 +257,27 @@ class BirthHouseholdGenerator {
       rootSeed: world.rootSeed,
       worldFingerprint: world.fingerprint,
       historyFingerprint: history.fingerprint,
-      generatorVersion: includeFamilyMembers
+      generatorVersion: includeInfantAttachmentLearning
+          ? attachedBirthHouseholdGeneratorVersion
+          : includeFamilyCareWitnessMemory
+          ? witnessedBirthHouseholdGeneratorVersion
+          : includeFamilyCareReliability
+          ? reliableBirthHouseholdGeneratorVersion
+          : includeFamilyCarePromise
+          ? promisedBirthHouseholdGeneratorVersion
+          : includeFamilyCareConflict
+          ? conflictedBirthHouseholdGeneratorVersion
+          : includeFamilyCareBurden
+          ? burdenedBirthHouseholdGeneratorVersion
+          : includeFamilyCareResilience
+          ? resilientBirthHouseholdGeneratorVersion
+          : includeFamilyCareSupport
+          ? supportedBirthHouseholdGeneratorVersion
+          : includeFamilyCareNegotiation
+          ? negotiatedBirthHouseholdGeneratorVersion
+          : includeFamilyMemory
+          ? relationalBirthHouseholdGeneratorVersion
+          : includeFamilyMembers
           ? extendedBirthHouseholdGeneratorVersion
           : birthHouseholdGeneratorVersion,
       households: <GeneratedBirthHousehold>[
@@ -225,7 +305,79 @@ class BirthHouseholdGenerator {
           waterBase: 12500,
           fuelBase: 1900,
           feedBase: 3200,
-          includeFamilyMembers: includeFamilyMembers,
+          includeFamilyMembers:
+              includeFamilyMembers ||
+              includeFamilyMemory ||
+              includeFamilyCareNegotiation ||
+              includeFamilyCareSupport ||
+              includeFamilyCareResilience ||
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyMemory:
+              includeFamilyMemory ||
+              includeFamilyCareNegotiation ||
+              includeFamilyCareSupport ||
+              includeFamilyCareResilience ||
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareNegotiation:
+              includeFamilyCareNegotiation ||
+              includeFamilyCareSupport ||
+              includeFamilyCareResilience ||
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareSupport:
+              includeFamilyCareSupport ||
+              includeFamilyCareResilience ||
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareResilience:
+              includeFamilyCareResilience ||
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareBurden:
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareConflict:
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability,
+          includeFamilyCarePromise:
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareReliability:
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareWitnessMemory:
+              includeFamilyCareWitnessMemory || includeInfantAttachmentLearning,
+          includeInfantAttachmentLearning: includeInfantAttachmentLearning,
           supportingCaregiverId: 'N07',
         ),
         _generate(
@@ -252,7 +404,79 @@ class BirthHouseholdGenerator {
           waterBase: 27000,
           fuelBase: 5200,
           feedBase: 6000,
-          includeFamilyMembers: includeFamilyMembers,
+          includeFamilyMembers:
+              includeFamilyMembers ||
+              includeFamilyMemory ||
+              includeFamilyCareNegotiation ||
+              includeFamilyCareSupport ||
+              includeFamilyCareResilience ||
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyMemory:
+              includeFamilyMemory ||
+              includeFamilyCareNegotiation ||
+              includeFamilyCareSupport ||
+              includeFamilyCareResilience ||
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareNegotiation:
+              includeFamilyCareNegotiation ||
+              includeFamilyCareSupport ||
+              includeFamilyCareResilience ||
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareSupport:
+              includeFamilyCareSupport ||
+              includeFamilyCareResilience ||
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareResilience:
+              includeFamilyCareResilience ||
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareBurden:
+              includeFamilyCareBurden ||
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareConflict:
+              includeFamilyCareConflict ||
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability,
+          includeFamilyCarePromise:
+              includeFamilyCarePromise ||
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareReliability:
+              includeFamilyCareReliability ||
+              includeFamilyCareWitnessMemory ||
+              includeInfantAttachmentLearning,
+          includeFamilyCareWitnessMemory:
+              includeFamilyCareWitnessMemory || includeInfantAttachmentLearning,
+          includeInfantAttachmentLearning: includeInfantAttachmentLearning,
           supportingCaregiverId: 'N08',
         ),
       ],
@@ -276,6 +500,16 @@ class BirthHouseholdGenerator {
     required int fuelBase,
     required int feedBase,
     required bool includeFamilyMembers,
+    required bool includeFamilyMemory,
+    required bool includeFamilyCareNegotiation,
+    required bool includeFamilyCareSupport,
+    required bool includeFamilyCareResilience,
+    required bool includeFamilyCareBurden,
+    required bool includeFamilyCareConflict,
+    required bool includeFamilyCarePromise,
+    required bool includeFamilyCareReliability,
+    required bool includeFamilyCareWitnessMemory,
+    required bool includeInfantAttachmentLearning,
     required String supportingCaregiverId,
   }) {
     final _SeedStream stream = _SeedStream.derived(
@@ -379,6 +613,16 @@ class BirthHouseholdGenerator {
           ),
       caregiverRoutine: primaryRoutine,
       familyMembers: familyMembers,
+      familyMemoryEnabled: includeFamilyMemory,
+      familyCareNegotiationEnabled: includeFamilyCareNegotiation,
+      familyCareSupportEnabled: includeFamilyCareSupport,
+      familyCareResilienceEnabled: includeFamilyCareResilience,
+      familyCareBurdenEnabled: includeFamilyCareBurden,
+      familyCareConflictEnabled: includeFamilyCareConflict,
+      familyCarePromiseEnabled: includeFamilyCarePromise,
+      familyCareReliabilityEnabled: includeFamilyCareReliability,
+      familyCareWitnessMemoryEnabled: includeFamilyCareWitnessMemory,
+      infantAttachmentLearningEnabled: includeInfantAttachmentLearning,
     );
   }
 

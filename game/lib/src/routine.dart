@@ -129,6 +129,50 @@ class ScheduleConflict {
       );
 }
 
+/// Một cam kết hữu hạn nằm ngoài bảng giờ thường ngày của NPC.
+///
+/// Khác với [RoutineBlock], cam kết này dùng thời gian tuyệt đối và có danh
+/// tính bền qua save/load. Nó phù hợp với các chuyến đi phát sinh giữa ngày:
+/// hỏi tin, dẫn người đi gặp hoặc mang hàng sang hộ khác.
+class PersonalTimeCommitment {
+  const PersonalTimeCommitment({
+    required this.id,
+    required this.kind,
+    required this.activity,
+    required this.startedAtSeconds,
+    required this.endsAtSeconds,
+    this.relatedId,
+  });
+
+  final String id;
+  final String kind;
+  final String activity;
+  final int startedAtSeconds;
+  final int endsAtSeconds;
+  final String? relatedId;
+
+  int get durationSeconds => endsAtSeconds - startedAtSeconds;
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'id': id,
+    'kind': kind,
+    'activity': activity,
+    'started_at_seconds': startedAtSeconds,
+    'ends_at_seconds': endsAtSeconds,
+    if (relatedId != null) 'related_id': relatedId,
+  };
+
+  factory PersonalTimeCommitment.fromJson(Map<String, Object?> json) =>
+      PersonalTimeCommitment(
+        id: json['id']! as String,
+        kind: json['kind']! as String,
+        activity: json['activity']! as String,
+        startedAtSeconds: json['started_at_seconds']! as int,
+        endsAtSeconds: json['ends_at_seconds']! as int,
+        relatedId: json['related_id'] as String?,
+      );
+}
+
 class RoutineState {
   const RoutineState({
     required this.blocks,

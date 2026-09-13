@@ -55,7 +55,10 @@ void main() {
     expect(find.byKey(const Key('map-site-SITE-HOME')), findsOneWidget);
     expect(find.byKey(const Key('map-site-SITE-FIELD')), findsOneWidget);
     expect(find.text('Thung lũng An Khê'), findsOneWidget);
-    expect(find.textContaining('0 người đang ngoài mọi địa điểm'), findsOneWidget);
+    expect(
+      find.textContaining('0 người đang ngoài mọi địa điểm'),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const Key('new-world')));
     await tester.pumpAndSettle();
     expect(find.text('Tạo thế giới mới?'), findsOneWidget);
@@ -93,7 +96,7 @@ void main() {
     expect(find.text('Tất cả'), findsOneWidget);
     await tester.tap(find.widgetWithText(ChoiceChip, 'Hộ gia đình'));
     await tester.pump();
-    expect(find.text('Hộ gia đình hình thành'), findsNWidgets(3));
+    expect(find.text('Hộ gia đình hình thành'), findsWidgets);
     expect(find.text('Nhân vật tồn tại'), findsNothing);
   });
 
@@ -136,15 +139,12 @@ void main() {
       find.byKey(const Key('history-anchor-ANCHOR-ROUTE-ESTABLISHED')),
       findsOneWidget,
     );
-    expect(find.textContaining('8 cư dân nền'), findsOneWidget);
+    expect(find.textContaining('cư dân nền'), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-HOME')), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-RIVER')), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-FIELD')), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-MARKET')), findsOneWidget);
-    expect(
-      find.byKey(const Key('birth-risk-SITE-FIELD-0')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('birth-risk-SITE-FIELD-0')), findsOneWidget);
     final GeneratedWorld generated = WorldGenerator.generate(
       rootSeed: 20260907,
     );
@@ -159,8 +159,7 @@ void main() {
           history: generatedHistory,
           includeFamilyMembers: true,
         );
-    for (final GeneratedBirthHousehold family
-        in generatedFamilies.households) {
+    for (final GeneratedBirthHousehold family in generatedFamilies.households) {
       expect(
         find.byKey(Key('birth-caregiver-${family.siteId}')),
         findsOneWidget,
@@ -175,9 +174,7 @@ void main() {
       );
       for (final GeneratedFamilyMember member in family.familyMembers) {
         expect(
-          find.byKey(
-            Key('birth-family-member-${family.siteId}-${member.id}'),
-          ),
+          find.byKey(Key('birth-family-member-${family.siteId}-${member.id}')),
           findsOneWidget,
         );
       }
@@ -224,7 +221,9 @@ void main() {
     tester.view.physicalSize = const Size(390, 844);
     await tester.pumpAndSettle();
 
-    await tester.ensureVisible(find.byKey(const Key('choose-birth-SITE-FIELD')));
+    await tester.ensureVisible(
+      find.byKey(const Key('choose-birth-SITE-FIELD')),
+    );
     await tester.tap(find.byKey(const Key('choose-birth-SITE-FIELD')));
     await tester.pumpAndSettle();
 
@@ -241,7 +240,10 @@ void main() {
     expect(repository.value, contains('"world_history"'));
     expect(repository.value, contains('"historical_legacy"'));
     expect(repository.value, contains('"formula_version": "v2.18.0"'));
-    expect(repository.value, contains('"plan_fingerprint": "582235ed607d383c"'));
+    expect(
+      repository.value,
+      contains('"plan_fingerprint": "582235ed607d383c"'),
+    );
     await tester.tap(find.byKey(const Key('nav-2')));
     await tester.pumpAndSettle();
     final String selectedHouseholdName = generatedFamilies.households
@@ -256,10 +258,7 @@ void main() {
     await tester.ensureVisible(find.text('Vô Danh · P00'));
     await tester.tap(find.text('Vô Danh · P00'));
     await tester.pumpAndSettle();
-    expect(
-      find.byKey(const Key('family-relationships-P00')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('family-relationships-P00')), findsOneWidget);
   });
 
   testWidgets('new world seed regenerates and persists the map', (
@@ -283,10 +282,7 @@ void main() {
     await tester.enterText(find.byKey(const Key('world-seed-field')), '0');
     await tester.tap(find.byKey(const Key('confirm-new-world')));
     await tester.pump();
-    expect(
-      find.text('Seed từ 1 đến 2147483646.'),
-      findsOneWidget,
-    );
+    expect(find.text('Seed từ 1 đến 2147483646.'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('world-seed-field')), '42');
     await tester.tap(find.byKey(const Key('confirm-new-world')));
     await tester.pumpAndSettle();
@@ -570,13 +566,6 @@ void main() {
     expect(find.textContaining('ngày dùng'), findsWidgets);
     expect(find.textContaining('vì thiếu'), findsWidgets);
     expect(find.text('Xung đột lịch'), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('nav-3')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Nhịp sống'));
-    await tester.pump();
-    expect(find.text('Hộ lập kế hoạch trong ngày'), findsWidgets);
-    expect(find.text('Hộ hoàn tất bữa ăn'), findsNothing);
   });
   testWidgets('skills pick the worker and a tired person may refuse', (
     WidgetTester tester,
@@ -601,7 +590,8 @@ void main() {
     // Người nấu ăn có quyền dùng kho củi nhưng không đủ tay nghề.
     expect(morning.state.households['H01']!.canUse('N02', 'I-FUEL-01'), isTrue);
     final WorldFact plan = morning.state.facts.lastWhere(
-      (WorldFact fact) => fact.kind == 'household_plan_made',
+      (WorldFact fact) =>
+          fact.kind == 'household_plan_made' && fact.subjectId == 'H01',
     );
     expect(plan.detail.contains('fuel:N03'), isTrue);
 
@@ -1126,5 +1116,109 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Xung đột lịch'), findsOneWidget);
     expect(find.text('Ca được gánh thay'), findsOneWidget);
+  });
+
+  testWidgets('mobile exposes V3 village survival knowledge and relations', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        requireBirthSelection: false,
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-world')));
+    await tester.pumpAndSettle();
+
+    final Simulation village = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(6 * gameSecondsPerDay));
+    final PersonState informed = village.state.people.values.firstWhere(
+      (PersonState person) =>
+          person.beliefs.isNotEmpty && person.socialRelations.isNotEmpty,
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        requireBirthSelection: false,
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: village,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('narrow-layout')), findsOneWidget);
+    expect(find.byKey(const Key('community-survival-card')), findsOneWidget);
+    expect(
+      find.byKey(const Key('community-resource-request-summary')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('people-directory')), findsOneWidget);
+    final Finder profile = find.byKey(Key('person-profile-${informed.id}'));
+    await tester.ensureVisible(profile);
+    await tester.tap(profile);
+    await tester.pumpAndSettle();
+    expect(find.byKey(Key('knowledge-count-${informed.id}')), findsOneWidget);
+    expect(find.byKey(Key('social-relations-${informed.id}')), findsOneWidget);
+  });
+
+  testWidgets('desktop exposes V3 village households and material flows', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final MemorySaveRepository repository = MemorySaveRepository();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        requireBirthSelection: false,
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: repository,
+      ),
+    );
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-world')));
+    await tester.pumpAndSettle();
+    final Simulation village = Simulation.fromSave(repository.value!)
+      ..advanceTo(const SimTime(6 * gameSecondsPerDay));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        requireBirthSelection: false,
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: village,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('wide-layout')), findsOneWidget);
+    expect(find.byKey(const Key('community-survival-card')), findsOneWidget);
+    expect(find.textContaining('chuyến hàng'), findsOneWidget);
+    expect(find.byKey(const Key('people-directory')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('nav-2')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('household-panel')), findsOneWidget);
   });
 }

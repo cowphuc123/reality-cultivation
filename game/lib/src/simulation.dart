@@ -4,14 +4,20 @@ import 'adult_body.dart';
 import 'birth_household_generation.dart';
 import 'agenda.dart';
 import 'care.dart';
+import 'community_exchange.dart';
+import 'community_survival.dart';
+import 'social_relation.dart';
 import 'domestic.dart';
+import 'family.dart';
 import 'geometry.dart';
 import 'household.dart';
 import 'historical_legacy.dart';
 import 'infancy.dart';
+import 'knowledge.dart';
 import 'region.dart';
 import 'route.dart';
 import 'routine.dart';
+import 'settlement_population_generation.dart';
 import 'world_generation.dart';
 import 'world_entry.dart';
 import 'world_history.dart';
@@ -107,10 +113,17 @@ class PersonState {
     this.householdId,
     this.roomId,
     this.routine,
+    this.timeCommitment,
     this.skills,
     this.agenda,
     this.body,
+    this.occupationCode,
+    this.occupationName,
+    this.originSummary,
+    this.beliefs = const <String, BeliefState>{},
+    this.socialRelations = const <String, SocialRelationState>{},
     this.familyRelationships = const <String, String>{},
+    this.familyBonds = const <String, FamilyBondState>{},
   });
 
   final String id;
@@ -128,6 +141,9 @@ class PersonState {
   final String? roomId;
   final RoutineState? routine;
 
+  /// Chuyến đi hoặc nghĩa vụ phát sinh đang giữ thời gian của người này.
+  final PersonalTimeCommitment? timeCommitment;
+
   /// Tay nghề theo mã việc; người không có hồ sơ này làm ra sản lượng gốc.
   final PersonSkills? skills;
 
@@ -137,8 +153,22 @@ class PersonState {
   /// Cơ thể người lớn ở độ phân giải ngày, nếu người này đã trưởng thành.
   final AdultBodyState? body;
 
+  /// Nghề hiện tại và xuất thân được sinh cùng dân làng, có mặt trong bản lưu.
+  final String? occupationCode;
+  final String? occupationName;
+  final String? originSummary;
+
+  /// Mã bằng chứng nguồn -> điều người này đã quan sát hoặc được kể.
+  final Map<String, BeliefState> beliefs;
+
+  /// Mã người khác -> quan hệ một chiều hình thành qua tiếp xúc thật.
+  final Map<String, SocialRelationState> socialRelations;
+
   /// Mã người thân -> vai trò của người đó đối với nhân vật này.
   final Map<String, String> familyRelationships;
+
+  /// Mã người thân -> trạng thái gắn bó và ký ức một chiều.
+  final Map<String, FamilyBondState> familyBonds;
 
   PersonState withGoal(String goal) => _copy(activeGoal: goal);
 
@@ -163,17 +193,49 @@ class PersonState {
 
   PersonState withRoutine(RoutineState value) => _copy(routine: value);
 
+  PersonState withTimeCommitment(PersonalTimeCommitment value) =>
+      _copy(timeCommitment: value);
+
+  PersonState clearTimeCommitment() => _copy(clearTimeCommitment: true);
+
   PersonState withAgenda(PersonAgenda value) => _copy(agenda: value);
 
   PersonState withSkills(PersonSkills value) => _copy(skills: value);
 
   PersonState withBody(AdultBodyState value) => _copy(body: value);
 
+  PersonState learn(BeliefState belief) {
+    final BeliefState? existing = beliefs[belief.id];
+    // Nghe lại đúng bằng chứng gốc không làm độ chắc tăng vô hạn. Bản trực tiếp
+    // hoặc bản ít chặng hơn được giữ nếu hai đường truyền gặp nhau.
+    if (existing != null &&
+        (existing.confidence > belief.confidence ||
+            (existing.confidence == belief.confidence &&
+                existing.transmissionCount <= belief.transmissionCount))) {
+      return this;
+    }
+    return _copy(beliefs: <String, BeliefState>{...beliefs, belief.id: belief});
+  }
+
   PersonState withFamilyRelationship(String personId, String role) => _copy(
     familyRelationships: <String, String>{
       ...familyRelationships,
       personId: role,
     },
+  );
+
+  PersonState withSocialRelation(
+    String personId,
+    SocialRelationState relation,
+  ) => _copy(
+    socialRelations: <String, SocialRelationState>{
+      ...socialRelations,
+      personId: relation,
+    },
+  );
+
+  PersonState withFamilyBond(String personId, FamilyBondState bond) => _copy(
+    familyBonds: <String, FamilyBondState>{...familyBonds, personId: bond},
   );
 
   PersonState _copy({
@@ -184,10 +246,15 @@ class PersonState {
     CaregiverAgentState? caregiverAgent,
     String? roomId,
     RoutineState? routine,
+    PersonalTimeCommitment? timeCommitment,
     PersonSkills? skills,
     PersonAgenda? agenda,
     AdultBodyState? body,
+    Map<String, BeliefState>? beliefs,
+    Map<String, SocialRelationState>? socialRelations,
     Map<String, String>? familyRelationships,
+    Map<String, FamilyBondState>? familyBonds,
+    bool clearTimeCommitment = false,
   }) => PersonState(
     id: id,
     name: name,
@@ -200,10 +267,19 @@ class PersonState {
     householdId: householdId,
     roomId: roomId ?? this.roomId,
     routine: routine ?? this.routine,
+    timeCommitment: clearTimeCommitment
+        ? null
+        : (timeCommitment ?? this.timeCommitment),
     skills: skills ?? this.skills,
     agenda: agenda ?? this.agenda,
     body: body ?? this.body,
+    occupationCode: occupationCode,
+    occupationName: occupationName,
+    originSummary: originSummary,
+    beliefs: beliefs ?? this.beliefs,
+    socialRelations: socialRelations ?? this.socialRelations,
     familyRelationships: familyRelationships ?? this.familyRelationships,
+    familyBonds: familyBonds ?? this.familyBonds,
   );
 
   Map<String, Object?> toJson() {
@@ -222,13 +298,37 @@ class PersonState {
     if (householdId != null) result['household_id'] = householdId;
     if (roomId != null) result['room_id'] = roomId;
     if (routine != null) result['routine'] = routine!.toJson();
+    if (timeCommitment != null) {
+      result['time_commitment'] = timeCommitment!.toJson();
+    }
     if (skills != null) result['skills'] = skills!.toJson();
     if (agenda != null) result['agenda'] = agenda!.toJson();
     if (body != null) result['adult_body'] = body!.toJson();
+    if (occupationCode != null) result['occupation_code'] = occupationCode;
+    if (occupationName != null) result['occupation_name'] = occupationName;
+    if (originSummary != null) result['origin_summary'] = originSummary;
+    if (beliefs.isNotEmpty) {
+      result['beliefs'] = <String, Object?>{
+        for (final String key in beliefs.keys.toList()..sort())
+          key: beliefs[key]!.toJson(),
+      };
+    }
+    if (socialRelations.isNotEmpty) {
+      result['social_relations'] = <String, Object?>{
+        for (final String key in socialRelations.keys.toList()..sort())
+          key: socialRelations[key]!.toJson(),
+      };
+    }
     if (familyRelationships.isNotEmpty) {
       result['family_relationships'] = <String, String>{
         for (final String key in familyRelationships.keys.toList()..sort())
           key: familyRelationships[key]!,
+      };
+    }
+    if (familyBonds.isNotEmpty) {
+      result['family_bonds'] = <String, Object?>{
+        for (final String key in familyBonds.keys.toList()..sort())
+          key: familyBonds[key]!.toJson(),
       };
     }
     return result;
@@ -260,6 +360,11 @@ class PersonState {
         : RoutineState.fromJson(
             (json['routine']! as Map).cast<String, Object?>(),
           ),
+    timeCommitment: json['time_commitment'] == null
+        ? null
+        : PersonalTimeCommitment.fromJson(
+            (json['time_commitment']! as Map).cast<String, Object?>(),
+          ),
     skills: json['skills'] == null
         ? null
         : PersonSkills.fromJson(
@@ -275,9 +380,39 @@ class PersonState {
         : AdultBodyState.fromJson(
             (json['adult_body']! as Map).cast<String, Object?>(),
           ),
+    occupationCode: json['occupation_code'] as String?,
+    occupationName: json['occupation_name'] as String?,
+    originSummary: json['origin_summary'] as String?,
+    beliefs: <String, BeliefState>{
+      for (final MapEntry<String, Object?> entry
+          in ((json['beliefs'] as Map?)?.cast<String, Object?>() ??
+                  const <String, Object?>{})
+              .entries)
+        entry.key: BeliefState.fromJson(
+          (entry.value! as Map).cast<String, Object?>(),
+        ),
+    },
+    socialRelations: <String, SocialRelationState>{
+      for (final MapEntry<String, Object?> entry
+          in ((json['social_relations'] as Map?)?.cast<String, Object?>() ??
+                  const <String, Object?>{})
+              .entries)
+        entry.key: SocialRelationState.fromJson(
+          (entry.value! as Map).cast<String, Object?>(),
+        ),
+    },
     familyRelationships:
         (json['family_relationships'] as Map?)?.cast<String, String>() ??
         const <String, String>{},
+    familyBonds: <String, FamilyBondState>{
+      for (final MapEntry<String, Object?> entry
+          in ((json['family_bonds'] as Map?)?.cast<String, Object?>() ??
+                  const <String, Object?>{})
+              .entries)
+        entry.key: FamilyBondState.fromJson(
+          (entry.value! as Map).cast<String, Object?>(),
+        ),
+    },
   );
 }
 
@@ -328,6 +463,8 @@ class WorldState {
     required this.rooms,
     required this.illnesses,
     required this.supplyJourneys,
+    required this.communityExchanges,
+    this.communitySurvival,
     this.routes = const <String, TradeRoute>{},
     this.regions = const <String, WorldRegion>{},
     this.sites = const <String, WorldSite>{},
@@ -351,6 +488,8 @@ class WorldState {
     rooms: const <String, RoomState>{},
     illnesses: const <String, IllnessState>{},
     supplyJourneys: const <String, SupplyJourneyState>{},
+    communityExchanges: const <String, CommunityExchangeState>{},
+    communitySurvival: null,
     routes: const <String, TradeRoute>{},
     regions: const <String, WorldRegion>{},
     sites: const <String, WorldSite>{},
@@ -373,6 +512,8 @@ class WorldState {
   final Map<String, RoomState> rooms;
   final Map<String, IllnessState> illnesses;
   final Map<String, SupplyJourneyState> supplyJourneys;
+  final Map<String, CommunityExchangeState> communityExchanges;
+  final CommunitySurvivalState? communitySurvival;
 
   /// Các tuyến đường đã được vật chất hóa trong thế giới này.
   final Map<String, TradeRoute> routes;
@@ -449,6 +590,19 @@ class WorldState {
       result['supply_journeys'] = sorted
           .map((SupplyJourneyState value) => value.toJson())
           .toList();
+    }
+    if (communityExchanges.isNotEmpty) {
+      final List<CommunityExchangeState> sorted =
+          communityExchanges.values.toList()..sort(
+            (CommunityExchangeState a, CommunityExchangeState b) =>
+                a.id.compareTo(b.id),
+          );
+      result['community_exchanges'] = sorted
+          .map((CommunityExchangeState value) => value.toJson())
+          .toList();
+    }
+    if (communitySurvival != null) {
+      result['community_survival'] = communitySurvival!.toJson();
     }
     if (routes.isNotEmpty) {
       final List<TradeRoute> sorted = routes.values.toList()
@@ -552,6 +706,21 @@ class WorldState {
             (item as Map).cast<String, Object?>(),
           ),
       },
+      communityExchanges: <String, CommunityExchangeState>{
+        for (final Object? item
+            in (json['community_exchanges'] as List<Object?>? ??
+                const <Object?>[]))
+          CommunityExchangeState.fromJson(
+            (item! as Map).cast<String, Object?>(),
+          ).id: CommunityExchangeState.fromJson(
+            (item as Map).cast<String, Object?>(),
+          ),
+      },
+      communitySurvival: json['community_survival'] == null
+          ? null
+          : CommunitySurvivalState.fromJson(
+              (json['community_survival']! as Map).cast<String, Object?>(),
+            ),
       routes: <String, TradeRoute>{
         for (final Object? item
             in (json['routes'] as List<Object?>? ?? const <Object?>[]))
@@ -832,11 +1001,23 @@ class Simulation {
           'care_skill': plan.caregiverSkill,
           'current_activity': 'trông nom nhà cửa',
           'adult_body': const <String, Object?>{'mass_g': 52000},
-          if (plan.caregiverRoutine.isNotEmpty) 'routine': plan.caregiverRoutine,
+          if (plan.familyMemoryEnabled) 'agenda': const <String, Object?>{},
+          if (plan.caregiverRoutine.isNotEmpty)
+            'routine': plan.caregiverRoutine,
           if (plan.familyMembers.isNotEmpty)
             'family_relationships': <String, String>{
               for (final GeneratedFamilyMember member in plan.familyMembers)
                 member.id: member.relationshipToCaregiver,
+            },
+          if (plan.familyMemoryEnabled)
+            'family_bonds': <String, Object?>{
+              for (final GeneratedFamilyMember member in plan.familyMembers)
+                member.id: <String, Object?>{
+                  'affection': member.relationshipToCaregiver == 'spouse'
+                      ? 650
+                      : 600,
+                  'trust': 600,
+                },
             },
         },
       );
@@ -857,10 +1038,20 @@ class Simulation {
             'care_skill': member.careSkill,
             'current_activity': 'trông nom nhà cửa',
             'adult_body': const <String, Object?>{'mass_g': 52000},
+            if (plan.familyMemoryEnabled) 'agenda': const <String, Object?>{},
             'routine': member.routine,
             'family_relationships': <String, String>{
               plan.caregiverId: member.relationshipToCaregiver,
             },
+            if (plan.familyMemoryEnabled)
+              'family_bonds': <String, Object?>{
+                plan.caregiverId: <String, Object?>{
+                  'affection': member.relationshipToCaregiver == 'spouse'
+                      ? 650
+                      : 600,
+                  'trust': 600,
+                },
+              },
           },
         );
       }
@@ -933,7 +1124,9 @@ class Simulation {
           'name': plan.householdName,
           'member_ids': <String>[
             plan.caregiverId,
-            ...plan.familyMembers.map((GeneratedFamilyMember value) => value.id),
+            ...plan.familyMembers.map(
+              (GeneratedFamilyMember value) => value.id,
+            ),
           ],
           'resource_item_ids': itemIds,
           'authorized_users_by_item_id': rights,
@@ -951,10 +1144,218 @@ class Simulation {
                 member.id: member.roleToChild,
             },
             'family_care_scheduling': true,
+            if (plan.familyMemoryEnabled) 'family_memory': true,
+            if (plan.familyCareNegotiationEnabled)
+              'family_care_negotiation': true,
+            if (plan.familyCareSupportEnabled) 'family_care_support': true,
+            if (plan.familyCareResilienceEnabled)
+              'family_care_resilience': true,
+            if (plan.familyCareBurdenEnabled) 'family_care_burden': true,
+            if (plan.familyCareConflictEnabled) 'family_care_conflict': true,
+            if (plan.familyCarePromiseEnabled) 'family_care_promise': true,
+            if (plan.familyCareReliabilityEnabled)
+              'family_care_reliability': true,
+            if (plan.familyCareWitnessMemoryEnabled)
+              'family_care_witness_memory': true,
+            if (plan.infantAttachmentLearningEnabled)
+              'infant_attachment_learning': true,
           },
         },
       );
+      if (plan.familyCareNegotiationEnabled) {
+        schedule(
+          due: publishAt,
+          phase: EventPhase.bookkeeping,
+          kind: 'family_care_plan_review',
+          payload: <String, Object?>{'household_id': plan.householdId},
+        );
+      }
     }
+  }
+
+  /// Vật chất hóa phần dân số còn lại của làng thành người, hộ và tài sản thật.
+  void materializeSettlementPopulation(
+    GeneratedSettlementPopulation generated, {
+    required GeneratedWorldHistory history,
+    SimTime? due,
+  }) {
+    if (generated.rootSeed != _state.seed) {
+      throw StateError('Settlement population seed does not match simulation.');
+    }
+    final String? worldFingerprint =
+        _state.worldGenesis?.fingerprint ??
+        _state.pendingEvents
+            .where(
+              (ScheduledEvent event) => event.kind == 'world_genesis_completed',
+            )
+            .map(
+              (ScheduledEvent event) => event.payload['fingerprint'] as String?,
+            )
+            .firstOrNull;
+    if (worldFingerprint != generated.worldFingerprint) {
+      throw StateError('Settlement population does not belong to this map.');
+    }
+    if (history.rootSeed != _state.seed ||
+        history.worldFingerprint != generated.worldFingerprint ||
+        history.fingerprint != generated.historyFingerprint) {
+      throw StateError(
+        'Settlement population does not belong to this history.',
+      );
+    }
+    if (_state.pendingEvents.any(
+          (ScheduledEvent event) =>
+              event.payload['settlement_population_fingerprint'] != null,
+        ) ||
+        _state.households.keys.any((String id) => id.startsWith('VH'))) {
+      throw StateError('Settlement population has already been materialized.');
+    }
+    final SimTime publishAt = due ?? _state.now;
+    for (final GeneratedSettlementHousehold household in generated.households) {
+      final WorldSite site = _generatedSiteFor(household.siteId);
+      schedule(
+        due: publishAt,
+        phase: EventPhase.completion,
+        kind: 'room_created',
+        payload: <String, Object?>{
+          'room_id': household.roomId,
+          'name': household.roomName,
+          'household_id': household.id,
+          'anchor_position_mm': site.center.xMm,
+          'anchor_position_y_mm': site.center.yMm,
+        },
+      );
+      for (
+        int personIndex = 0;
+        personIndex < household.people.length;
+        personIndex++
+      ) {
+        final GeneratedSettlementPerson person = household.people[personIndex];
+        final Map<String, String> relationships = <String, String>{};
+        final Map<String, Object?> bonds = <String, Object?>{};
+        for (
+          int otherIndex = 0;
+          otherIndex < household.people.length;
+          otherIndex++
+        ) {
+          if (otherIndex == personIndex) continue;
+          final GeneratedSettlementPerson other = household.people[otherIndex];
+          final bool spouses =
+              (personIndex == 0 && otherIndex == 1) ||
+              (personIndex == 1 && otherIndex == 0);
+          relationships[other.id] = spouses ? 'spouse' : 'relative';
+          bonds[other.id] = <String, Object?>{
+            'affection': spouses ? 650 : 520,
+            'trust': spouses ? 620 : 540,
+          };
+        }
+        schedule(
+          due: publishAt,
+          phase: EventPhase.completion,
+          kind: 'person_created',
+          payload: <String, Object?>{
+            'person_id': person.id,
+            'name': person.name,
+            'birth_seconds': -person.ageYears * 365 * gameSecondsPerDay,
+            'position_mm': site.center.xMm + personIndex * 1400,
+            'position_y_mm': site.center.yMm + personIndex * 900,
+            'room_id': household.roomId,
+            'household_id': household.id,
+            'caregiver_agent': true,
+            'care_skill': person.careSkill,
+            'current_activity': person.occupationName,
+            'routine': person.routine,
+            'skills': person.skills,
+            'agenda': const <String, Object?>{},
+            'adult_body': <String, Object?>{
+              'mass_g': 45000 + (person.ageYears % 15) * 900,
+            },
+            'occupation_code': person.occupationCode,
+            'occupation_name': person.occupationName,
+            'origin_summary': person.originSummary,
+            'family_relationships': relationships,
+            'family_bonds': bonds,
+          },
+        );
+      }
+      final Map<String, (String, int, String)> resources =
+          <String, (String, int, String)>{
+            'food': ('staple_food', household.foodQuantity, 'g'),
+            'water': ('clean_water', household.waterQuantity, 'ml'),
+            'fuel': ('firewood', household.fuelQuantity, 'g'),
+          };
+      final Map<String, String> itemIds = <String, String>{};
+      final Map<String, List<String>> rights = <String, List<String>>{};
+      for (final MapEntry<String, (String, int, String)> resource
+          in resources.entries) {
+        final String itemId = 'I-${household.id}-${resource.key.toUpperCase()}';
+        itemIds[resource.key] = itemId;
+        rights[itemId] = household.people
+            .map((GeneratedSettlementPerson value) => value.id)
+            .toList();
+        schedule(
+          due: publishAt,
+          phase: EventPhase.completion,
+          kind: 'item_created',
+          payload: <String, Object?>{
+            'item_id': itemId,
+            'kind': resource.value.$1,
+            'position_mm': site.center.xMm,
+            'position_y_mm': site.center.yMm,
+            'room_id': household.roomId,
+            'quantity': resource.value.$2,
+            'unit': resource.value.$3,
+            'owner_household_id': household.id,
+          },
+        );
+      }
+      final GeneratedSettlementPerson mealActor = household.people.firstWhere(
+        (GeneratedSettlementPerson person) => person.occupationCode == 'cook',
+        orElse: () => household.people.first,
+      );
+      schedule(
+        due: publishAt,
+        phase: EventPhase.completion,
+        kind: 'household_created',
+        payload: <String, Object?>{
+          'household_id': household.id,
+          'name': household.name,
+          'member_ids': household.people
+              .map((GeneratedSettlementPerson value) => value.id)
+              .toList(),
+          'resource_item_ids': itemIds,
+          'authorized_users_by_item_id': rights,
+          'scheduled_work_seconds_by_person': <String, int>{
+            for (final GeneratedSettlementPerson person in household.people)
+              person.id: 0,
+          },
+          'meal_actor_id': mealActor.id,
+          'auto_plan': true,
+          'enable_v2_6': true,
+          'enable_v2_11': true,
+          'enable_v2_13': true,
+          'settlement_population_fingerprint': generated.fingerprint,
+          'settlement_livelihood': household.livelihood,
+        },
+      );
+    }
+    if (generated.households.length >= 2) {
+      schedule(
+        due: publishAt.addSeconds(17 * 3600),
+        phase: EventPhase.transfer,
+        kind: 'community_exchange_cycle',
+        payload: <String, Object?>{
+          'population_fingerprint': generated.fingerprint,
+        },
+      );
+    }
+    schedule(
+      due: publishAt.addSeconds(23 * 3600 + 50 * 60),
+      phase: EventPhase.observation,
+      kind: 'community_survival_audit',
+      payload: <String, Object?>{
+        'population_fingerprint': generated.fingerprint,
+      },
+    );
   }
 
   WorldSite _generatedSiteFor(String siteId) {
@@ -965,7 +1366,7 @@ class Simulation {
         return WorldSite.fromJson(event.payload);
       }
     }
-    throw StateError('Birth household references unknown site $siteId.');
+    throw StateError('Generated household references unknown site $siteId.');
   }
 
   /// Mở giai đoạn chọn nơi sinh sau khi bản đồ và đời sống nền đã tồn tại.
@@ -993,6 +1394,29 @@ class Simulation {
 
   /// Địa điểm được kiểm tra từ trạng thái thật, không lưu cờ khả dụng riêng.
   List<BirthSiteCandidate> birthSiteCandidates() => _birthSiteCandidates();
+
+  /// Lớp quyết định phải dùng truy vấn này thay vì đọc WorldFact toàn tri.
+  List<BeliefState> beliefsOf(String personId, {String? topic}) {
+    final PersonState? person = _state.people[personId];
+    if (person == null) return const <BeliefState>[];
+    final List<BeliefState> beliefs =
+        person.beliefs.values
+            .where(
+              (BeliefState belief) => topic == null || belief.topic == topic,
+            )
+            .toList()
+          ..sort((BeliefState a, BeliefState b) {
+            final int byLearned = b.learnedAtSeconds.compareTo(
+              a.learnedAtSeconds,
+            );
+            return byLearned != 0 ? byLearned : a.id.compareTo(b.id);
+          });
+    return List<BeliefState>.unmodifiable(beliefs);
+  }
+
+  bool personKnowsClaim(String personId, String claimId) => beliefsOf(
+    personId,
+  ).any((BeliefState belief) => belief.claimId == claimId);
 
   List<BirthSiteCandidate> _birthSiteCandidates({
     Map<String, CareItemState>? items,
@@ -1123,14 +1547,15 @@ class Simulation {
                   name: member.name,
                   roleToChild: relation.value,
                   careSkill: member.caregiverAgent?.careSkill ?? 0,
-                  currentActivity: member.routine?.currentActivity ??
+                  currentActivity:
+                      member.routine?.currentActivity ??
                       member.caregiverAgent?.currentActivity,
                   canUseInfantFeed: household.canUse(member.id, usableFeed.id),
                 ),
           ]..sort(
-              (BirthFamilyMemberSummary a, BirthFamilyMemberSummary b) =>
-                  a.personId.compareTo(b.personId),
-            ),
+            (BirthFamilyMemberSummary a, BirthFamilyMemberSummary b) =>
+                a.personId.compareTo(b.personId),
+          ),
         ),
       );
     }
@@ -1242,6 +1667,7 @@ class Simulation {
         rooms: _state.rooms,
         illnesses: _state.illnesses,
         supplyJourneys: _state.supplyJourneys,
+        communityExchanges: _state.communityExchanges,
         routes: _state.routes,
         regions: _state.regions,
         sites: _state.sites,
@@ -1249,6 +1675,7 @@ class Simulation {
         worldEntry: _state.worldEntry,
         worldHistory: _state.worldHistory,
         historicalLegacy: _state.historicalLegacy,
+        communitySurvival: _state.communitySurvival,
       );
       _applyEvent(event);
     }
@@ -1288,10 +1715,10 @@ class Simulation {
             _state.worldEntry?.playerPersonId == personId
             ? _state.worldEntry!.markBorn()
             : _state.worldEntry;
-        final String? caregiverRole = event.payload['caregiver_role'] as String?;
-        final Map<String, String> familyRoles = household
-                    ?.birthFamilyRolesByPersonId.isNotEmpty ==
-                true
+        final String? caregiverRole =
+            event.payload['caregiver_role'] as String?;
+        final Map<String, String> familyRoles =
+            household?.birthFamilyRolesByPersonId.isNotEmpty == true
             ? household!.birthFamilyRolesByPersonId
             : caregiverRole == null || caregiverId.isEmpty
             ? const <String, String>{}
@@ -1302,10 +1729,21 @@ class Simulation {
         for (final MapEntry<String, String> relation in familyRoles.entries) {
           final PersonState? adult = people[relation.key];
           if (adult == null) continue;
-          people[adult.id] = adult.withFamilyRelationship(
+          PersonState nextAdult = adult.withFamilyRelationship(
             personId,
             relation.value == 'guardian' ? 'ward' : 'child',
           );
+          if (household?.familyMemory == true) {
+            nextAdult = nextAdult.withFamilyBond(
+              personId,
+              FamilyBondState(
+                affection: 620,
+                trust: 600,
+                careObligation: relation.value == 'guardian' ? 760 : 860,
+              ),
+            );
+          }
+          people[adult.id] = nextAdult;
         }
         _replace(
           people: <String, PersonState>{
@@ -1320,6 +1758,15 @@ class Simulation {
               householdId: householdId,
               roomId: event.payload['room_id'] as String?,
               familyRelationships: familyRoles,
+              familyBonds: household?.familyMemory == true
+                  ? <String, FamilyBondState>{
+                      for (final String adultId in familyRoles.keys)
+                        adultId: const FamilyBondState(
+                          affection: 600,
+                          trust: 650,
+                        ),
+                    }
+                  : const <String, FamilyBondState>{},
             ),
           },
           facts: <WorldFact>[
@@ -1396,10 +1843,23 @@ class Simulation {
                       (event.payload['adult_body']! as Map)
                           .cast<String, Object?>(),
                     ),
+              occupationCode: event.payload['occupation_code'] as String?,
+              occupationName: event.payload['occupation_name'] as String?,
+              originSummary: event.payload['origin_summary'] as String?,
               familyRelationships:
                   (event.payload['family_relationships'] as Map?)
                       ?.cast<String, String>() ??
                   const <String, String>{},
+              familyBonds: <String, FamilyBondState>{
+                for (final MapEntry<String, Object?> entry
+                    in ((event.payload['family_bonds'] as Map?)
+                                ?.cast<String, Object?>() ??
+                            const <String, Object?>{})
+                        .entries)
+                  entry.key: FamilyBondState.fromJson(
+                    (entry.value! as Map).cast<String, Object?>(),
+                  ),
+              },
             ),
           },
           facts: <WorldFact>[
@@ -1416,6 +1876,26 @@ class Simulation {
         _applyItemCreated(event);
       case 'household_created':
         _applyHouseholdCreated(event);
+      case 'community_exchange_cycle':
+        _applyCommunityExchangeCycle(event);
+      case 'community_exchange_arrived':
+        _applyCommunityExchangeArrived(event);
+      case 'knowledge_shared':
+        _applyKnowledgeShared(event);
+      case 'community_survival_audit':
+        _applyCommunitySurvivalAudit(event);
+      case 'community_resource_response':
+        _applyCommunityResourceResponse(event);
+      case 'community_resource_inquiry_answered':
+        _applyCommunityResourceInquiryAnswered(event);
+      case 'community_resource_introduction_arrived':
+        _applyCommunityResourceIntroductionArrived(event);
+      case 'family_care_plan_review':
+        _applyFamilyCarePlanReview(event);
+      case 'family_care_support_retry':
+        _applyFamilyCareSupportRetry(event);
+      case 'family_care_conflict_conversation':
+        _applyFamilyCareConflictConversation(event);
       case 'household_meal':
         _applyHouseholdMeal(event);
       case 'household_work_settlement':
@@ -1710,6 +2190,10 @@ class Simulation {
 
   /// Điều đang giữ chân một người khỏi cam kết mới, nếu có.
   String? _competingObligation(PersonState person) {
+    final PersonalTimeCommitment? commitment = person.timeCommitment;
+    if (commitment != null && commitment.endsAtSeconds > _state.now.seconds) {
+      return commitment.activity;
+    }
     final RoutineState? routine = person.routine;
     if (routine?.preemptedBy != null) return routine!.preemptedBy;
     if (person.caregiverAgent?.available == false) {
@@ -1722,6 +2206,95 @@ class Simulation {
     final IllnessState? sick = _activeIllness(person.id);
     if (sick != null) return 'nghỉ vì ốm (${sick.severity}/1000)';
     return null;
+  }
+
+  /// Giữ đồng thời thời gian của mọi người tham gia một hành trình.
+  ///
+  /// Kiểm tra toàn bộ trước rồi mới ghi để không xảy ra trạng thái một nửa
+  /// đoàn đã đi còn người khác vẫn ở nhà. Khối việc đang chạy được cắt ngang;
+  /// giờ mất sẽ được [RoutineState] tính vào sản lượng khi khối kết thúc.
+  bool _beginPersonalCommitments({
+    required Iterable<String> personIds,
+    required String commitmentId,
+    required String kind,
+    required String activity,
+    required int endsAtSeconds,
+    String? relatedId,
+  }) {
+    final List<String> ids = personIds.toSet().toList()..sort();
+    if (endsAtSeconds <= _state.now.seconds || ids.isEmpty) return false;
+    final List<PersonState> people = <PersonState>[];
+    for (final String id in ids) {
+      final PersonState? person = _state.people[id];
+      if (person == null || _competingObligation(person) != null) return false;
+      people.add(person);
+    }
+    final Map<String, PersonState> updated = <String, PersonState>{
+      ..._state.people,
+    };
+    final List<WorldFact> facts = <WorldFact>[..._state.facts];
+    for (final PersonState person in people) {
+      final PersonalTimeCommitment commitment = PersonalTimeCommitment(
+        id: commitmentId,
+        kind: kind,
+        activity: activity,
+        startedAtSeconds: _state.now.seconds,
+        endsAtSeconds: endsAtSeconds,
+        relatedId: relatedId,
+      );
+      updated[person.id] = _preemptRoutine(
+        person.withTimeCommitment(commitment),
+        activity,
+      );
+      facts.add(
+        _fact(
+          'personal_time_committed',
+          person.id,
+          'commitment=$commitmentId kind=$kind activity=$activity '
+              'ends_at=$endsAtSeconds related=${relatedId ?? 'none'}',
+        ),
+      );
+    }
+    _replace(people: updated, facts: facts);
+    return true;
+  }
+
+  /// Trả người tham gia về nhịp sống cũ và tính mệt cho thời gian đi đường.
+  void _endPersonalCommitments(
+    Iterable<String> personIds,
+    String commitmentId,
+  ) {
+    final Map<String, PersonState> updated = <String, PersonState>{
+      ..._state.people,
+    };
+    final List<WorldFact> facts = <WorldFact>[..._state.facts];
+    bool changed = false;
+    for (final String id in personIds.toSet()) {
+      final PersonState? person = updated[id];
+      final PersonalTimeCommitment? commitment = person?.timeCommitment;
+      if (person == null ||
+          commitment == null ||
+          commitment.id != commitmentId) {
+        continue;
+      }
+      final int elapsed = (_state.now.seconds - commitment.startedAtSeconds)
+          .clamp(0, commitment.durationSeconds);
+      PersonState next = _resumeRoutine(person).clearTimeCommitment();
+      if (next.agenda != null && elapsed > 0) {
+        next = next.withAgenda(next.agenda!.tire(elapsed).logWork(elapsed));
+      }
+      updated[id] = next;
+      facts.add(
+        _fact(
+          'personal_time_released',
+          id,
+          'commitment=$commitmentId kind=${commitment.kind} '
+              'elapsed_seconds=$elapsed',
+        ),
+      );
+      changed = true;
+    }
+    if (changed) _replace(people: updated, facts: facts);
   }
 
   /// Năng lượng của một trăm gam lương thực khô trong fixture.
@@ -1789,6 +2362,18 @@ class Simulation {
     return base + drinkers * _dailyDrinkMlPerAdult;
   }
 
+  String? _workRoomForHousehold(
+    HouseholdState household,
+    String preferredRoomId,
+  ) {
+    final RoomState? preferred = _state.rooms[preferredRoomId];
+    if (preferred?.householdId == household.id) return preferredRoomId;
+    return _state.rooms.values
+        .where((RoomState room) => room.householdId == household.id)
+        .map((RoomState room) => room.id)
+        .firstOrNull;
+  }
+
   /// Nhu cầu vật chất của hộ, suy từ tồn kho thật tại thời điểm gọi.
   List<HouseholdNeed> householdNeeds(String householdId) {
     final HouseholdState? household = _state.households[householdId];
@@ -1813,6 +2398,1840 @@ class Simulation {
       return byUrgency != 0 ? byUrgency : a.kind.compareTo(b.kind);
     });
     return List<HouseholdNeed>.unmodifiable(needs);
+  }
+
+  /// Mỗi chiều đổi một phần sản lượng đặc trưng của hộ kia. Hai lượng hàng
+  /// rời kho cùng lúc; sự kiện đến nơi chỉ giải phóng hàng đang vận chuyển.
+  void _applyCommunityExchangeCycle(ScheduledEvent event) {
+    final SimTime nextCycle = event.due.addDays(1);
+    if (nextCycle.seconds < 30 * gameSecondsPerDay) {
+      schedule(
+        due: nextCycle,
+        phase: EventPhase.transfer,
+        kind: event.kind,
+        payload: event.payload,
+      );
+    }
+    final List<HouseholdState> eligible =
+        _state.households.values
+            .where(
+              (HouseholdState household) =>
+                  household.id.startsWith('VH') &&
+                  !_state.communityExchanges.values.any(
+                    (CommunityExchangeState exchange) =>
+                        exchange.status == CommunityExchangeStatus.traveling &&
+                        (exchange.firstHouseholdId == household.id ||
+                            exchange.secondHouseholdId == household.id),
+                  ),
+            )
+            .toList()
+          ..sort((HouseholdState a, HouseholdState b) => a.id.compareTo(b.id));
+    if (eligible.length < 2) return;
+    final int rotation = _state.now.day % eligible.length;
+    final List<HouseholdState> waiting = <HouseholdState>[
+      ...eligible.skip(rotation),
+      ...eligible.take(rotation),
+    ];
+    int ordinal = 0;
+    while (waiting.length >= 2) {
+      final HouseholdState first = waiting.removeAt(0);
+      final String? firstResource = _householdSpecialty(first);
+      if (firstResource == null) continue;
+      final int partnerIndex = waiting.indexWhere((HouseholdState candidate) {
+        final String? resource = _householdSpecialty(candidate);
+        return resource != null && resource != firstResource;
+      });
+      if (partnerIndex < 0) continue;
+      final HouseholdState second = waiting.removeAt(partnerIndex);
+      if (_departCommunityExchange(first, second, ordinal)) ordinal++;
+    }
+  }
+
+  String? _householdSpecialty(HouseholdState household) {
+    final PersonState? lead = household.memberIds
+        .map((String id) => _state.people[id])
+        .whereType<PersonState>()
+        .firstOrNull;
+    return switch (lead?.occupationCode) {
+      'gather_food' || 'trade' || 'herbalism' => 'food',
+      'fetch_water' => 'water',
+      'gather_fuel' => 'fuel',
+      _ => null,
+    };
+  }
+
+  PersonState? _exchangeCarrier(HouseholdState household, String itemId) {
+    final Set<String> authorized =
+        household.authorizedUsersByItemId[itemId] ?? const <String>{};
+    final List<PersonState> available = household.memberIds
+        .map((String id) => _state.people[id])
+        .whereType<PersonState>()
+        .where(
+          (PersonState person) =>
+              authorized.contains(person.id) &&
+              person.caregiverAgent?.available != false &&
+              _competingObligation(person) == null &&
+              !_state.illnesses.values.any(
+                (IllnessState illness) =>
+                    illness.personId == person.id && illness.active,
+              ),
+        )
+        .toList();
+    available.sort((PersonState left, PersonState right) {
+      final int byFatigue = (left.agenda?.fatigue ?? 0).compareTo(
+        right.agenda?.fatigue ?? 0,
+      );
+      return byFatigue != 0 ? byFatigue : left.id.compareTo(right.id);
+    });
+    return available.firstOrNull;
+  }
+
+  bool _departCommunityExchange(
+    HouseholdState first,
+    HouseholdState second,
+    int ordinal,
+  ) {
+    final String? firstResource = _householdSpecialty(first);
+    final String? secondResource = _householdSpecialty(second);
+    if (firstResource == null ||
+        secondResource == null ||
+        firstResource == secondResource) {
+      return false;
+    }
+    final String? firstItemId = first.resourceItemIds[firstResource];
+    final String? secondItemId = second.resourceItemIds[secondResource];
+    final CareItemState? firstItem = firstItemId == null
+        ? null
+        : _state.items[firstItemId];
+    final CareItemState? secondItem = secondItemId == null
+        ? null
+        : _state.items[secondItemId];
+    if (firstItem == null || secondItem == null) return false;
+    final PersonState? firstCarrier = _exchangeCarrier(first, firstItem.id);
+    final PersonState? secondCarrier = _exchangeCarrier(second, secondItem.id);
+    if (firstCarrier == null || secondCarrier == null) return false;
+    final int firstDailyUse = _dailyUse(firstResource, first);
+    final int secondDailyUse = _dailyUse(secondResource, second);
+    final int firstAvailable = firstItem.quantity - firstDailyUse * 2;
+    final int secondAvailable = secondItem.quantity - secondDailyUse * 2;
+    if (firstAvailable <= 0 || secondAvailable <= 0) return false;
+    final int firstAmount = firstAvailable < firstDailyUse
+        ? firstAvailable
+        : firstDailyUse;
+    final int secondAmount = secondAvailable < secondDailyUse
+        ? secondAvailable
+        : secondDailyUse;
+    final RoomState? firstRoom = _state.rooms.values
+        .where((RoomState room) => room.householdId == first.id)
+        .firstOrNull;
+    final RoomState? secondRoom = _state.rooms.values
+        .where((RoomState room) => room.householdId == second.id)
+        .firstOrNull;
+    if (firstRoom == null || secondRoom == null) return false;
+    final int distanceMm =
+        WorldPoint(
+          firstRoom.anchorPositionMm,
+          firstRoom.anchorPositionYMm,
+        ).distanceTo(
+          WorldPoint(secondRoom.anchorPositionMm, secondRoom.anchorPositionYMm),
+        );
+    final int firstSpeed =
+        firstCarrier.caregiverAgent?.movementSpeedMmPerSecond ?? 1000;
+    final int secondSpeed =
+        secondCarrier.caregiverAgent?.movementSpeedMmPerSecond ?? 1000;
+    final int slowestSpeed = firstSpeed < secondSpeed
+        ? firstSpeed
+        : secondSpeed;
+    final int rawTravelSeconds = distanceMm ~/ slowestSpeed.clamp(1, 1000000);
+    final int travelSeconds = rawTravelSeconds.clamp(15 * 60, 12 * 3600);
+    final int arrivalSeconds = _state.now.seconds + travelSeconds;
+    final String exchangeId =
+        'EX-${_state.now.day}-${ordinal + 1}-${first.id}-${second.id}';
+    final CommunityExchangeState exchange = CommunityExchangeState(
+      id: exchangeId,
+      firstHouseholdId: first.id,
+      secondHouseholdId: second.id,
+      firstCarrierId: firstCarrier.id,
+      secondCarrierId: secondCarrier.id,
+      firstResource: firstResource,
+      firstAmount: firstAmount,
+      secondResource: secondResource,
+      secondAmount: secondAmount,
+      departedAtSeconds: _state.now.seconds,
+      expectedArrivalSeconds: arrivalSeconds,
+      status: CommunityExchangeStatus.traveling,
+    );
+    final String commitmentId = 'TRAVEL-${exchange.id}';
+    if (!_beginPersonalCommitments(
+      personIds: <String>[firstCarrier.id, secondCarrier.id],
+      commitmentId: commitmentId,
+      kind: 'community_exchange',
+      activity: 'đang mang hàng đổi giữa các hộ',
+      endsAtSeconds: arrivalSeconds,
+      relatedId: exchange.id,
+    )) {
+      return false;
+    }
+    _replace(
+      items: <String, CareItemState>{
+        ..._state.items,
+        firstItem.id: firstItem.consume(firstAmount),
+        secondItem.id: secondItem.consume(secondAmount),
+      },
+      communityExchanges: <String, CommunityExchangeState>{
+        ..._state.communityExchanges,
+        exchange.id: exchange,
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'community_exchange_departed',
+          exchange.id,
+          'first=${first.id} give=$firstResource:$firstAmount '
+              'second=${second.id} give=$secondResource:$secondAmount '
+              'travel_seconds=$travelSeconds',
+        ),
+      ],
+    );
+    schedule(
+      due: SimTime(arrivalSeconds),
+      phase: EventPhase.transfer,
+      kind: 'community_exchange_arrived',
+      payload: <String, Object?>{'exchange_id': exchange.id},
+    );
+    _recordExchangeEncounter(exchange);
+    _recordExchangeObservation(exchange, 'departed');
+    _scheduleKnowledgeContact(
+      speakerId: firstCarrier.id,
+      listenerId: secondCarrier.id,
+      contextExchangeId: exchange.id,
+      delaySeconds: 10 * 60,
+    );
+    _scheduleKnowledgeContact(
+      speakerId: secondCarrier.id,
+      listenerId: firstCarrier.id,
+      contextExchangeId: exchange.id,
+      delaySeconds: 12 * 60,
+    );
+    return true;
+  }
+
+  bool _departNeedDrivenExchange({
+    required HouseholdState requester,
+    required HouseholdState donor,
+    required PersonState requesterActor,
+    required PersonState donorContact,
+    required String requestedResource,
+    required String offerResource,
+    required HouseholdNeed need,
+    required int relationScore,
+    required int donorWillingness,
+    required String resourceRequestId,
+  }) {
+    final String? offerItemId = requester.resourceItemIds[offerResource];
+    final String? requestedItemId = donor.resourceItemIds[requestedResource];
+    final CareItemState? offerItem = offerItemId == null
+        ? null
+        : _state.items[offerItemId];
+    final CareItemState? requestedItem = requestedItemId == null
+        ? null
+        : _state.items[requestedItemId];
+    if (offerItem == null || requestedItem == null) return false;
+    if (!requester.canUse(requesterActor.id, offerItem.id) ||
+        !donor.canUse(donorContact.id, requestedItem.id)) {
+      return false;
+    }
+    final int offerSurplus =
+        offerItem.quantity - _dailyUse(offerResource, requester) * 2;
+    final int requestedSurplus =
+        requestedItem.quantity - _dailyUse(requestedResource, donor) * 2;
+    if (offerSurplus <= 0 || requestedSurplus <= 0) return false;
+    final int offerDailyUse = _dailyUse(offerResource, requester);
+    final int offerAmount = offerSurplus < offerDailyUse
+        ? offerSurplus
+        : offerDailyUse;
+    final int requestedAmount = requestedSurplus < need.dailyUse
+        ? requestedSurplus
+        : need.dailyUse;
+    final RoomState? requesterRoom = _state.rooms.values
+        .where((RoomState room) => room.householdId == requester.id)
+        .firstOrNull;
+    final RoomState? donorRoom = _state.rooms.values
+        .where((RoomState room) => room.householdId == donor.id)
+        .firstOrNull;
+    if (requesterRoom == null || donorRoom == null) return false;
+    final int distanceMm =
+        WorldPoint(
+          requesterRoom.anchorPositionMm,
+          requesterRoom.anchorPositionYMm,
+        ).distanceTo(
+          WorldPoint(donorRoom.anchorPositionMm, donorRoom.anchorPositionYMm),
+        );
+    final int requesterSpeed =
+        requesterActor.caregiverAgent?.movementSpeedMmPerSecond ?? 1000;
+    final int donorSpeed =
+        donorContact.caregiverAgent?.movementSpeedMmPerSecond ?? 1000;
+    final int slowestSpeed = requesterSpeed < donorSpeed
+        ? requesterSpeed
+        : donorSpeed;
+    final int travelSeconds = (distanceMm ~/ slowestSpeed.clamp(1, 1000000))
+        .clamp(15 * 60, 12 * 3600);
+    final String exchangeId =
+        'EX-NEED-${_state.now.seconds}-${requester.id}-${donor.id}';
+    if (_state.communityExchanges.containsKey(exchangeId)) return false;
+    final CommunityExchangeState exchange = CommunityExchangeState(
+      id: exchangeId,
+      firstHouseholdId: requester.id,
+      secondHouseholdId: donor.id,
+      firstCarrierId: requesterActor.id,
+      secondCarrierId: donorContact.id,
+      firstResource: offerResource,
+      firstAmount: offerAmount,
+      secondResource: requestedResource,
+      secondAmount: requestedAmount,
+      departedAtSeconds: _state.now.seconds,
+      expectedArrivalSeconds: _state.now.seconds + travelSeconds,
+      status: CommunityExchangeStatus.traveling,
+      resourceRequestId: resourceRequestId,
+    );
+    final String commitmentId = 'TRAVEL-${exchange.id}';
+    if (!_beginPersonalCommitments(
+      personIds: <String>[requesterActor.id, donorContact.id],
+      commitmentId: commitmentId,
+      kind: 'need_driven_exchange',
+      activity: 'đang mang hàng cứu nhu cầu của hộ',
+      endsAtSeconds: exchange.expectedArrivalSeconds,
+      relatedId: exchange.id,
+    )) {
+      return false;
+    }
+    final CommunityResourceRequestState? request = _communityResourceRequest(
+      resourceRequestId,
+    );
+    if (request != null) {
+      _saveCommunityResourceRequest(
+        request.advance(
+          status: CommunityResourceRequestStatus.goodsInTransit,
+          atSeconds: _state.now.seconds,
+          askerId: requesterActor.id,
+          providerHouseholdId: donor.id,
+          providerContactId: donorContact.id,
+          exchangeId: exchange.id,
+        ),
+      );
+    }
+    _replace(
+      items: <String, CareItemState>{
+        ..._state.items,
+        offerItem.id: offerItem.consume(offerAmount),
+        requestedItem.id: requestedItem.consume(requestedAmount),
+      },
+      communityExchanges: <String, CommunityExchangeState>{
+        ..._state.communityExchanges,
+        exchange.id: exchange,
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'community_resource_response_started',
+          requester.id,
+          'resource=$requestedResource actor=${requesterActor.id} '
+              'contact=${donorContact.id} donor=${donor.id} '
+              'received=$requestedAmount offer=$offerResource:$offerAmount '
+              'relation_score=$relationScore '
+              'donor_willingness=$donorWillingness '
+              'travel_seconds=$travelSeconds',
+        ),
+      ],
+    );
+    schedule(
+      due: SimTime(exchange.expectedArrivalSeconds),
+      phase: EventPhase.transfer,
+      kind: 'community_exchange_arrived',
+      payload: <String, Object?>{'exchange_id': exchange.id},
+    );
+    _recordExchangeEncounter(exchange);
+    _recordExchangeObservation(exchange, 'departed');
+    _scheduleKnowledgeContact(
+      speakerId: requesterActor.id,
+      listenerId: donorContact.id,
+      contextExchangeId: exchange.id,
+      delaySeconds: 10 * 60,
+    );
+    _scheduleKnowledgeContact(
+      speakerId: donorContact.id,
+      listenerId: requesterActor.id,
+      contextExchangeId: exchange.id,
+      delaySeconds: 12 * 60,
+    );
+    return true;
+  }
+
+  void _applyCommunityExchangeArrived(ScheduledEvent event) {
+    final String exchangeId = event.payload['exchange_id']! as String;
+    final CommunityExchangeState? exchange =
+        _state.communityExchanges[exchangeId];
+    if (exchange == null ||
+        exchange.status != CommunityExchangeStatus.traveling) {
+      return;
+    }
+    _endPersonalCommitments(<String>[
+      exchange.firstCarrierId,
+      exchange.secondCarrierId,
+    ], 'TRAVEL-${exchange.id}');
+    final HouseholdState? first = _state.households[exchange.firstHouseholdId];
+    final HouseholdState? second =
+        _state.households[exchange.secondHouseholdId];
+    final CareItemState? firstDestination = first == null
+        ? null
+        : _state.items[first.resourceItemIds[exchange.secondResource]];
+    final CareItemState? secondDestination = second == null
+        ? null
+        : _state.items[second.resourceItemIds[exchange.firstResource]];
+    if (first == null ||
+        second == null ||
+        firstDestination == null ||
+        secondDestination == null) {
+      final Map<String, CareItemState> restored = <String, CareItemState>{
+        ..._state.items,
+      };
+      final String? firstSourceId =
+          first?.resourceItemIds[exchange.firstResource];
+      final String? secondSourceId =
+          second?.resourceItemIds[exchange.secondResource];
+      if (firstSourceId != null && restored[firstSourceId] != null) {
+        restored[firstSourceId] = restored[firstSourceId]!.replenish(
+          exchange.firstAmount,
+        );
+      }
+      if (secondSourceId != null && restored[secondSourceId] != null) {
+        restored[secondSourceId] = restored[secondSourceId]!.replenish(
+          exchange.secondAmount,
+        );
+      }
+      _replace(
+        items: restored,
+        communityExchanges: <String, CommunityExchangeState>{
+          ..._state.communityExchanges,
+          exchange.id: exchange.cancel(
+            _state.now.seconds,
+            'destination_ledger_missing',
+          ),
+        },
+        facts: <WorldFact>[
+          ..._state.facts,
+          _fact(
+            'community_exchange_cancelled',
+            exchange.id,
+            'reason=destination_ledger_missing cargo_returned=true',
+          ),
+        ],
+      );
+      _recordExchangeTradeOutcome(exchange, succeeded: false);
+      if (exchange.resourceRequestId != null) {
+        _recordCommunityResourceResponseFailure(
+          exchange.firstHouseholdId,
+          exchange.secondResource,
+          'exchange_cancelled_${exchange.cancelReason ?? 'destination_ledger_missing'}',
+          requestId: exchange.resourceRequestId,
+        );
+      }
+      return;
+    }
+    _replace(
+      items: <String, CareItemState>{
+        ..._state.items,
+        firstDestination.id: firstDestination.replenish(exchange.secondAmount),
+        secondDestination.id: secondDestination.replenish(exchange.firstAmount),
+      },
+      communityExchanges: <String, CommunityExchangeState>{
+        ..._state.communityExchanges,
+        exchange.id: exchange.complete(_state.now.seconds),
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'community_exchange_completed',
+          exchange.id,
+          'first=${first.id} received=${exchange.secondResource}:'
+              '${exchange.secondAmount} second=${second.id} '
+              'received=${exchange.firstResource}:${exchange.firstAmount}',
+        ),
+      ],
+    );
+    final CommunityExchangeState completed =
+        _state.communityExchanges[exchange.id]!;
+    final CommunityResourceRequestState? resourceRequest =
+        _communityResourceRequest(completed.resourceRequestId);
+    if (resourceRequest != null && resourceRequest.active) {
+      _saveCommunityResourceRequest(
+        resourceRequest.advance(
+          status: CommunityResourceRequestStatus.resolved,
+          atSeconds: _state.now.seconds,
+          exchangeId: completed.id,
+        ),
+        factKind: 'community_resource_request_resolved',
+        factDetail:
+            'resource=${resourceRequest.resource} exchange=${completed.id} '
+            'amount=${completed.secondAmount}',
+      );
+    }
+    _recordExchangeTradeOutcome(completed, succeeded: true);
+    _recordExchangeObservation(completed, 'completed');
+    _scheduleHouseholdDebrief(completed, completed.firstCarrierId);
+    _scheduleHouseholdDebrief(completed, completed.secondCarrierId);
+  }
+
+  void _recordExchangeEncounter(CommunityExchangeState exchange) {
+    final PersonState? first = _state.people[exchange.firstCarrierId];
+    final PersonState? second = _state.people[exchange.secondCarrierId];
+    if (first == null || second == null) return;
+    final bool relationStarted =
+        !first.socialRelations.containsKey(second.id) ||
+        !second.socialRelations.containsKey(first.id);
+    final String interactionId = 'encounter:${exchange.id}';
+    final SocialRelationState firstRelation =
+        (first.socialRelations[second.id] ??
+                SocialRelationState(otherPersonId: second.id))
+            .recordEncounter(
+              interactionId: interactionId,
+              atSeconds: _state.now.seconds,
+            );
+    final SocialRelationState secondRelation =
+        (second.socialRelations[first.id] ??
+                SocialRelationState(otherPersonId: first.id))
+            .recordEncounter(
+              interactionId: interactionId,
+              atSeconds: _state.now.seconds,
+            );
+    _replace(
+      people: <String, PersonState>{
+        ..._state.people,
+        first.id: first.withSocialRelation(second.id, firstRelation),
+        second.id: second.withSocialRelation(first.id, secondRelation),
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          relationStarted
+              ? 'social_relation_started'
+              : 'social_encounter_recorded',
+          exchange.id,
+          'first=${first.id} second=${second.id} '
+          'cause=community_exchange',
+        ),
+      ],
+    );
+  }
+
+  void _recordExchangeTradeOutcome(
+    CommunityExchangeState exchange, {
+    required bool succeeded,
+  }) {
+    final PersonState? first = _state.people[exchange.firstCarrierId];
+    final PersonState? second = _state.people[exchange.secondCarrierId];
+    if (first == null || second == null) return;
+    final String interactionId = 'trade:${exchange.id}';
+    final SocialRelationState firstRelation =
+        (first.socialRelations[second.id] ??
+                SocialRelationState(otherPersonId: second.id))
+            .recordTrade(
+              interactionId: interactionId,
+              atSeconds: _state.now.seconds,
+              succeeded: succeeded,
+            );
+    final SocialRelationState secondRelation =
+        (second.socialRelations[first.id] ??
+                SocialRelationState(otherPersonId: first.id))
+            .recordTrade(
+              interactionId: interactionId,
+              atSeconds: _state.now.seconds,
+              succeeded: succeeded,
+            );
+    _replace(
+      people: <String, PersonState>{
+        ..._state.people,
+        first.id: first.withSocialRelation(second.id, firstRelation),
+        second.id: second.withSocialRelation(first.id, secondRelation),
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'social_trade_trust_changed',
+          exchange.id,
+          'first=${first.id} second=${second.id} succeeded=$succeeded '
+              'first_trust=${firstRelation.tradeTrust} '
+              'second_trust=${secondRelation.tradeTrust}',
+        ),
+      ],
+    );
+  }
+
+  void _recordExchangeObservation(
+    CommunityExchangeState exchange,
+    String stage,
+  ) {
+    final String claimId = 'exchange:${exchange.id}:$stage';
+    final List<String> witnesses = <String>[
+      exchange.firstCarrierId,
+      exchange.secondCarrierId,
+    ];
+    final Map<String, PersonState> people = <String, PersonState>{
+      ..._state.people,
+    };
+    int learned = 0;
+    for (final String witnessId in witnesses) {
+      final PersonState? witness = people[witnessId];
+      if (witness == null) continue;
+      final String evidenceId = '$claimId:$witnessId';
+      final BeliefState belief = BeliefState(
+        id: evidenceId,
+        claimId: claimId,
+        topic: 'community_exchange',
+        subjectId: exchange.id,
+        summary: stage == 'departed'
+            ? '${exchange.firstHouseholdId} và ${exchange.secondHouseholdId} đã giao hàng để đổi.'
+            : 'Hàng đổi giữa ${exchange.firstHouseholdId} và ${exchange.secondHouseholdId} đã tới nơi.',
+        eventAtSeconds: _state.now.seconds,
+        learnedAtSeconds: _state.now.seconds,
+        acquisition: KnowledgeAcquisition.observation,
+        sourcePersonId: witnessId,
+        originPersonId: witnessId,
+        originEvidenceId: evidenceId,
+        confidence: 1000,
+      );
+      final PersonState next = witness.learn(belief);
+      if (!identical(next, witness)) {
+        people[witnessId] = next;
+        learned++;
+      }
+    }
+    if (learned == 0) return;
+    _replace(
+      people: people,
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'knowledge_observed',
+          exchange.id,
+          'claim=$claimId witnesses=${witnesses.join(',')} count=$learned',
+        ),
+      ],
+    );
+  }
+
+  void _scheduleKnowledgeContact({
+    required String speakerId,
+    required String listenerId,
+    required String contextExchangeId,
+    required int delaySeconds,
+  }) {
+    final PersonState? speaker = _state.people[speakerId];
+    final PersonState? listener = _state.people[listenerId];
+    if (speaker == null || listener == null) return;
+    final List<BeliefState> shareable =
+        speaker.beliefs.values
+            .where(
+              (BeliefState belief) => !listener.beliefs.containsKey(belief.id),
+            )
+            .toList()
+          ..sort((BeliefState a, BeliefState b) {
+            final int byTime = b.learnedAtSeconds.compareTo(a.learnedAtSeconds);
+            return byTime != 0 ? byTime : a.id.compareTo(b.id);
+          });
+    if (shareable.isEmpty) return;
+    schedule(
+      due: _state.now.addSeconds(delaySeconds),
+      phase: EventPhase.observation,
+      kind: 'knowledge_shared',
+      payload: <String, Object?>{
+        'speaker_id': speakerId,
+        'listener_id': listenerId,
+        'belief_id': shareable.first.id,
+        'context_exchange_id': contextExchangeId,
+      },
+    );
+  }
+
+  void _scheduleHouseholdDebrief(
+    CommunityExchangeState exchange,
+    String speakerId,
+  ) {
+    final PersonState? speaker = _state.people[speakerId];
+    final HouseholdState? household = speaker?.householdId == null
+        ? null
+        : _state.households[speaker!.householdId];
+    final List<String> listenerIds = <String>[
+      ...?household?.memberIds.where((String id) => id != speakerId),
+    ]..sort();
+    final String? listenerId = listenerIds.firstOrNull;
+    if (listenerId == null) return;
+    _scheduleKnowledgeContact(
+      speakerId: speakerId,
+      listenerId: listenerId,
+      contextExchangeId: exchange.id,
+      delaySeconds: 30 * 60,
+    );
+  }
+
+  void _applyKnowledgeShared(ScheduledEvent event) {
+    final String speakerId = event.payload['speaker_id']! as String;
+    final String listenerId = event.payload['listener_id']! as String;
+    final String beliefId = event.payload['belief_id']! as String;
+    final String exchangeId = event.payload['context_exchange_id']! as String;
+    final PersonState? speaker = _state.people[speakerId];
+    final PersonState? listener = _state.people[listenerId];
+    final BeliefState? belief = speaker?.beliefs[beliefId];
+    final CommunityExchangeState? exchange =
+        _state.communityExchanges[exchangeId];
+    if (speaker == null ||
+        listener == null ||
+        belief == null ||
+        exchange == null) {
+      return;
+    }
+    final bool sameHousehold =
+        speaker.householdId != null &&
+        speaker.householdId == listener.householdId;
+    final Set<String> carriers = <String>{
+      exchange.firstCarrierId,
+      exchange.secondCarrierId,
+    };
+    if (!sameHousehold || !carriers.contains(speakerId)) {
+      if (!(carriers.contains(speakerId) && carriers.contains(listenerId))) {
+        return;
+      }
+    }
+    final BeliefState relayed = belief.relayedBy(
+      speakerId: speakerId,
+      learnedAtSeconds: _state.now.seconds,
+    );
+    PersonState next = listener.learn(relayed);
+    if (identical(next, listener)) return;
+    SocialRelationState? informationRelation;
+    if (speaker.householdId != listener.householdId) {
+      informationRelation =
+          (next.socialRelations[speakerId] ??
+                  SocialRelationState(otherPersonId: speakerId))
+              .recordInformationReceived(
+                interactionId:
+                    'information:${belief.originEvidenceId}:$speakerId:$listenerId',
+                atSeconds: _state.now.seconds,
+                confidence: relayed.confidence,
+              );
+      next = next.withSocialRelation(speakerId, informationRelation);
+    }
+    _replace(
+      people: <String, PersonState>{..._state.people, listenerId: next},
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'knowledge_shared',
+          listenerId,
+          'speaker=$speakerId claim=${belief.claimId} '
+              'origin=${belief.originPersonId} confidence=${relayed.confidence} '
+              'hops=${relayed.transmissionCount}'
+              '${informationRelation == null ? '' : ' information_trust=${informationRelation.informationTrust}'}',
+        ),
+      ],
+    );
+  }
+
+  void _applyCommunitySurvivalAudit(ScheduledEvent event) {
+    final CommunitySurvivalState current =
+        _state.communitySurvival ?? const CommunitySurvivalState();
+    if (current.complete) return;
+    final CommunityDaySnapshot? previous = current.latest;
+    final List<HouseholdState> households = _state.households.values.toList()
+      ..sort((HouseholdState a, HouseholdState b) => a.id.compareTo(b.id));
+    final List<HouseholdSurvivalSnapshot> snapshots =
+        <HouseholdSurvivalSnapshot>[];
+    for (final HouseholdState household in households) {
+      int? quantityOf(String resource) {
+        final String? itemId = household.resourceItemIds[resource];
+        return itemId == null ? null : _state.items[itemId]?.quantity;
+      }
+
+      final List<String> pressureKinds = householdNeeds(household.id)
+          .where((HouseholdNeed need) => need.needed)
+          .map((HouseholdNeed need) => need.kind)
+          .toList();
+      final int activeIllnesses = household.memberIds
+          .where((String personId) => _activeIllness(personId) != null)
+          .length;
+      final int availableWorkers = household.memberIds.where((String id) {
+        final PersonState? person = _state.people[id];
+        return person != null &&
+            person.infancy == null &&
+            person.body != null &&
+            person.caregiverAgent?.available != false &&
+            _activeIllness(id) == null;
+      }).length;
+      final HouseholdSurvivalSnapshot? previousHousehold = previous?.households
+          .where(
+            (HouseholdSurvivalSnapshot value) =>
+                value.householdId == household.id,
+          )
+          .firstOrNull;
+      final int newMealShortfalls =
+          (household.mealShortfalls - (previousHousehold?.mealShortfalls ?? 0))
+              .clamp(0, household.mealShortfalls);
+      final int? food = quantityOf('food');
+      final int? water = quantityOf('water');
+      final int? fuel = quantityOf('fuel');
+      final List<String> criticalReasons = <String>[
+        if (food == null) 'missing_food_ledger' else if (food <= 0) 'no_food',
+        if (water == null)
+          'missing_water_ledger'
+        else if (water <= 0)
+          'no_water',
+        if (fuel == null) 'missing_fuel_ledger' else if (fuel <= 0) 'no_fuel',
+        if (availableWorkers == 0) 'no_available_adult_worker',
+        if (newMealShortfalls > 0) 'meal_shortfall',
+      ];
+      snapshots.add(
+        HouseholdSurvivalSnapshot(
+          householdId: household.id,
+          foodQuantity: food,
+          waterQuantity: water,
+          fuelQuantity: fuel,
+          availableAdultWorkers: availableWorkers,
+          activeIllnesses: activeIllnesses,
+          mealShortfalls: household.mealShortfalls,
+          newMealShortfalls: newMealShortfalls,
+          pressureKinds: pressureKinds,
+          criticalReasons: criticalReasons,
+        ),
+      );
+    }
+    final int traveling = _state.communityExchanges.values
+        .where(
+          (CommunityExchangeState exchange) =>
+              exchange.status == CommunityExchangeStatus.traveling,
+        )
+        .length;
+    final int overdue = _state.communityExchanges.values
+        .where(
+          (CommunityExchangeState exchange) =>
+              exchange.status == CommunityExchangeStatus.traveling &&
+              exchange.expectedArrivalSeconds < _state.now.seconds,
+        )
+        .length;
+    final CommunityDaySnapshot snapshot = CommunityDaySnapshot(
+      day: _state.now.day,
+      recordedAtSeconds: _state.now.seconds,
+      households: snapshots,
+      travelingExchanges: traveling,
+      overdueExchanges: overdue,
+    );
+    final CommunitySurvivalState next = current.record(snapshot);
+    _replace(
+      communitySurvival: next,
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          next.complete
+              ? 'community_survival_audit_completed'
+              : 'community_survival_day_recorded',
+          'community',
+          'day=${snapshot.day} recorded=${next.recordedDays}/'
+              '${next.targetDays} pressured=${snapshot.pressuredHouseholds} '
+              'critical=${snapshot.criticalHouseholds} overdue=$overdue '
+              'rescue_days=${next.daysRequiringUnsupportedRescue}',
+        ),
+      ],
+    );
+    if (!next.complete) {
+      schedule(
+        due: event.due.addDays(1),
+        phase: event.phase,
+        kind: event.kind,
+        payload: event.payload,
+      );
+    }
+    for (final HouseholdSurvivalSnapshot household in snapshots) {
+      if (household.pressureKinds.isEmpty) continue;
+      final String resource = household.pressureKinds.first;
+      final List<CommunityResourceRequestState> earlier =
+          (_state.communitySurvival?.resourceRequests.values ??
+                  const <CommunityResourceRequestState>[])
+              .where(
+                (CommunityResourceRequestState request) =>
+                    request.householdId == household.householdId &&
+                    request.resource == resource,
+              )
+              .toList()
+            ..sort(
+              (
+                CommunityResourceRequestState a,
+                CommunityResourceRequestState b,
+              ) => b.updatedAtSeconds.compareTo(a.updatedAtSeconds),
+            );
+      final CommunityResourceRequestState? latestRequest = earlier.firstOrNull;
+      final bool requestBlocksRetry =
+          latestRequest?.active == true ||
+          (latestRequest?.nextRetryAtSeconds ?? 0) > _state.now.seconds;
+      final bool alreadyTrading = _state.communityExchanges.values.any(
+        (CommunityExchangeState exchange) =>
+            exchange.status == CommunityExchangeStatus.traveling &&
+            (exchange.firstHouseholdId == household.householdId ||
+                exchange.secondHouseholdId == household.householdId),
+      );
+      if (requestBlocksRetry || alreadyTrading) continue;
+      final HouseholdNeed? need = householdNeeds(
+        household.householdId,
+      ).where((HouseholdNeed value) => value.kind == resource).firstOrNull;
+      if (need == null) continue;
+      final CommunityResourceRequestState request =
+          CommunityResourceRequestState(
+            id: 'RR-${snapshot.day}-${household.householdId}-$resource',
+            householdId: household.householdId,
+            resource: resource,
+            openedAtSeconds: _state.now.seconds,
+            updatedAtSeconds: _state.now.seconds,
+            status: CommunityResourceRequestStatus.detected,
+            urgency: need.urgency,
+          );
+      _saveCommunityResourceRequest(
+        request,
+        factKind: 'community_resource_request_opened',
+        factDetail:
+            'resource=$resource urgency=${need.urgency} day=${snapshot.day}',
+      );
+      schedule(
+        due: event.due.addSeconds(10 * 60),
+        phase: EventPhase.intent,
+        kind: 'community_resource_response',
+        payload: <String, Object?>{
+          'household_id': household.householdId,
+          'resource': resource,
+          'audit_day': snapshot.day,
+          'request_id': request.id,
+        },
+      );
+    }
+  }
+
+  CommunityResourceRequestState? _communityResourceRequest(String? id) =>
+      id == null ? null : _state.communitySurvival?.resourceRequests[id];
+
+  void _saveCommunityResourceRequest(
+    CommunityResourceRequestState request, {
+    String? factKind,
+    String? factDetail,
+  }) {
+    final CommunitySurvivalState survival =
+        _state.communitySurvival ?? const CommunitySurvivalState();
+    _replace(
+      communitySurvival: survival.withResourceRequest(request),
+      facts: factKind == null
+          ? null
+          : <WorldFact>[
+              ..._state.facts,
+              _fact(factKind, request.id, factDetail ?? ''),
+            ],
+    );
+  }
+
+  bool _personKnowsHouseholdProvides(
+    PersonState person,
+    String householdId,
+    String resource,
+  ) {
+    for (final BeliefState belief in person.beliefs.values) {
+      if (_beliefShowsHouseholdProvides(belief, householdId, resource)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void _applyCommunityResourceResponse(ScheduledEvent event) {
+    final String householdId = event.payload['household_id']! as String;
+    final String resource = event.payload['resource']! as String;
+    final String? requestId = event.payload['request_id'] as String?;
+    final CommunityResourceRequestState? request = _communityResourceRequest(
+      requestId,
+    );
+    if (request == null || !request.active) return;
+    final CommunityResourceRequestState seeking = request.advance(
+      status: CommunityResourceRequestStatus.seeking,
+      atSeconds: _state.now.seconds,
+      countAttempt: true,
+    );
+    _saveCommunityResourceRequest(seeking);
+    final HouseholdState? requester = _state.households[householdId];
+    if (requester == null) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'requesting_household_missing',
+        requestId: request.id,
+      );
+      return;
+    }
+    final HouseholdNeed? currentNeed = householdNeeds(householdId)
+        .where((HouseholdNeed need) => need.kind == resource && need.needed)
+        .firstOrNull;
+    if (currentNeed == null) {
+      _saveCommunityResourceRequest(
+        seeking.advance(
+          status: CommunityResourceRequestStatus.cancelled,
+          atSeconds: _state.now.seconds,
+        ),
+        factKind: 'community_resource_response_cancelled',
+        factDetail: 'resource=$resource reason=need_resolved_before_action',
+      );
+      return;
+    }
+    final bool alreadyTrading = _state.communityExchanges.values.any(
+      (CommunityExchangeState exchange) =>
+          exchange.status == CommunityExchangeStatus.traveling &&
+          (exchange.firstHouseholdId == householdId ||
+              exchange.secondHouseholdId == householdId),
+    );
+    if (alreadyTrading) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'household_already_has_goods_in_transit',
+        requestId: request.id,
+      );
+      return;
+    }
+    final String? offerResource = _householdSpecialty(requester);
+    if (offerResource == null || offerResource == resource) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'no_distinct_offer_resource',
+      );
+      return;
+    }
+    final String? offerItemId = requester.resourceItemIds[offerResource];
+    final CareItemState? offerItem = offerItemId == null
+        ? null
+        : _state.items[offerItemId];
+    if (offerItem == null) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'offer_ledger_missing',
+      );
+      return;
+    }
+    final int offerSurplus =
+        offerItem.quantity - _dailyUse(offerResource, requester) * 2;
+    if (offerSurplus <= 0) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'no_offer_surplus',
+      );
+      return;
+    }
+    final List<
+      ({
+        PersonState actor,
+        PersonState contact,
+        HouseholdState donor,
+        int requesterScore,
+        int donorWillingness,
+        int donorResourceUrgency,
+        bool accepted,
+      })
+    >
+    choices =
+        <
+          ({
+            PersonState actor,
+            PersonState contact,
+            HouseholdState donor,
+            int requesterScore,
+            int donorWillingness,
+            int donorResourceUrgency,
+            bool accepted,
+          })
+        >[];
+    for (final String actorId in requester.memberIds) {
+      final PersonState? actor = _state.people[actorId];
+      if (actor == null ||
+          actor.infancy != null ||
+          _competingObligation(actor) != null ||
+          !requester.canUse(actor.id, offerItem.id)) {
+        continue;
+      }
+      for (final SocialRelationState relation in actor.socialRelations.values) {
+        final PersonState? contact = _state.people[relation.otherPersonId];
+        final HouseholdState? donor = contact?.householdId == null
+            ? null
+            : _state.households[contact!.householdId];
+        if (contact == null ||
+            donor == null ||
+            donor.id == requester.id ||
+            _competingObligation(contact) != null ||
+            !_personKnowsHouseholdProvides(actor, donor.id, resource)) {
+          continue;
+        }
+        final String? donorItemId = donor.resourceItemIds[resource];
+        final CareItemState? donorItem = donorItemId == null
+            ? null
+            : _state.items[donorItemId];
+        if (donorItem == null || !donor.canUse(contact.id, donorItem.id)) {
+          continue;
+        }
+        final int donorSurplus =
+            donorItem.quantity - _dailyUse(resource, donor) * 2;
+        if (donorSurplus <= 0) continue;
+        final SocialRelationState? reverseRelation =
+            contact.socialRelations[actor.id];
+        if (reverseRelation == null) continue;
+        final int donorResourceUrgency =
+            householdNeeds(donor.id)
+                .where((HouseholdNeed need) => need.kind == resource)
+                .map((HouseholdNeed need) => need.urgency)
+                .firstOrNull ??
+            100;
+        final int offeredResourceUrgency =
+            householdNeeds(donor.id)
+                .where((HouseholdNeed need) => need.kind == offerResource)
+                .map((HouseholdNeed need) => need.urgency)
+                .firstOrNull ??
+            0;
+        final int donorWillingness =
+            reverseRelation.tradeTrust * 2 +
+            reverseRelation.goodwill +
+            reverseRelation.familiarity -
+            reverseRelation.resentment * 2 -
+            donorResourceUrgency * 8 +
+            offeredResourceUrgency * 4;
+        final int score =
+            relation.familiarity +
+            relation.tradeTrust * 2 +
+            relation.informationTrust +
+            relation.goodwill -
+            relation.resentment * 2;
+        choices.add((
+          actor: actor,
+          contact: contact,
+          donor: donor,
+          requesterScore: score,
+          donorWillingness: donorWillingness,
+          donorResourceUrgency: donorResourceUrgency,
+          accepted: donorWillingness >= 900,
+        ));
+      }
+    }
+    choices.sort((left, right) {
+      final int byPreference = right.requesterScore.compareTo(
+        left.requesterScore,
+      );
+      if (byPreference != 0) return byPreference;
+      final int byActor = left.actor.id.compareTo(right.actor.id);
+      return byActor != 0
+          ? byActor
+          : left.contact.id.compareTo(right.contact.id);
+    });
+    final choice = choices.firstOrNull;
+    if (choice == null) {
+      if (_scheduleCommunityResourceInquiry(
+        requester: requester,
+        requestedResource: resource,
+        offerItem: offerItem,
+        request: seeking,
+      )) {
+        return;
+      }
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'no_known_contact_with_surplus',
+        requestId: request.id,
+      );
+      return;
+    }
+    if (!choice.accepted) {
+      _recordResourceAidRefusal(
+        request: seeking,
+        actor: choice.actor,
+        contact: choice.contact,
+        donor: choice.donor,
+        resource: resource,
+        urgency: currentNeed.urgency,
+        donorResourceUrgency: choice.donorResourceUrgency,
+        donorWillingness: choice.donorWillingness,
+      );
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'known_contact_refused_to_risk_stock',
+        requestId: request.id,
+      );
+      return;
+    }
+    if (!_departNeedDrivenExchange(
+      requester: requester,
+      donor: choice.donor,
+      requesterActor: choice.actor,
+      donorContact: choice.contact,
+      requestedResource: resource,
+      offerResource: offerResource,
+      need: currentNeed,
+      relationScore: choice.requesterScore,
+      donorWillingness: choice.donorWillingness,
+      resourceRequestId: request.id,
+    )) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'departure_conditions_changed',
+        requestId: request.id,
+      );
+    }
+  }
+
+  void _recordResourceAidRefusal({
+    required CommunityResourceRequestState request,
+    required PersonState actor,
+    required PersonState contact,
+    required HouseholdState donor,
+    required String resource,
+    required int urgency,
+    required int donorResourceUrgency,
+    required int donorWillingness,
+  }) {
+    final PersonState? currentActor = _state.people[actor.id];
+    final SocialRelationState? relation =
+        currentActor?.socialRelations[contact.id];
+    if (currentActor == null || relation == null) return;
+    final String interactionId =
+        'resource-aid-refusal:${request.id}:${actor.id}:${contact.id}';
+    final SocialRelationState remembered = relation.recordResourceAidRefused(
+      interactionId: interactionId,
+      atSeconds: _state.now.seconds,
+      urgency: urgency,
+    );
+    _replace(
+      people: <String, PersonState>{
+        ..._state.people,
+        actor.id: currentActor.withSocialRelation(contact.id, remembered),
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'social_resource_aid_refused',
+          actor.id,
+          'request=${request.id} contact=${contact.id} donor=${donor.id} '
+              'resource=$resource urgency=$urgency '
+              'donor_urgency=$donorResourceUrgency '
+              'willingness=$donorWillingness '
+              'trade_trust=${remembered.tradeTrust} '
+              'goodwill=${remembered.goodwill} '
+              'resentment=${remembered.resentment}',
+        ),
+      ],
+    );
+    _saveCommunityResourceRequest(
+      request.advance(
+        status: CommunityResourceRequestStatus.seeking,
+        atSeconds: _state.now.seconds,
+        askerId: actor.id,
+        providerHouseholdId: donor.id,
+        providerContactId: contact.id,
+      ),
+    );
+  }
+
+  bool _scheduleCommunityResourceInquiry({
+    required HouseholdState requester,
+    required String requestedResource,
+    required CareItemState offerItem,
+    required CommunityResourceRequestState request,
+  }) {
+    final List<
+      ({
+        PersonState asker,
+        PersonState intermediary,
+        HouseholdState provider,
+        PersonState providerContact,
+        BeliefState answer,
+        int score,
+      })
+    >
+    possibilities =
+        <
+          ({
+            PersonState asker,
+            PersonState intermediary,
+            HouseholdState provider,
+            PersonState providerContact,
+            BeliefState answer,
+            int score,
+          })
+        >[];
+    for (final String askerId in requester.memberIds) {
+      final PersonState? asker = _state.people[askerId];
+      if (asker == null ||
+          asker.infancy != null ||
+          _competingObligation(asker) != null ||
+          !requester.canUse(asker.id, offerItem.id)) {
+        continue;
+      }
+      for (final SocialRelationState relation in asker.socialRelations.values) {
+        final PersonState? intermediary = _state.people[relation.otherPersonId];
+        if (intermediary == null ||
+            _competingObligation(intermediary) != null) {
+          continue;
+        }
+        for (final BeliefState answer in intermediary.beliefs.values) {
+          if (asker.beliefs.containsKey(answer.id)) continue;
+          final String? providerId = _providerHouseholdFromBelief(
+            answer,
+            requestedResource,
+          );
+          final HouseholdState? provider = providerId == null
+              ? null
+              : _state.households[providerId];
+          if (provider == null || provider.id == requester.id) continue;
+          final CommunityExchangeState? knownExchange =
+              _state.communityExchanges[answer.subjectId];
+          if (knownExchange == null) continue;
+          final String providerContactId =
+              knownExchange.firstHouseholdId == provider.id
+              ? knownExchange.firstCarrierId
+              : knownExchange.secondCarrierId;
+          final PersonState? providerContact = _state.people[providerContactId];
+          if (providerContact == null ||
+              providerContact.householdId != provider.id ||
+              _competingObligation(providerContact) != null) {
+            continue;
+          }
+          final bool providerIsIntermediaryHousehold =
+              intermediary.householdId == provider.id;
+          final SocialRelationState? referralRelation =
+              intermediary.socialRelations[providerContact.id];
+          if (!providerIsIntermediaryHousehold && referralRelation == null) {
+            continue;
+          }
+          final String? providerItemId =
+              provider.resourceItemIds[requestedResource];
+          final CareItemState? providerItem = providerItemId == null
+              ? null
+              : _state.items[providerItemId];
+          if (providerItem == null ||
+              !provider.canUse(providerContact.id, providerItem.id) ||
+              providerItem.quantity <=
+                  _dailyUse(requestedResource, provider) * 2) {
+            continue;
+          }
+          possibilities.add((
+            asker: asker,
+            intermediary: intermediary,
+            provider: provider,
+            providerContact: providerContact,
+            answer: answer,
+            score:
+                relation.informationTrust * 2 +
+                relation.familiarity +
+                relation.goodwill -
+                relation.resentment * 2 +
+                answer.confidence +
+                (referralRelation?.familiarity ?? 0),
+          ));
+        }
+      }
+    }
+    possibilities.sort((left, right) {
+      final int byScore = right.score.compareTo(left.score);
+      if (byScore != 0) return byScore;
+      final int byAsker = left.asker.id.compareTo(right.asker.id);
+      if (byAsker != 0) return byAsker;
+      final int byIntermediary = left.intermediary.id.compareTo(
+        right.intermediary.id,
+      );
+      if (byIntermediary != 0) return byIntermediary;
+      final int byProvider = left.provider.id.compareTo(right.provider.id);
+      if (byProvider != 0) return byProvider;
+      final int byProviderContact = left.providerContact.id.compareTo(
+        right.providerContact.id,
+      );
+      return byProviderContact != 0
+          ? byProviderContact
+          : left.answer.id.compareTo(right.answer.id);
+    });
+    if (possibilities.isEmpty) return false;
+    final possibility = possibilities.first;
+    final RoomState? askerRoom = possibility.asker.roomId == null
+        ? null
+        : _state.rooms[possibility.asker.roomId];
+    final RoomState? intermediaryRoom = possibility.intermediary.roomId == null
+        ? null
+        : _state.rooms[possibility.intermediary.roomId];
+    if (askerRoom == null || intermediaryRoom == null) return false;
+    final int distanceMm =
+        WorldPoint(
+          askerRoom.anchorPositionMm,
+          askerRoom.anchorPositionYMm,
+        ).distanceTo(
+          WorldPoint(
+            intermediaryRoom.anchorPositionMm,
+            intermediaryRoom.anchorPositionYMm,
+          ),
+        );
+    final int speed =
+        possibility.asker.caregiverAgent?.movementSpeedMmPerSecond ?? 1000;
+    final int travelSeconds = (distanceMm ~/ speed.clamp(1, 1000000)).clamp(
+      10 * 60,
+      12 * 3600,
+    );
+    final String commitmentId = 'INQUIRY-${request.id}';
+    if (!_beginPersonalCommitments(
+      personIds: <String>[possibility.asker.id],
+      commitmentId: commitmentId,
+      kind: 'resource_inquiry',
+      activity: 'đang đi hỏi nguồn hàng',
+      endsAtSeconds: _state.now.seconds + travelSeconds,
+      relatedId: request.id,
+    )) {
+      return false;
+    }
+    schedule(
+      due: _state.now.addSeconds(travelSeconds),
+      phase: EventPhase.observation,
+      kind: 'community_resource_inquiry_answered',
+      payload: <String, Object?>{
+        'household_id': requester.id,
+        'resource': requestedResource,
+        'asker_id': possibility.asker.id,
+        'intermediary_id': possibility.intermediary.id,
+        'belief_id': possibility.answer.id,
+        'provider_household_id': possibility.provider.id,
+        'provider_contact_id': possibility.providerContact.id,
+        'request_id': request.id,
+        'commitment_id': commitmentId,
+      },
+    );
+    _saveCommunityResourceRequest(
+      request.advance(
+        status: CommunityResourceRequestStatus.inquiring,
+        atSeconds: _state.now.seconds,
+        askerId: possibility.asker.id,
+        intermediaryId: possibility.intermediary.id,
+        providerHouseholdId: possibility.provider.id,
+        providerContactId: possibility.providerContact.id,
+      ),
+    );
+    _replace(
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'community_resource_inquiry_started',
+          requester.id,
+          'resource=$requestedResource asker=${possibility.asker.id} '
+              'intermediary=${possibility.intermediary.id} '
+              'provider=${possibility.provider.id} '
+              'travel_seconds=$travelSeconds',
+        ),
+      ],
+    );
+    return true;
+  }
+
+  String? _providerHouseholdFromBelief(BeliefState belief, String resource) {
+    if (belief.topic != 'community_exchange') return null;
+    final CommunityExchangeState? known =
+        _state.communityExchanges[belief.subjectId];
+    if (known == null) return null;
+    if (known.firstResource == resource) return known.firstHouseholdId;
+    if (known.secondResource == resource) return known.secondHouseholdId;
+    return null;
+  }
+
+  bool _beliefShowsHouseholdProvides(
+    BeliefState belief,
+    String householdId,
+    String resource,
+  ) {
+    return _providerHouseholdFromBelief(belief, resource) == householdId;
+  }
+
+  void _applyCommunityResourceInquiryAnswered(ScheduledEvent event) {
+    final String householdId = event.payload['household_id']! as String;
+    final String resource = event.payload['resource']! as String;
+    final String askerId = event.payload['asker_id']! as String;
+    final String intermediaryId = event.payload['intermediary_id']! as String;
+    final String beliefId = event.payload['belief_id']! as String;
+    final String providerHouseholdId =
+        event.payload['provider_household_id']! as String;
+    final String providerContactId =
+        event.payload['provider_contact_id']! as String;
+    final String requestId = event.payload['request_id']! as String;
+    _endPersonalCommitments(<String>[
+      askerId,
+    ], event.payload['commitment_id'] as String? ?? 'INQUIRY-$requestId');
+    final CommunityResourceRequestState? request = _communityResourceRequest(
+      requestId,
+    );
+    if (request == null || !request.active) return;
+    final PersonState? asker = _state.people[askerId];
+    final PersonState? intermediary = _state.people[intermediaryId];
+    final PersonState? providerContact = _state.people[providerContactId];
+    final BeliefState? answer = intermediary?.beliefs[beliefId];
+    if (asker == null ||
+        intermediary == null ||
+        providerContact == null ||
+        answer == null) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'inquiry_contact_or_memory_lost',
+      );
+      return;
+    }
+    if (asker.householdId != householdId ||
+        providerContact.householdId != providerHouseholdId ||
+        !_beliefShowsHouseholdProvides(answer, providerHouseholdId, resource)) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'inquiry_answer_no_longer_matches_need',
+      );
+      return;
+    }
+    if (providerHouseholdId != intermediary.householdId &&
+        !intermediary.socialRelations.containsKey(providerContactId)) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'intermediary_no_longer_knows_provider_contact',
+      );
+      return;
+    }
+    final SocialRelationState? askerRelation =
+        asker.socialRelations[intermediaryId];
+    final SocialRelationState? intermediaryRelation =
+        intermediary.socialRelations[askerId];
+    if (askerRelation == null || intermediaryRelation == null) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'inquiry_relationship_lost',
+      );
+      return;
+    }
+    final String encounterId =
+        'resource-inquiry:${event.id}:$askerId:$intermediaryId';
+    final BeliefState relayed = answer.relayedBy(
+      speakerId: intermediaryId,
+      learnedAtSeconds: _state.now.seconds,
+    );
+    PersonState nextAsker = asker.learn(relayed);
+    final SocialRelationState nextAskerRelation = askerRelation
+        .recordEncounter(
+          interactionId: '$encounterId:encounter',
+          atSeconds: _state.now.seconds,
+        )
+        .recordInformationReceived(
+          interactionId: '$encounterId:answer:${answer.originEvidenceId}',
+          atSeconds: _state.now.seconds,
+          confidence: relayed.confidence,
+        );
+    nextAsker = nextAsker.withSocialRelation(intermediaryId, nextAskerRelation);
+    final PersonState nextIntermediary = intermediary.withSocialRelation(
+      askerId,
+      intermediaryRelation.recordEncounter(
+        interactionId: '$encounterId:encounter',
+        atSeconds: _state.now.seconds,
+      ),
+    );
+    _replace(
+      people: <String, PersonState>{
+        ..._state.people,
+        askerId: nextAsker,
+        intermediaryId: nextIntermediary,
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'community_resource_inquiry_answered',
+          householdId,
+          'resource=$resource asker=$askerId '
+              'intermediary=$intermediaryId '
+              'provider_household=$providerHouseholdId '
+              'provider_contact=$providerContactId '
+              'confidence=${relayed.confidence} '
+              'origin=${answer.originPersonId}',
+        ),
+      ],
+    );
+    if (nextAsker.socialRelations.containsKey(providerContactId)) {
+      _saveCommunityResourceRequest(
+        request.advance(
+          status: CommunityResourceRequestStatus.negotiating,
+          atSeconds: _state.now.seconds,
+          askerId: askerId,
+          intermediaryId: intermediaryId,
+          providerHouseholdId: providerHouseholdId,
+          providerContactId: providerContactId,
+        ),
+      );
+      schedule(
+        due: _state.now.addSeconds(10 * 60),
+        phase: EventPhase.intent,
+        kind: 'community_resource_response',
+        payload: <String, Object?>{
+          'household_id': householdId,
+          'resource': resource,
+          'retry_after_inquiry': true,
+          'request_id': requestId,
+        },
+      );
+      return;
+    }
+    final RoomState? intermediaryRoom = intermediary.roomId == null
+        ? null
+        : _state.rooms[intermediary.roomId];
+    final RoomState? providerRoom = providerContact.roomId == null
+        ? null
+        : _state.rooms[providerContact.roomId];
+    if (intermediaryRoom == null || providerRoom == null) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'introduction_route_missing',
+      );
+      return;
+    }
+    final int distanceMm =
+        WorldPoint(
+          intermediaryRoom.anchorPositionMm,
+          intermediaryRoom.anchorPositionYMm,
+        ).distanceTo(
+          WorldPoint(
+            providerRoom.anchorPositionMm,
+            providerRoom.anchorPositionYMm,
+          ),
+        );
+    final int askerSpeed =
+        asker.caregiverAgent?.movementSpeedMmPerSecond ?? 1000;
+    final int intermediarySpeed =
+        intermediary.caregiverAgent?.movementSpeedMmPerSecond ?? 1000;
+    final int slowestSpeed = askerSpeed < intermediarySpeed
+        ? askerSpeed
+        : intermediarySpeed;
+    final int travelSeconds = (distanceMm ~/ slowestSpeed.clamp(1, 1000000))
+        .clamp(10 * 60, 12 * 3600);
+    final String commitmentId = 'INTRODUCTION-$requestId';
+    if (!_beginPersonalCommitments(
+      personIds: <String>[askerId, intermediaryId],
+      commitmentId: commitmentId,
+      kind: 'resource_introduction',
+      activity: 'đang đi gặp người của hộ nguồn',
+      endsAtSeconds: _state.now.seconds + travelSeconds,
+      relatedId: requestId,
+    )) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'introduction_participant_became_busy',
+        requestId: requestId,
+      );
+      return;
+    }
+    schedule(
+      due: _state.now.addSeconds(travelSeconds),
+      phase: EventPhase.observation,
+      kind: 'community_resource_introduction_arrived',
+      payload: <String, Object?>{
+        'household_id': householdId,
+        'resource': resource,
+        'asker_id': askerId,
+        'intermediary_id': intermediaryId,
+        'provider_household_id': providerHouseholdId,
+        'provider_contact_id': providerContactId,
+        'source_belief_id': beliefId,
+        'request_id': requestId,
+        'commitment_id': commitmentId,
+      },
+    );
+    _saveCommunityResourceRequest(
+      request.advance(
+        status: CommunityResourceRequestStatus.introductionTravel,
+        atSeconds: _state.now.seconds,
+        askerId: askerId,
+        intermediaryId: intermediaryId,
+        providerHouseholdId: providerHouseholdId,
+        providerContactId: providerContactId,
+      ),
+    );
+    _replace(
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'community_resource_introduction_started',
+          householdId,
+          'resource=$resource asker=$askerId '
+              'intermediary=$intermediaryId '
+              'provider_contact=$providerContactId '
+              'provider_household=$providerHouseholdId '
+              'travel_seconds=$travelSeconds',
+        ),
+      ],
+    );
+  }
+
+  void _applyCommunityResourceIntroductionArrived(ScheduledEvent event) {
+    final String householdId = event.payload['household_id']! as String;
+    final String resource = event.payload['resource']! as String;
+    final String askerId = event.payload['asker_id']! as String;
+    final String intermediaryId = event.payload['intermediary_id']! as String;
+    final String providerHouseholdId =
+        event.payload['provider_household_id']! as String;
+    final String providerContactId =
+        event.payload['provider_contact_id']! as String;
+    final String requestId = event.payload['request_id']! as String;
+    _endPersonalCommitments(<String>[
+      askerId,
+      intermediaryId,
+    ], event.payload['commitment_id'] as String? ?? 'INTRODUCTION-$requestId');
+    final CommunityResourceRequestState? request = _communityResourceRequest(
+      requestId,
+    );
+    if (request == null || !request.active) return;
+    final PersonState? asker = _state.people[askerId];
+    final PersonState? intermediary = _state.people[intermediaryId];
+    final PersonState? providerContact = _state.people[providerContactId];
+    if (asker == null || intermediary == null || providerContact == null) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'introduction_participant_missing',
+      );
+      return;
+    }
+    if (asker.householdId != householdId ||
+        providerContact.householdId != providerHouseholdId ||
+        !intermediary.socialRelations.containsKey(providerContactId)) {
+      _recordCommunityResourceResponseFailure(
+        householdId,
+        resource,
+        'introduction_connection_broken',
+      );
+      return;
+    }
+    final String interactionId =
+        'introduction:${event.id}:$askerId:$providerContactId';
+    final SocialRelationState askerToProvider =
+        (asker.socialRelations[providerContactId] ??
+                SocialRelationState(otherPersonId: providerContactId))
+            .recordEncounter(
+              interactionId: interactionId,
+              atSeconds: _state.now.seconds,
+            );
+    final SocialRelationState providerToAsker =
+        (providerContact.socialRelations[askerId] ??
+                SocialRelationState(otherPersonId: askerId))
+            .recordEncounter(
+              interactionId: interactionId,
+              atSeconds: _state.now.seconds,
+            );
+    _replace(
+      people: <String, PersonState>{
+        ..._state.people,
+        askerId: asker.withSocialRelation(providerContactId, askerToProvider),
+        providerContactId: providerContact.withSocialRelation(
+          askerId,
+          providerToAsker,
+        ),
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'community_resource_introduction_arrived',
+          householdId,
+          'resource=$resource asker=$askerId '
+              'intermediary=$intermediaryId '
+              'provider_contact=$providerContactId '
+              'provider_household=$providerHouseholdId',
+        ),
+      ],
+    );
+    final bool stillNeeded = householdNeeds(
+      householdId,
+    ).any((HouseholdNeed need) => need.kind == resource && need.needed);
+    if (stillNeeded) {
+      _saveCommunityResourceRequest(
+        request.advance(
+          status: CommunityResourceRequestStatus.negotiating,
+          atSeconds: _state.now.seconds,
+          askerId: askerId,
+          intermediaryId: intermediaryId,
+          providerHouseholdId: providerHouseholdId,
+          providerContactId: providerContactId,
+        ),
+      );
+      schedule(
+        due: _state.now.addSeconds(10 * 60),
+        phase: EventPhase.intent,
+        kind: 'community_resource_response',
+        payload: <String, Object?>{
+          'household_id': householdId,
+          'resource': resource,
+          'retry_after_introduction': true,
+          'request_id': requestId,
+        },
+      );
+    } else {
+      _saveCommunityResourceRequest(
+        request.advance(
+          status: CommunityResourceRequestStatus.cancelled,
+          atSeconds: _state.now.seconds,
+        ),
+        factKind: 'community_resource_response_cancelled',
+        factDetail: 'resource=$resource reason=need_resolved_during_trip',
+      );
+    }
+  }
+
+  void _recordCommunityResourceResponseFailure(
+    String householdId,
+    String resource,
+    String reason, {
+    String? requestId,
+  }) {
+    CommunityResourceRequestState? request = _communityResourceRequest(
+      requestId,
+    );
+    request ??= _state.communitySurvival?.resourceRequests.values
+        .where(
+          (CommunityResourceRequestState value) =>
+              value.active &&
+              value.householdId == householdId &&
+              value.resource == resource,
+        )
+        .firstOrNull;
+    if (request != null) {
+      _saveCommunityResourceRequest(
+        request.fail(
+          atSeconds: _state.now.seconds,
+          reason: reason,
+          retryAfterSeconds: 2 * gameSecondsPerDay,
+        ),
+        factKind: 'community_resource_response_failed',
+        factDetail: 'resource=$resource reason=$reason retry_days=2',
+      );
+      return;
+    }
+    _replace(
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'community_resource_response_failed',
+          householdId,
+          'resource=$resource reason=$reason request_missing=true',
+        ),
+      ],
+    );
   }
 
   void _applyHouseholdPlanning(ScheduledEvent event) {
@@ -1908,12 +4327,13 @@ class Simulation {
         continue;
       }
       final PersonState worker = _state.people[assignee]!;
+      final String? workRoomId = _workRoomForHousehold(household, work.$4);
       final RoutineBlock block = RoutineBlock(
         id: 'GEN-${need.kind.toUpperCase()}-D$day',
         activity: work.$1,
         startSecondOfDay: startSecond,
         durationSeconds: work.$2,
-        roomId: work.$4,
+        roomId: workRoomId,
         priority: need.priority,
         needKind: need.kind,
         outputResource: need.resourceKey,
@@ -2679,10 +5099,20 @@ class Simulation {
       infant,
       infancy.caregiverId,
     );
+    final FamilyCareSupportRequestState? supportRequest =
+        _recordFamilyCareCoverage(
+          infant: infant,
+          caregiver: caregiver,
+          trigger: 'cry_response',
+        );
     if (caregiver == null ||
         caregiver.caregiverAgent == null ||
         caregiver.positionMm == null ||
         infant.positionMm == null) {
+      if (supportRequest?.status == FamilyCareSupportStatus.pending) {
+        _waitForFamilyCareSupport(supportRequest!);
+        return;
+      }
       _failCareResponse(
         personId,
         'care_response_impossible',
@@ -2690,6 +5120,24 @@ class Simulation {
       );
       return;
     }
+    _beginCryResponse(infant: infant, infancy: infancy, caregiver: caregiver);
+  }
+
+  void _beginCryResponse({
+    required PersonState infant,
+    required InfantState infancy,
+    required PersonState caregiver,
+    int? requestedAtSeconds,
+  }) {
+    final String personId = infant.id;
+    final int requestedAt = requestedAtSeconds ?? _state.now.seconds;
+    final InfantCareExpectationState? expectation =
+        infancy.careExpectations[caregiver.id];
+    final int loudness =
+        (900 +
+                infancy.needs.distress ~/ 3 +
+                (500 - (expectation?.safety ?? 500)) ~/ 2)
+            .clamp(500, 1000);
     if (caregiver.id != infancy.caregiverId) {
       _recordCaregiverSubstitution(
         preferredId: infancy.caregiverId,
@@ -2713,9 +5161,11 @@ class Simulation {
       payload: <String, Object?>{
         'person_id': personId,
         'caregiver_id': caregiver.id,
+        'preferred_caregiver_id': infancy.caregiverId,
+        'requested_at_seconds': requestedAt,
         'origin_position_mm': infant.positionMm,
         if (infant.positionYMm != 0) 'origin_y_mm': infant.positionYMm,
-        'loudness': 900,
+        'loudness': loudness,
       },
     );
   }
@@ -2784,6 +5234,10 @@ class Simulation {
       payload: <String, Object?>{
         'person_id': personId,
         'caregiver_id': caregiverId,
+        if (event.payload['preferred_caregiver_id'] != null)
+          'preferred_caregiver_id': event.payload['preferred_caregiver_id'],
+        if (event.payload['requested_at_seconds'] != null)
+          'requested_at_seconds': event.payload['requested_at_seconds'],
       },
     );
   }
@@ -2822,6 +5276,10 @@ class Simulation {
       payload: <String, Object?>{
         'person_id': personId,
         'caregiver_id': caregiverId,
+        if (event.payload['preferred_caregiver_id'] != null)
+          'preferred_caregiver_id': event.payload['preferred_caregiver_id'],
+        if (event.payload['requested_at_seconds'] != null)
+          'requested_at_seconds': event.payload['requested_at_seconds'],
       },
     );
   }
@@ -2874,17 +5332,42 @@ class Simulation {
       if (cloth != null) cloth.id: cloth.wear(5),
     };
     final bool comforted = cloth != null;
+    final int requestedAt =
+        event.payload['requested_at_seconds'] as int? ?? _state.now.seconds;
+    final int responseDelaySeconds = (_state.now.seconds - requestedAt).clamp(
+      0,
+      gameSecondsPerDay,
+    );
+    final bool attachmentLearning =
+        infant.householdId != null &&
+        _state.households[infant.householdId]?.infantAttachmentLearning == true;
+    final InfantState learnedInfancy = attachmentLearning
+        ? feeding.state.recordCareResponse(
+            caregiverId: caregiverId,
+            atSeconds: _state.now.seconds,
+            delaySeconds: responseDelaySeconds,
+          )
+        : feeding.state;
     final Map<String, HouseholdState> households =
         _householdsAfterCareInterruption(caregiver!);
+    final ({PersonState infant, PersonState caregiver}) remembered =
+        _rememberFamilyCare(
+          infant: infant.withInfancy(learnedInfancy),
+          caregiver: _resumeRoutine(
+            caregiver.withCaregiverAgent(
+              caregiver.caregiverAgent!.resumeActivity(),
+            ),
+          ),
+          preferredCaregiverId:
+              event.payload['preferred_caregiver_id'] as String? ?? caregiverId,
+          interruptedAtSeconds:
+              caregiver.caregiverAgent!.interruptionStartedSeconds,
+        );
     _replace(
       people: <String, PersonState>{
         ..._state.people,
-        personId: infant.withInfancy(feeding.state),
-        caregiverId: _resumeRoutine(
-          caregiver.withCaregiverAgent(
-            caregiver.caregiverAgent!.resumeActivity(),
-          ),
-        ),
+        personId: remembered.infant,
+        caregiverId: remembered.caregiver,
       },
       items: items,
       households: households,
@@ -2897,6 +5380,21 @@ class Simulation {
               'energy_kj=${feeding.gainedEnergyKj} '
               'water_ml=${feeding.gainedWaterMl} comforted=$comforted',
         ),
+        if (_state.households[caregiver.householdId]?.familyMemory == true)
+          _fact(
+            'family_care_remembered',
+            caregiverId,
+            'infant=$personId substitute='
+                '${event.payload['preferred_caregiver_id'] != caregiverId}',
+          ),
+        if (attachmentLearning)
+          _fact(
+            'infant_caregiver_expectation_updated',
+            personId,
+            'caregiver=$caregiverId delay_seconds=$responseDelaySeconds '
+                'safety=${learnedInfancy.careExpectations[caregiverId]?.safety} '
+                'predictability=${learnedInfancy.careExpectations[caregiverId]?.predictability}',
+          ),
       ],
     );
   }
@@ -2966,6 +5464,22 @@ class Simulation {
               ?.cast<String, String>() ??
           const <String, String>{},
       familyCareScheduling: event.payload['family_care_scheduling'] == true,
+      familyMemory: event.payload['family_memory'] == true,
+      familyCareNegotiation: event.payload['family_care_negotiation'] == true,
+      familyCareSupport: event.payload['family_care_support'] == true,
+      familyCareResilience: event.payload['family_care_resilience'] == true,
+      familyCareBurdenEnabled: event.payload['family_care_burden'] == true,
+      familyCareConflictEnabled: event.payload['family_care_conflict'] == true,
+      familyCarePromiseEnabled: event.payload['family_care_promise'] == true,
+      familyCareReliabilityEnabled:
+          event.payload['family_care_reliability'] == true,
+      familyCareWitnessMemory:
+          event.payload['family_care_witness_memory'] == true,
+      infantAttachmentLearning:
+          event.payload['infant_attachment_learning'] == true,
+      familyCareSubjectId: event.payload['family_care_negotiation'] == true
+          ? event.payload['infant_id'] as String?
+          : null,
     );
     _replace(
       households: <String, HouseholdState>{
@@ -3069,6 +5583,286 @@ class Simulation {
         );
       }
     }
+  }
+
+  void _applyFamilyCarePlanReview(ScheduledEvent event) {
+    final String householdId = event.payload['household_id']! as String;
+    final HouseholdState? household = _state.households[householdId];
+    if (household?.familyCareNegotiation != true) return;
+    final String? feedId = household!.resourceItemIds['infant_feed'];
+    final String careSubjectId = household.familyCareSubjectId ?? 'P00';
+    final List<PersonState> adults = <PersonState>[
+      for (final String personId in household.birthFamilyRolesByPersonId.keys)
+        if (_state.people[personId] case final PersonState person) person,
+    ]..sort((PersonState a, PersonState b) => a.id.compareTo(b.id));
+    final Map<String, int> assignedShifts = <String, int>{};
+    final List<FamilyCareShiftState> shifts = <FamilyCareShiftState>[];
+    final Map<String, PersonState> people = <String, PersonState>{
+      ..._state.people,
+    };
+    final List<WorldFact> negotiationFacts = <WorldFact>[];
+    for (int index = 0; index < 4; index++) {
+      final int start = index * 6 * 3600;
+      const int duration = 6 * 3600;
+      final List<String> declined = <String>[];
+      final List<PersonState> willing = <PersonState>[];
+      for (final PersonState original in adults) {
+        final PersonState person = people[original.id]!;
+        final bool routineConflict =
+            person.routine?.blocks.any(
+              (RoutineBlock block) =>
+                  block.blocking &&
+                  block.startSecondOfDay < start + duration &&
+                  start < block.endSecondOfDay,
+            ) ??
+            false;
+        final String role =
+            household.birthFamilyRolesByPersonId[person.id] ?? 'guardian';
+        final int obligation =
+            person.familyBonds[careSubjectId]?.careObligation ??
+            (role == 'guardian' ? 760 : 860);
+        final FamilyCareBurdenState burden =
+            household.familyCareBurdenByPersonId[person.id] ??
+            const FamilyCareBurdenState();
+        final FamilyCareReliabilityState reliability =
+            household.familyCareReliabilityByPersonId[person.id] ??
+            const FamilyCareReliabilityState();
+        final int witnessTrust = _familyWitnessTrust(
+          household,
+          person.id,
+          people,
+        );
+        final FamilyCarePromiseState? duePromise = household.familyCarePromises
+            .where(
+              (FamilyCarePromiseState value) =>
+                  value.status == FamilyCarePromiseStatus.active &&
+                  value.debtorId == person.id &&
+                  value.dueDay <= _state.now.day,
+            )
+            .firstOrNull;
+        final int offerPriority =
+            (45 +
+                    obligation ~/ 20 +
+                    burden.careDebt ~/ 20 -
+                    burden.strain ~/ 25 +
+                    (reliability.score - 500) ~/ 20 +
+                    (witnessTrust - 500) ~/ 25 +
+                    (duePromise == null ? 0 : 35))
+                .clamp(0, 100);
+        final bool canReceiveOffer =
+            person.caregiverAgent?.available == true &&
+            person.caregiverAgent!.careSkill >= 400 &&
+            feedId != null &&
+            household.canUse(person.id, feedId) &&
+            !routineConflict;
+        final bool acceptsOffer =
+            canReceiveOffer && (person.agenda?.accepts(offerPriority) ?? true);
+        if (acceptsOffer) {
+          willing.add(person);
+        } else {
+          declined.add(person.id);
+          if (canReceiveOffer && person.agenda != null) {
+            final String reason =
+                '${person.agenda!.mainStrain} ${person.agenda!.fatigue}/1000, '
+                'ca mức $offerPriority';
+            people[person.id] = person.withAgenda(
+              person.agenda!.recordOffer(accepted: false, reason: reason),
+            );
+            negotiationFacts.add(
+              _fact(
+                'family_care_offer_refused',
+                person.id,
+                'household=$householdId shift=$index priority=$offerPriority '
+                    'floor=${person.agenda!.acceptanceFloor}',
+              ),
+            );
+          }
+        }
+      }
+      willing.sort((PersonState a, PersonState b) {
+        int score(PersonState person) {
+          final String role =
+              household.birthFamilyRolesByPersonId[person.id] ?? 'guardian';
+          final FamilyBondState? bond = person.familyBonds[careSubjectId];
+          final int obligation =
+              bond?.careObligation ?? (role == 'guardian' ? 760 : 860);
+          final FamilyCareBurdenState burden =
+              household.familyCareBurdenByPersonId[person.id] ??
+              const FamilyCareBurdenState();
+          final FamilyCareReliabilityState reliability =
+              household.familyCareReliabilityByPersonId[person.id] ??
+              const FamilyCareReliabilityState();
+          final int witnessTrust = _familyWitnessTrust(
+            household,
+            person.id,
+            people,
+          );
+          final bool hasDuePromise = household.familyCarePromises.any(
+            (FamilyCarePromiseState value) =>
+                value.status == FamilyCarePromiseStatus.active &&
+                value.debtorId == person.id &&
+                value.dueDay <= _state.now.day,
+          );
+          return obligation +
+              person.caregiverAgent!.careSkill -
+              (person.agenda?.fatigue ?? 0) -
+              (assignedShifts[person.id] ?? 0) * 260 -
+              (bond?.careGiven ?? 0) * 12 +
+              burden.careDebt -
+              burden.strain +
+              (reliability.score - 500) +
+              (witnessTrust - 500) +
+              (hasDuePromise ? 800 : 0);
+        }
+
+        final int byScore = score(b).compareTo(score(a));
+        return byScore != 0 ? byScore : a.id.compareTo(b.id);
+      });
+      final PersonState? chosen = willing.firstOrNull;
+      if (chosen != null) {
+        assignedShifts[chosen.id] = (assignedShifts[chosen.id] ?? 0) + 1;
+        if (chosen.agenda != null) {
+          final PersonState current = people[chosen.id]!;
+          people[chosen.id] = current.withAgenda(
+            current.agenda!.recordOffer(accepted: true),
+          );
+        }
+      }
+      shifts.add(
+        FamilyCareShiftState(
+          id: 'CARE-$householdId-D${_state.now.day}-S$index',
+          startSecondOfDay: start,
+          durationSeconds: duration,
+          caregiverId: chosen?.id,
+          reason: chosen == null
+              ? 'no_accepted_caregiver'
+              : (assignedShifts.length > 1
+                    ? 'care_burden_balanced'
+                    : 'highest_care_commitment'),
+          declinedPersonIds: declined,
+        ),
+      );
+    }
+    final FamilyCarePlanState plan = FamilyCarePlanState(
+      day: _state.now.day,
+      revision: (household.familyCarePlan?.revision ?? 0) + 1,
+      negotiatedAtSeconds: _state.now.seconds,
+      shifts: List<FamilyCareShiftState>.unmodifiable(shifts),
+    );
+    HouseholdState updatedHousehold = household
+        .withFamilyCarePlan(plan)
+        .settleFamilyCareBurden(assignedShifts);
+    final List<FamilyCarePromiseState> promises = <FamilyCarePromiseState>[];
+    for (final FamilyCarePromiseState promise in household.familyCarePromises) {
+      if (promise.status != FamilyCarePromiseStatus.active ||
+          promise.dueDay > _state.now.day) {
+        promises.add(promise);
+        continue;
+      }
+      final FamilyCarePromiseState settled = promise.settle(
+        assignedShifts: assignedShifts[promise.debtorId] ?? 0,
+        atSeconds: _state.now.seconds,
+      );
+      promises.add(settled);
+      negotiationFacts.add(
+        _fact(
+          settled.status == FamilyCarePromiseStatus.fulfilled
+              ? 'family_care_promise_fulfilled'
+              : 'family_care_promise_broken',
+          householdId,
+          'promise=${settled.id} debtor=${settled.debtorId} '
+          'beneficiary=${settled.beneficiaryId} '
+          'assigned=${settled.assignedShifts} '
+          'promised=${settled.promisedShifts}',
+        ),
+      );
+      if (household.familyCareWitnessMemory) {
+        int witnesses = 0;
+        for (final String witnessId
+            in household.birthFamilyRolesByPersonId.keys) {
+          if (witnessId == settled.debtorId ||
+              (settled.status == FamilyCarePromiseStatus.broken &&
+                  witnessId == settled.beneficiaryId)) {
+            continue;
+          }
+          final PersonState? witness = people[witnessId];
+          if (witness == null) continue;
+          final FamilyBondState observedBond =
+              witness.familyBonds[settled.debtorId] ?? const FamilyBondState();
+          people[witnessId] = witness.withFamilyBond(
+            settled.debtorId,
+            observedBond.recordReliabilityObservation(
+              atSeconds: _state.now.seconds,
+              keptPromise: settled.status == FamilyCarePromiseStatus.fulfilled,
+            ),
+          );
+          witnesses++;
+        }
+        negotiationFacts.add(
+          _fact(
+            'family_care_reputation_witnessed',
+            settled.debtorId,
+            'promise=${settled.id} status=${settled.status.name} '
+                'witnesses=$witnesses',
+          ),
+        );
+      }
+      if (settled.status == FamilyCarePromiseStatus.broken) {
+        final PersonState? debtor = people[settled.debtorId];
+        final PersonState? beneficiary = people[settled.beneficiaryId];
+        if (debtor != null && beneficiary != null) {
+          final int breachSeverity = 180 + settled.missingShifts * 70;
+          people[debtor.id] = debtor.withFamilyBond(
+            beneficiary.id,
+            (debtor.familyBonds[beneficiary.id] ?? const FamilyBondState())
+                .recordConflict(
+                  atSeconds: _state.now.seconds,
+                  severity: breachSeverity,
+                ),
+          );
+          people[beneficiary.id] = beneficiary.withFamilyBond(
+            debtor.id,
+            (beneficiary.familyBonds[debtor.id] ?? const FamilyBondState())
+                .recordConflict(
+                  atSeconds: _state.now.seconds,
+                  severity: breachSeverity,
+                ),
+          );
+        }
+      }
+    }
+    if (household.familyCarePromiseEnabled) {
+      updatedHousehold = updatedHousehold.updateFamilyCarePromises(promises);
+    }
+    _replace(
+      people: people,
+      households: <String, HouseholdState>{
+        ..._state.households,
+        householdId: updatedHousehold,
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        ...negotiationFacts,
+        _fact(
+          'family_care_plan_negotiated',
+          householdId,
+          'day=${plan.day} revision=${plan.revision} assignments='
+              '${plan.shifts.map((FamilyCareShiftState shift) => '${shift.startSecondOfDay}:${shift.caregiverId ?? 'uncovered'}').join(',')}',
+        ),
+        if (household.familyCareBurdenEnabled)
+          _fact(
+            'family_care_burden_rebalanced',
+            householdId,
+            'assigned=${assignedShifts.entries.map((MapEntry<String, int> value) => '${value.key}:${value.value}').join(',')}',
+          ),
+      ],
+    );
+    schedule(
+      due: _state.now.addDays(1),
+      phase: EventPhase.bookkeeping,
+      kind: 'family_care_plan_review',
+      payload: event.payload,
+    );
   }
 
   void _applyHouseholdMeal(ScheduledEvent event) {
@@ -3359,8 +6153,19 @@ class Simulation {
     final PersonState? caregiver = infant == null
         ? null
         : _selectAvailableCaregiver(infant, preferredCaregiverId);
+    final FamilyCareSupportRequestState? supportRequest = infant == null
+        ? null
+        : _recordFamilyCareCoverage(
+            infant: infant,
+            caregiver: caregiver,
+            trigger: 'illness_care',
+          );
     final CaregiverAgentState? agent = caregiver?.caregiverAgent;
     if (infant == null || caregiver == null || agent == null) {
+      if (supportRequest?.status == FamilyCareSupportStatus.pending) {
+        _waitForFamilyCareSupport(supportRequest!);
+        return;
+      }
       _replace(
         facts: <WorldFact>[
           ..._state.facts,
@@ -3373,6 +6178,22 @@ class Simulation {
       );
       return;
     }
+    _beginIllnessCareResponse(
+      infant: infant,
+      caregiver: caregiver,
+      preferredCaregiverId: preferredCaregiverId,
+      payload: event.payload,
+    );
+  }
+
+  void _beginIllnessCareResponse({
+    required PersonState infant,
+    required PersonState caregiver,
+    required String preferredCaregiverId,
+    required Map<String, Object?> payload,
+  }) {
+    final CaregiverAgentState agent = caregiver.caregiverAgent!;
+    final String personId = infant.id;
     final String caregiverId = caregiver.id;
     final IllnessState? illness = _state.illnesses['ILL-P00-01'];
     if (illness == null || !illness.active) return;
@@ -3420,7 +6241,11 @@ class Simulation {
       due: _state.now.addSeconds(travelSeconds),
       phase: EventPhase.movement,
       kind: 'illness_caregiver_arrives',
-      payload: <String, Object?>{...event.payload, 'caregiver_id': caregiverId},
+      payload: <String, Object?>{
+        ...payload,
+        'caregiver_id': caregiverId,
+        'preferred_caregiver_id': preferredCaregiverId,
+      },
     );
   }
 
@@ -3459,12 +6284,14 @@ class Simulation {
     final String personId = event.payload['person_id']! as String;
     final String caregiverId = event.payload['caregiver_id']! as String;
     final PersonState? caregiver = _state.people[caregiverId];
+    final PersonState? infant = _state.people[personId];
     final IllnessState? illness = _state.illnesses['ILL-P00-01'];
     final String? householdId = caregiver?.householdId;
     final HouseholdState? household = householdId == null
         ? null
         : _state.households[householdId];
     if (caregiver?.caregiverAgent == null ||
+        infant == null ||
         illness == null ||
         household == null) {
       return;
@@ -3485,14 +6312,24 @@ class Simulation {
     final Map<String, HouseholdState> households =
         _householdsAfterCareInterruption(caregiver!);
     final IllnessState cared = illness.afterCare(10);
+    final ({PersonState infant, PersonState caregiver}) remembered =
+        _rememberFamilyCare(
+          infant: infant,
+          caregiver: _resumeRoutine(
+            caregiver.withCaregiverAgent(
+              caregiver.caregiverAgent!.resumeActivity(),
+            ),
+          ),
+          preferredCaregiverId:
+              event.payload['preferred_caregiver_id'] as String? ?? caregiverId,
+          interruptedAtSeconds:
+              caregiver.caregiverAgent!.interruptionStartedSeconds,
+        );
     _replace(
       people: <String, PersonState>{
         ..._state.people,
-        caregiverId: _resumeRoutine(
-          caregiver.withCaregiverAgent(
-            caregiver.caregiverAgent!.resumeActivity(),
-          ),
-        ),
+        personId: remembered.infant,
+        caregiverId: remembered.caregiver,
       },
       items: <String, CareItemState>{
         ..._state.items,
@@ -3507,6 +6344,13 @@ class Simulation {
           personId,
           'caregiver=$caregiverId water_ml=100 severity=${cared.severity}',
         ),
+        if (household.familyMemory)
+          _fact(
+            'family_care_remembered',
+            caregiverId,
+            'infant=$personId illness=${illness.id} substitute='
+                '${event.payload['preferred_caregiver_id'] != caregiverId}',
+          ),
       ],
     );
   }
@@ -4407,6 +7251,23 @@ class Simulation {
     );
   }
 
+  int _familyWitnessTrust(
+    HouseholdState household,
+    String personId, [
+    Map<String, PersonState>? people,
+  ]) {
+    if (!household.familyCareWitnessMemory) return 500;
+    final Map<String, PersonState> source = people ?? _state.people;
+    final List<int> trust = <int>[
+      for (final String witnessId in household.birthFamilyRolesByPersonId.keys)
+        if (witnessId != personId && source[witnessId] != null)
+          source[witnessId]!.familyBonds[personId]?.trust ?? 500,
+    ];
+    if (trust.isEmpty) return 500;
+    return trust.fold(0, (int total, int value) => total + value) ~/
+        trust.length;
+  }
+
   PersonState? _selectAvailableCaregiver(
     PersonState infant,
     String preferredId,
@@ -4415,18 +7276,18 @@ class Simulation {
         ? null
         : _state.households[infant.householdId];
     bool canProvideCare(PersonState person) {
-      if (person.caregiverAgent?.available != true ||
-          person.caregiverAgent!.careSkill < 400) {
-        return false;
-      }
+      if (person.caregiverAgent?.available != true) return false;
       if (household?.familyCareScheduling != true) return true;
+      if (person.caregiverAgent!.careSkill < 400) return false;
       if (person.routine?.blockingActivity != null) return false;
       final String? feedId = household!.resourceItemIds['infant_feed'];
       return feedId != null && household.canUse(person.id, feedId);
     }
 
     final PersonState? preferred = _state.people[preferredId];
-    if (preferred != null && canProvideCare(preferred)) {
+    if (household?.familyMemory != true &&
+        preferred != null &&
+        canProvideCare(preferred)) {
       return preferred;
     }
     final List<PersonState> candidates =
@@ -4439,12 +7300,579 @@ class Simulation {
             )
             .toList()
           ..sort((PersonState a, PersonState b) {
+            if (household?.familyMemory == true) {
+              final String? plannedCaregiverId = household?.familyCarePlan
+                  ?.shiftAt(_state.now.seconds)
+                  ?.caregiverId;
+              int willingness(PersonState person) {
+                final FamilyBondState? bond = person.familyBonds[infant.id];
+                return person.caregiverAgent!.careSkill +
+                    (bond?.careCommitment ?? 0) +
+                    ((household
+                                ?.familyCareReliabilityByPersonId[person.id]
+                                ?.score ??
+                            500) -
+                        500) +
+                    (_familyWitnessTrust(household!, person.id) - 500) +
+                    (person.id == plannedCaregiverId ? 900 : 0) +
+                    (person.id == preferredId ? 40 : 0) -
+                    (person.agenda?.fatigue ?? 0) ~/ 2;
+              }
+
+              final int byWillingness = willingness(
+                b,
+              ).compareTo(willingness(a));
+              if (byWillingness != 0) return byWillingness;
+            }
             final int bySkill = b.caregiverAgent!.careSkill.compareTo(
               a.caregiverAgent!.careSkill,
             );
             return bySkill != 0 ? bySkill : a.id.compareTo(b.id);
           });
     return candidates.firstOrNull;
+  }
+
+  FamilyCareSupportRequestState? _recordFamilyCareCoverage({
+    required PersonState infant,
+    required PersonState? caregiver,
+    required String trigger,
+  }) {
+    final String? householdId = infant.householdId;
+    final HouseholdState? household = householdId == null
+        ? null
+        : _state.households[householdId];
+    if (household?.familyCareSupport != true) return null;
+    final FamilyCareShiftState? shift = household!.familyCarePlan?.shiftAt(
+      _state.now.seconds,
+    );
+    final String? plannedId = shift?.caregiverId;
+    if (plannedId != null && caregiver?.id == plannedId) return null;
+    final PersonState? planned = plannedId == null
+        ? null
+        : _state.people[plannedId];
+    final String reason = shift == null
+        ? 'care_plan_missing'
+        : plannedId == null
+        ? 'shift_uncovered'
+        : planned == null
+        ? 'planned_caregiver_missing'
+        : planned.caregiverAgent?.available != true
+        ? 'planned_caregiver_unavailable'
+        : planned.routine?.blockingActivity != null
+        ? 'planned_caregiver_busy'
+        : 'planned_caregiver_ineligible';
+    final bool waitForSupport =
+        caregiver == null && household.familyCareResilience;
+    final int? nextRetryAtSeconds = waitForSupport
+        ? _state.now.seconds + 15 * 60
+        : null;
+    final FamilyCareSupportRequestState request = FamilyCareSupportRequestState(
+      id:
+          'SUPPORT-${household.id}-${_state.now.seconds}-'
+          '${household.familyCareSupportRequests.length}',
+      shiftId: shift?.id,
+      infantId: infant.id,
+      openedAtSeconds: _state.now.seconds,
+      reason: reason,
+      status: waitForSupport
+          ? FamilyCareSupportStatus.pending
+          : caregiver == null
+          ? FamilyCareSupportStatus.failed
+          : FamilyCareSupportStatus.fulfilled,
+      trigger: trigger,
+      plannedCaregiverId: plannedId,
+      supporterId: caregiver?.id,
+      lastAttemptAtSeconds: _state.now.seconds,
+      nextRetryAtSeconds: nextRetryAtSeconds,
+      resolvedAtSeconds: caregiver == null ? null : _state.now.seconds,
+    );
+    HouseholdState recordedHousehold = household.recordFamilyCareSupport(
+      request,
+    );
+    FamilyCareConflictState? conflict;
+    if (caregiver != null) {
+      recordedHousehold = recordedHousehold.recordEmergencyCareBurden(
+        plannedCaregiverId: plannedId,
+        supporterId: caregiver.id,
+        atSeconds: _state.now.seconds,
+        delaySeconds: 0,
+      );
+      conflict = _newFamilyCareConflict(
+        household: recordedHousehold,
+        request: request,
+        supporterId: caregiver.id,
+      );
+      if (conflict != null) {
+        recordedHousehold = recordedHousehold.recordFamilyCareConflict(
+          conflict,
+        );
+      }
+    }
+    _replace(
+      households: <String, HouseholdState>{
+        ..._state.households,
+        household.id: recordedHousehold,
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'family_care_shift_broken',
+          household.id,
+          'shift=${shift?.id ?? 'missing'} planned=${plannedId ?? 'none'} '
+              'reason=$reason trigger=$trigger',
+        ),
+        _fact(
+          waitForSupport
+              ? 'family_care_support_waiting'
+              : caregiver == null
+              ? 'family_care_support_failed'
+              : 'family_care_support_called',
+          caregiver?.id ?? household.id,
+          'request=${request.id} infant=${infant.id} '
+          'planned=${plannedId ?? 'none'} reason=$reason trigger=$trigger',
+        ),
+        if (caregiver != null &&
+            plannedId != caregiver.id &&
+            household.familyCareBurdenEnabled)
+          _fact(
+            'family_care_debt_created',
+            household.id,
+            'planned=${plannedId ?? 'none'} supporter=${caregiver.id} '
+                'delay_seconds=0',
+          ),
+        if (conflict != null)
+          _fact(
+            'family_care_conflict_opened',
+            household.id,
+            'conflict=${conflict.id} supporter=${conflict.supporterId} '
+                'responsible=${conflict.responsibleId} '
+                'severity=${conflict.severity}',
+          ),
+      ],
+    );
+    if (conflict != null) _scheduleFamilyCareConflict(conflict);
+    return request;
+  }
+
+  void _waitForFamilyCareSupport(FamilyCareSupportRequestState request) {
+    final PersonState? infant = _state.people[request.infantId];
+    final InfantState? infancy = infant?.infancy;
+    final int? retryAt = request.nextRetryAtSeconds;
+    if (infant == null || infancy == null || retryAt == null) return;
+    _replace(
+      people: <String, PersonState>{
+        ..._state.people,
+        infant.id: infant.withInfancy(infancy.withCareResponsePending(true)),
+      },
+    );
+    schedule(
+      due: SimTime(retryAt),
+      phase: EventPhase.observation,
+      kind: 'family_care_support_retry',
+      payload: <String, Object?>{
+        'household_id': infant.householdId,
+        'request_id': request.id,
+      },
+    );
+  }
+
+  void _applyFamilyCareSupportRetry(ScheduledEvent event) {
+    final String householdId = event.payload['household_id']! as String;
+    final String requestId = event.payload['request_id']! as String;
+    final HouseholdState? household = _state.households[householdId];
+    final FamilyCareSupportRequestState? request = household
+        ?.familyCareSupportRequests
+        .where((FamilyCareSupportRequestState value) => value.id == requestId)
+        .firstOrNull;
+    if (household == null ||
+        request == null ||
+        request.status != FamilyCareSupportStatus.pending) {
+      return;
+    }
+    final PersonState? infant = _state.people[request.infantId];
+    final InfantState? infancy = infant?.infancy;
+    if (infant == null || infancy == null) return;
+    final String preferredId =
+        request.plannedCaregiverId ?? infancy.caregiverId;
+    final PersonState? caregiver = _selectAvailableCaregiver(
+      infant,
+      preferredId,
+    );
+    if (caregiver != null) {
+      final FamilyCareSupportRequestState fulfilled = request.fulfill(
+        supporterId: caregiver.id,
+        atSeconds: _state.now.seconds,
+      );
+      HouseholdState updatedHousehold = household
+          .updateFamilyCareSupport(fulfilled)
+          .recordEmergencyCareBurden(
+            plannedCaregiverId: request.plannedCaregiverId,
+            supporterId: caregiver.id,
+            atSeconds: _state.now.seconds,
+            delaySeconds: fulfilled.responseDelaySeconds ?? 0,
+          );
+      final FamilyCareConflictState? conflict = _newFamilyCareConflict(
+        household: updatedHousehold,
+        request: fulfilled,
+        supporterId: caregiver.id,
+      );
+      if (conflict != null) {
+        updatedHousehold = updatedHousehold.recordFamilyCareConflict(conflict);
+      }
+      _replace(
+        households: <String, HouseholdState>{
+          ..._state.households,
+          householdId: updatedHousehold,
+        },
+        people: <String, PersonState>{
+          ..._state.people,
+          infant.id: infant.withInfancy(infancy.withCareResponsePending(false)),
+        },
+        facts: <WorldFact>[
+          ..._state.facts,
+          _fact(
+            'family_care_support_arrived_late',
+            caregiver.id,
+            'request=${request.id} infant=${infant.id} '
+                'delay_seconds=${fulfilled.responseDelaySeconds} '
+                'attempts=${fulfilled.attempts}',
+          ),
+          if (household.familyCareBurdenEnabled &&
+              request.plannedCaregiverId != caregiver.id)
+            _fact(
+              'family_care_debt_created',
+              householdId,
+              'planned=${request.plannedCaregiverId ?? 'none'} '
+                  'supporter=${caregiver.id} '
+                  'delay_seconds=${fulfilled.responseDelaySeconds ?? 0}',
+            ),
+          if (conflict != null)
+            _fact(
+              'family_care_conflict_opened',
+              householdId,
+              'conflict=${conflict.id} supporter=${conflict.supporterId} '
+                  'responsible=${conflict.responsibleId} '
+                  'severity=${conflict.severity}',
+            ),
+        ],
+      );
+      if (conflict != null) _scheduleFamilyCareConflict(conflict);
+      final PersonState refreshedInfant = _state.people[infant.id]!;
+      if (request.trigger == 'illness_care') {
+        _beginIllnessCareResponse(
+          infant: refreshedInfant,
+          caregiver: caregiver,
+          preferredCaregiverId: preferredId,
+          payload: <String, Object?>{
+            'person_id': infant.id,
+            'caregiver_id': caregiver.id,
+          },
+        );
+      } else {
+        _beginCryResponse(
+          infant: refreshedInfant,
+          infancy: refreshedInfant.infancy!,
+          caregiver: caregiver,
+          requestedAtSeconds: request.openedAtSeconds,
+        );
+      }
+      return;
+    }
+
+    if (request.attempts >= 3) {
+      final FamilyCareSupportRequestState expired = request.expire(
+        _state.now.seconds,
+      );
+      final int delaySeconds = _state.now.seconds - request.openedAtSeconds;
+      InfantState harmed = infancy.markCareUnmet(delaySeconds: delaySeconds);
+      if (household.infantAttachmentLearning) {
+        harmed = harmed.recordMissedCare(
+          caregiverId: request.plannedCaregiverId ?? infancy.caregiverId,
+          atSeconds: _state.now.seconds,
+          delaySeconds: delaySeconds,
+        );
+      }
+      _replace(
+        households: <String, HouseholdState>{
+          ..._state.households,
+          householdId: household.updateFamilyCareSupport(expired),
+        },
+        people: <String, PersonState>{
+          ..._state.people,
+          infant.id: infant.withInfancy(harmed),
+        },
+        facts: <WorldFact>[
+          ..._state.facts,
+          _fact(
+            'family_care_support_expired',
+            infant.id,
+            'request=${request.id} delay_seconds=$delaySeconds '
+                'attempts=${expired.attempts}',
+          ),
+          _fact(
+            'infant_care_delayed_harm',
+            infant.id,
+            'request=${request.id} attachment=${infancy.attachment}->'
+                '${harmed.attachment}',
+          ),
+          if (household.infantAttachmentLearning)
+            _fact(
+              'infant_caregiver_expectation_missed',
+              infant.id,
+              'caregiver=${request.plannedCaregiverId ?? infancy.caregiverId} '
+                  'delay_seconds=$delaySeconds',
+            ),
+        ],
+      );
+      return;
+    }
+
+    final int nextRetryAt = _state.now.seconds + 15 * 60;
+    final FamilyCareSupportRequestState retrying = request.retryAt(
+      atSeconds: _state.now.seconds,
+      nextRetryAtSeconds: nextRetryAt,
+    );
+    _replace(
+      households: <String, HouseholdState>{
+        ..._state.households,
+        householdId: household.updateFamilyCareSupport(retrying),
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          'family_care_support_still_waiting',
+          householdId,
+          'request=${request.id} attempts=${retrying.attempts}',
+        ),
+      ],
+    );
+    schedule(
+      due: SimTime(nextRetryAt),
+      phase: EventPhase.observation,
+      kind: 'family_care_support_retry',
+      payload: event.payload,
+    );
+  }
+
+  FamilyCareConflictState? _newFamilyCareConflict({
+    required HouseholdState household,
+    required FamilyCareSupportRequestState request,
+    required String supporterId,
+  }) {
+    final String? responsibleId = request.plannedCaregiverId;
+    if (!household.familyCareConflictEnabled ||
+        responsibleId == null ||
+        responsibleId == supporterId) {
+      return null;
+    }
+    final bool alreadyOpen = household.familyCareConflicts.any(
+      (FamilyCareConflictState value) =>
+          value.status == FamilyCareConflictStatus.open &&
+          value.supporterId == supporterId &&
+          value.responsibleId == responsibleId,
+    );
+    if (alreadyOpen) return null;
+    final FamilyCareBurdenState supporterBurden =
+        household.familyCareBurdenByPersonId[supporterId] ??
+        const FamilyCareBurdenState();
+    final FamilyCareBurdenState responsibleBurden =
+        household.familyCareBurdenByPersonId[responsibleId] ??
+        const FamilyCareBurdenState();
+    final int severity =
+        (supporterBurden.strain + responsibleBurden.careDebt) ~/ 2;
+    if (severity < 240) return null;
+    return FamilyCareConflictState(
+      id:
+          'CONFLICT-${household.id}-${_state.now.seconds}-'
+          '${household.familyCareConflicts.length}',
+      supporterId: supporterId,
+      responsibleId: responsibleId,
+      causeRequestId: request.id,
+      openedAtSeconds: _state.now.seconds,
+      severity: severity.clamp(0, 1000),
+    );
+  }
+
+  void _scheduleFamilyCareConflict(FamilyCareConflictState conflict) {
+    schedule(
+      due: _state.now.addSeconds(2 * 3600),
+      phase: EventPhase.intent,
+      kind: 'family_care_conflict_conversation',
+      payload: <String, Object?>{'conflict_id': conflict.id},
+    );
+  }
+
+  void _applyFamilyCareConflictConversation(ScheduledEvent event) {
+    final String conflictId = event.payload['conflict_id']! as String;
+    HouseholdState? household;
+    FamilyCareConflictState? conflict;
+    for (final HouseholdState candidate in _state.households.values) {
+      final FamilyCareConflictState? found = candidate.familyCareConflicts
+          .where((FamilyCareConflictState value) => value.id == conflictId)
+          .firstOrNull;
+      if (found != null) {
+        household = candidate;
+        conflict = found;
+        break;
+      }
+    }
+    if (household == null ||
+        conflict == null ||
+        conflict.status != FamilyCareConflictStatus.open) {
+      return;
+    }
+    final PersonState? supporter = _state.people[conflict.supporterId];
+    final PersonState? responsible = _state.people[conflict.responsibleId];
+    if (supporter == null || responsible == null) return;
+    final FamilyBondState supporterBond =
+        supporter.familyBonds[responsible.id] ?? const FamilyBondState();
+    final FamilyBondState responsibleBond =
+        responsible.familyBonds[supporter.id] ?? const FamilyBondState();
+    final int mutualTrust = (supporterBond.trust + responsibleBond.trust) ~/ 2;
+    final int mutualAffection =
+        (supporterBond.affection + responsibleBond.affection) ~/ 2;
+    final int fatigue =
+        ((supporter.agenda?.fatigue ?? 0) +
+            (responsible.agenda?.fatigue ?? 0)) ~/
+        2;
+    final int repairScore =
+        mutualTrust + mutualAffection - conflict.severity - fatigue ~/ 2;
+    final bool repaired = repairScore >= 620;
+    final FamilyCareConflictState concluded = conflict.conclude(
+      atSeconds: _state.now.seconds,
+      repaired: repaired,
+      outcome: repaired ? 'accepted_repayment' : 'blame_unresolved',
+    );
+    final FamilyBondState nextSupporterBond = repaired
+        ? supporterBond.recordReconciliation(
+            atSeconds: _state.now.seconds,
+            strength: conflict.severity,
+          )
+        : supporterBond.recordConflict(
+            atSeconds: _state.now.seconds,
+            severity: conflict.severity,
+          );
+    final FamilyBondState nextResponsibleBond = repaired
+        ? responsibleBond.recordReconciliation(
+            atSeconds: _state.now.seconds,
+            strength: conflict.severity,
+          )
+        : responsibleBond.recordConflict(
+            atSeconds: _state.now.seconds,
+            severity: conflict.severity,
+          );
+    FamilyCarePromiseState? promise;
+    HouseholdState updatedHousehold = household.updateFamilyCareConflict(
+      concluded,
+    );
+    if (repaired && household.familyCarePromiseEnabled) {
+      promise = FamilyCarePromiseState(
+        id:
+            'PROMISE-${household.id}-${_state.now.seconds}-'
+            '${household.familyCarePromises.length}',
+        debtorId: responsible.id,
+        beneficiaryId: supporter.id,
+        sourceConflictId: conflict.id,
+        madeAtSeconds: _state.now.seconds,
+        dueDay: _state.now.day + 1,
+        promisedShifts: 1 + conflict.severity ~/ 500,
+      );
+      updatedHousehold = updatedHousehold.recordFamilyCarePromise(promise);
+    }
+    _replace(
+      households: <String, HouseholdState>{
+        ..._state.households,
+        household.id: updatedHousehold,
+      },
+      people: <String, PersonState>{
+        ..._state.people,
+        supporter.id: supporter.withFamilyBond(
+          responsible.id,
+          nextSupporterBond,
+        ),
+        responsible.id: responsible.withFamilyBond(
+          supporter.id,
+          nextResponsibleBond,
+        ),
+      },
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(
+          repaired
+              ? 'family_care_conflict_repaired'
+              : 'family_care_conflict_unresolved',
+          household.id,
+          'conflict=${conflict.id} supporter=${supporter.id} '
+          'responsible=${responsible.id} severity=${conflict.severity} '
+          'repair_score=$repairScore',
+        ),
+        if (promise != null)
+          _fact(
+            'family_care_promise_made',
+            household.id,
+            'promise=${promise.id} debtor=${promise.debtorId} '
+                'beneficiary=${promise.beneficiaryId} '
+                'due_day=${promise.dueDay} shifts=${promise.promisedShifts}',
+          ),
+      ],
+    );
+  }
+
+  ({PersonState infant, PersonState caregiver}) _rememberFamilyCare({
+    required PersonState infant,
+    required PersonState caregiver,
+    required String preferredCaregiverId,
+    int? interruptedAtSeconds,
+  }) {
+    final HouseholdState? household = caregiver.householdId == null
+        ? null
+        : _state.households[caregiver.householdId];
+    if (household?.familyMemory != true) {
+      return (infant: infant, caregiver: caregiver);
+    }
+    final bool substituted = caregiver.id != preferredCaregiverId;
+    final int interruptedAt = interruptedAtSeconds ?? _state.now.seconds - 60;
+    final int careSeconds = (_state.now.seconds - interruptedAt).clamp(
+      900,
+      3600,
+    );
+    final FamilyBondState adultBond =
+        caregiver.familyBonds[infant.id] ??
+        FamilyBondState(
+          affection: 600,
+          trust: 600,
+          careObligation: caregiver.familyRelationships[infant.id] == 'ward'
+              ? 760
+              : 860,
+        );
+    final FamilyBondState childBond =
+        infant.familyBonds[caregiver.id] ??
+        const FamilyBondState(affection: 600, trust: 650);
+    PersonState nextCaregiver = caregiver.withFamilyBond(
+      infant.id,
+      adultBond.recordCareGiven(
+        atSeconds: _state.now.seconds,
+        durationSeconds: careSeconds,
+        substituted: substituted,
+      ),
+    );
+    final PersonAgenda? agenda = nextCaregiver.agenda;
+    if (agenda != null) {
+      nextCaregiver = nextCaregiver.withAgenda(
+        agenda.tire(careSeconds).logWork(careSeconds),
+      );
+    }
+    return (
+      infant: infant.withFamilyBond(
+        caregiver.id,
+        childBond.recordCareReceived(
+          atSeconds: _state.now.seconds,
+          durationSeconds: careSeconds,
+          substituted: substituted,
+        ),
+      ),
+      caregiver: nextCaregiver,
+    );
   }
 
   void _recordCaregiverSubstitution({
@@ -4509,10 +7937,21 @@ class Simulation {
     final Map<String, HouseholdState> households = caregiver == null
         ? _state.households
         : _householdsAfterCareInterruption(caregiver);
+    final bool attachmentLearning =
+        infant.householdId != null &&
+        _state.households[infant.householdId]?.infantAttachmentLearning == true;
+    InfantState failedInfancy = infancy.markCareUnmet();
+    if (attachmentLearning) {
+      failedInfancy = failedInfancy.recordMissedCare(
+        caregiverId: infancy.caregiverId,
+        atSeconds: _state.now.seconds,
+        delaySeconds: 0,
+      );
+    }
     _replace(
       people: <String, PersonState>{
         ..._state.people,
-        personId: infant.withInfancy(infancy.markCareUnmet()),
+        personId: infant.withInfancy(failedInfancy),
         if (caregiver?.caregiverAgent != null)
           caregiver!.id: _resumeRoutine(
             caregiver.withCaregiverAgent(
@@ -4520,7 +7959,16 @@ class Simulation {
             ),
           ),
       },
-      facts: <WorldFact>[..._state.facts, _fact(kind, personId, detail)],
+      facts: <WorldFact>[
+        ..._state.facts,
+        _fact(kind, personId, detail),
+        if (attachmentLearning)
+          _fact(
+            'infant_caregiver_expectation_missed',
+            personId,
+            'caregiver=${infancy.caregiverId} delay_seconds=0',
+          ),
+      ],
       households: households,
     );
   }
@@ -4783,6 +8231,7 @@ class Simulation {
     Map<String, RoomState>? rooms,
     Map<String, IllnessState>? illnesses,
     Map<String, SupplyJourneyState>? supplyJourneys,
+    Map<String, CommunityExchangeState>? communityExchanges,
     Map<String, TradeRoute>? routes,
     Map<String, WorldRegion>? regions,
     Map<String, WorldSite>? sites,
@@ -4790,6 +8239,7 @@ class Simulation {
     WorldEntryState? worldEntry,
     WorldHistoryState? worldHistory,
     HistoricalLegacyState? historicalLegacy,
+    CommunitySurvivalState? communitySurvival,
   }) {
     _state = WorldState(
       seed: _state.seed,
@@ -4815,6 +8265,9 @@ class Simulation {
       supplyJourneys: Map<String, SupplyJourneyState>.unmodifiable(
         supplyJourneys ?? _state.supplyJourneys,
       ),
+      communityExchanges: Map<String, CommunityExchangeState>.unmodifiable(
+        communityExchanges ?? _state.communityExchanges,
+      ),
       routes: Map<String, TradeRoute>.unmodifiable(routes ?? _state.routes),
       regions: Map<String, WorldRegion>.unmodifiable(regions ?? _state.regions),
       sites: Map<String, WorldSite>.unmodifiable(sites ?? _state.sites),
@@ -4822,6 +8275,7 @@ class Simulation {
       worldEntry: worldEntry ?? _state.worldEntry,
       worldHistory: worldHistory ?? _state.worldHistory,
       historicalLegacy: historicalLegacy ?? _state.historicalLegacy,
+      communitySurvival: communitySurvival ?? _state.communitySurvival,
     );
   }
 }

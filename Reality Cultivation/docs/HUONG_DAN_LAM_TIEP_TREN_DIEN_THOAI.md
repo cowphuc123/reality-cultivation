@@ -17,7 +17,7 @@ Cách này dùng trực tiếp thư mục `D:\Reality Cultivation`, repository, 
 
 Khi vào từ điện thoại, có thể nhắn:
 
-> Tiếp tục dự án Reality Cultivation trong task hiện tại. Đọc AGENTS.md và Reality Cultivation/docs/STATE.md trước, hoàn tất lát cắt đang dở, chạy kiểm thử, cập nhật hồ sơ Obsidian, rồi commit và push khi toàn bộ kiểm tra đạt. Không đẩy trạng thái đang dở hoặc đang lỗi.
+> Tiếp tục dự án Reality Cultivation trong task hiện tại. Đọc AGENTS.md, Reality Cultivation/docs/STATE.md và LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC.md trước; tiếp tục đúng cổng của phiên bản lớn đang làm. Chỉ kiểm chứng đầy đủ, hoàn thiện hồ sơ và push master khi mình yêu cầu; nếu cần chuyển thiết bị giữa chừng thì bàn giao WIP trên nhánh handoff.
 
 ## Nếu tạo một task riêng chỉ dựa vào GitHub
 
@@ -33,7 +33,7 @@ Trước khi đổi máy:
 Trong task mới trên điện thoại:
 
 1. Chọn đúng repository `cowphuc123/reality-cultivation` và đúng nhánh.
-2. Yêu cầu đọc `AGENTS.md`, `Reality Cultivation/docs/STATE.md`, `DECISIONS.md`, `MASTER_PLAN.md` và tài liệu K5 mới nhất.
+2. Yêu cầu đọc `AGENTS.md`, `Reality Cultivation/docs/STATE.md`, `DECISIONS.md`, `MASTER_PLAN.md`, `LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC.md` và tài liệu K5 mới nhất.
 3. Chỉ bắt đầu sửa sau khi xác nhận commit đầu nhánh đúng với mốc đã ghi.
 4. Làm trên một nhánh riêng; chạy kiểm thử; commit và push.
 
