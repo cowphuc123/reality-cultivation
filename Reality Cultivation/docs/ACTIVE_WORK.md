@@ -17,9 +17,9 @@ Cập nhật: 2026-09-19.
 | Trường | Giá trị |
 | --- | --- |
 | Chủ lượt | Codex — phát hành V4/V5/V6 |
-| Trạng thái | V4, V5 và V6 đã đóng cổng; đang hoàn tất commit/push và triển khai web |
+| Trạng thái | V4, V5 và V6 đã đóng cổng, đã push GitHub và triển khai web thành công |
 | Nhánh ổn định | `master` |
-| Commit game ổn định | V4/V5/V6 — xem `HEAD` của `master` sau lượt phát hành |
+| Commit game ổn định | `f05040e` — Release V4-V6 simulation milestones |
 | Nhánh bàn giao | Không có |
 | Lát cắt phát hành gần nhất | [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]] |
 | Việc tiếp theo | Khóa danh sách cổng hữu hạn V7 trước lát cắt tu luyện đầu tiên |
