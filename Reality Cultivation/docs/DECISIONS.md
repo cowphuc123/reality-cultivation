@@ -28,6 +28,9 @@ Cập nhật: 2026-09-10.
 | U020 | Mỗi phiên bản lớn phải có mục đích và điều kiện kết thúc đã ghi; dừng kéo dài V2, phân loại phần mã hiện có về đúng V3/V4/V5/V10 rồi tiếp tục theo lộ trình | Người dùng xác nhận, 2026-09-10 |
 | U021 | Tránh tự sinh nội dung vô tận làm phiên bản không bao giờ kết thúc; chỉ phát triển phần thật sự cần để vượt cổng đã định, đưa ý tưởng mở rộng không bắt buộc vào backlog | Người dùng yêu cầu kiểm tra lại phạm vi, 2026-09-13 |
 | U022 | Thực hiện kiểm chứng đầy đủ, test, commit/push GitHub và triển khai web cho V3 đã khóa phạm vi | Người dùng yêu cầu, 2026-09-13 |
+| U023 | Sau khi mã chức năng và bằng chứng V4 đã được dựng nhưng chưa chạy, tiếp tục viết nội dung game; vẫn giữ U019 nên chưa kiểm chứng phát hành hoặc đẩy GitHub nếu chưa được yêu cầu | Người dùng yêu cầu tiếp tục làm nội dung game, 2026-09-18 |
+| U024 | Sau khi mã chức năng và bằng chứng V5 đã dựng nhưng chưa chạy, tiếp tục viết mã chặng kế tiếp; vẫn giữ U019 và không tự kéo dài V5 | Người dùng yêu cầu tiếp tục, 2026-09-19 |
+| U025 | Chạy kiểm chứng phát hành đầy đủ và đăng GitHub cho phần mã đã tích lũy; hoàn thiện hồ sơ, commit/push `master` và triển khai web | Người dùng yêu cầu, 2026-09-19 |
 
 ## Đề xuất của trợ lý — chưa được người dùng chốt
 
@@ -50,6 +53,12 @@ Trừ những gì ghi trong bảng U ở trên, **mọi tên, con số, ngưỡn
 Lịch sử đầy đủ từng lượt việc — tài liệu nào thêm gì, số điều kiện tăng ra sao — nằm trong [[CHANGELOG]] và trong phần mở đầu của mỗi tài liệu K tương ứng. Không cần chép lại ở đây.
 
 ## Diễn biến gần nhất
+
+Ngày 2026-09-19: theo U025, V4, V5 và V6 đã chạy đủ bằng chứng phát hành. 36 runner, 22 widget test, 592 điều kiện catalog, hai analyzer và web build đều đạt sau khi sửa đúng các lỗi được kiểm chứng làm lộ ra. Ba chặng được đóng tại [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]]; chặng tiếp theo theo lộ trình là V7 tu luyện và phải khóa cổng trước khi viết lát cắt đầu.
+
+Ngày 2026-09-19: theo U024, phần viết mã chuyển sang V6 sinh kế sau khi V5 đã hết danh sách mã hữu hạn. V4 và V5 vẫn chưa được chứng nhận vì bằng chứng chưa chạy. Danh sách đóng V6 phải được khóa trước lát cắt đầu và không được tự mở rộng sang tiền tệ, tín dụng, luật hay tổ chức của V9.
+
+Ngày 2026-09-18: theo U023 và sơ đồ phụ thuộc K4 (`V0 → V5`), công việc viết mã chuyển sang V5 worldgen nhỏ mà không thêm chiều sâu ngoài cổng V4. V4 vẫn chờ lượt kiểm chứng riêng theo U019. Danh sách hữu hạn V5 được ghi trong [[LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC]] trước lát cắt đầu tiên.
 
 Ngày 2026-09-13: theo U022, V3 đã chạy đủ cổng phát hành và được đóng tại [[K5_29_V3_LANG_NHO_TU_VAN_HANH_30_NGAY]]. Bảy cổng đạt bằng runner 30 ngày, parity save/replay và hai bố cục GUI. Các ý tưởng xã hội ngoài cổng vẫn ở backlog theo U021; không mở `V3.0-dev.21`.
 

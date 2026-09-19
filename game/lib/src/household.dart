@@ -129,6 +129,17 @@ class HouseholdState {
   bool canUse(String personId, String itemId) =>
       authorizedUsersByItemId[itemId]?.contains(personId) ?? false;
 
+  HouseholdState authorizeItem(String itemId, Iterable<String> personIds) =>
+      _copy(
+        authorizedUsersByItemId: <String, Set<String>>{
+          ...authorizedUsersByItemId,
+          itemId: <String>{
+            ...?authorizedUsersByItemId[itemId],
+            ...personIds,
+          },
+        },
+      );
+
   HouseholdState recordCareInterruption(String personId, int seconds) => _copy(
     careInterruptionSecondsByPerson: <String, int>{
       ...careInterruptionSecondsByPerson,
@@ -329,6 +340,7 @@ class HouseholdState {
 
   HouseholdState _copy({
     List<String>? memberIds,
+    Map<String, Set<String>>? authorizedUsersByItemId,
     Map<String, int>? careInterruptionSecondsByPerson,
     Map<String, int>? totalCareInterruptionSecondsByPerson,
     Map<String, int>? workCompletedSecondsByPerson,
@@ -352,7 +364,8 @@ class HouseholdState {
     name: name,
     memberIds: memberIds ?? this.memberIds,
     resourceItemIds: resourceItemIds,
-    authorizedUsersByItemId: authorizedUsersByItemId,
+    authorizedUsersByItemId:
+        authorizedUsersByItemId ?? this.authorizedUsersByItemId,
     scheduledWorkSecondsByPerson: scheduledWorkSecondsByPerson,
     careInterruptionSecondsByPerson:
         careInterruptionSecondsByPerson ?? this.careInterruptionSecondsByPerson,

@@ -242,4 +242,4 @@ V2 “một hộ sống” được đóng về chức năng tại V2.3. Các t�
 
 V3 “làng nhỏ” đã hoàn thành ngày 2026-09-13 tại [[K5_29_V3_LANG_NHO_TU_VAN_HANH_30_NGAY]]. Runner phát hành chứng minh 50 NPC trong 12 hộ tự vận hành 30 ngày, save-load/replay xác định và GUI xem được trên điện thoại/máy tính. Semantic hash V3 là `8b27413973a433d7`.
 
-Chặng kế tiếp theo roadmap là V4 “tuổi thơ”. Chỉ bắt đầu khi người dùng yêu cầu và chỉ triển khai các phần phục vụ cổng V4 đã ghi; không kéo dài V3 bằng số phụ hoặc lấy backlog xã hội làm điều kiện mới.
+V4 “tuổi thơ”, V5 “worldgen nhỏ” và V6 “sinh kế” đã đóng cổng bằng runner, save/load/replay, GUI, catalog và web build tại [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]]. Chặng tiếp theo là V7 “tu luyện”; phải khóa danh sách hữu hạn trong [[LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC]] trước khi viết lát cắt đầu và không tự mở nội dung của V8/V9.

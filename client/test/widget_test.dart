@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart' hide Simulation;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:reality_cultivation_client/main.dart';
@@ -46,6 +48,64 @@ void main() {
     expect(find.text('16695 g'), findsWidgets);
     expect(find.byKey(const Key('member-profile-N01')), findsOneWidget);
     expect(find.byKey(const Key('item-profile-I-FOOD-01')), findsOneWidget);
+    expect(find.byKey(const Key('production-batch-panel')), findsOneWidget);
+    expect(
+      find.byKey(const Key('production-batch-PB-CARRY-FRAME-01')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Workpiece đang giữ 2 lô'), findsOneWidget);
+    expect(find.textContaining('rìu tay · I-HAND-AXE-01'), findsWidgets);
+    expect(find.textContaining('chưa xuất hiện trong kho'), findsWidgets);
+    expect(find.byKey(const Key('service-appointment-panel')), findsOneWidget);
+    expect(
+      find.byKey(const Key('service-appointment-SA-COOKING-LESSON-01')),
+      findsOneWidget,
+    );
+    expect(find.text('đã giữ lịch hai phía'), findsOneWidget);
+    expect(find.textContaining('ngũ cốc thô 100 g'), findsWidgets);
+    expect(find.textContaining('dịch vụ chưa hoàn tất'), findsOneWidget);
+    expect(find.byKey(const Key('labor-offer-panel')), findsOneWidget);
+    expect(
+      find.byKey(const Key('labor-offer-LO-YARD-SORT-01')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('gạo trả công 300 g'), findsOneWidget);
+    expect(find.text('đã nhận việc · Người làm công'), findsOneWidget);
+    expect(
+      find.byKey(const Key('labor-offer-LO-EXTRA-HAUL-01')),
+      findsOneWidget,
+    );
+    expect(find.text('đã từ chối · Người làm công'), findsOneWidget);
+    expect(find.byKey(const Key('market-panel')), findsOneWidget);
+    expect(
+      find.byKey(const Key('market-offer-MO-GRAIN-HERB-01')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('100/200 g'), findsOneWidget);
+    expect(find.textContaining('50 g dược thảo khô'), findsOneWidget);
+    expect(
+      find.byKey(const Key('market-order-MO-GRAIN-HERB-01-ORDER-01')),
+      findsOneWidget,
+    );
+    expect(find.text('đã thanh toán · Người đổi dược thảo'), findsOneWidget);
+    expect(find.textContaining('Đã đổi chủ:'), findsOneWidget);
+    expect(
+      find.byKey(const Key('market-shipment-MS-GRAIN-M01-01')),
+      findsOneWidget,
+    );
+    expect(find.text('đang vận chuyển · Người đổi dược thảo'), findsOneWidget);
+    expect(find.textContaining('hàng đã rời kho đầu'), findsOneWidget);
+    expect(find.byKey(const Key('supply-shock-panel')), findsOneWidget);
+    expect(
+      find.byKey(const Key('supply-shock-SS-GRAIN-RAIN-01')),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Phản ứng có bằng chứng (2/2 hộ)'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('H01: đổi sản xuất'), findsOneWidget);
+    expect(find.textContaining('H-MERCHANT: đổi cách mua bán'), findsOneWidget);
     await tester.tap(find.byKey(const Key('nav-4')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('save-world')), findsOneWidget);
@@ -90,6 +150,51 @@ void main() {
     await tester.tap(find.byKey(const Key('nav-2')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('household-panel')), findsOneWidget);
+    expect(
+      find.byKey(const Key('production-batch-PB-CARRY-FRAME-01')),
+      findsOneWidget,
+    );
+    expect(find.text('đóng khung gùi gỗ'), findsWidgets);
+    expect(find.textContaining('Còn 120 phút'), findsOneWidget);
+    expect(
+      find.byKey(const Key('service-appointment-SA-COOKING-LESSON-01')),
+      findsOneWidget,
+    );
+    expect(find.text('hướng dẫn nấu cháo ngũ cốc'), findsOneWidget);
+    expect(find.textContaining('còn 180 phút tới giờ hẹn'), findsOneWidget);
+    expect(find.text('phân loại gỗ và sợi trong sân'), findsOneWidget);
+    expect(find.textContaining('còn 240 phút tới ca'), findsOneWidget);
+    expect(find.text('gánh thêm gỗ cuối ngày'), findsOneWidget);
+    expect(find.textContaining('mệt, đói, khát'), findsOneWidget);
+    expect(find.text('ngũ cốc thô tại chợ'), findsOneWidget);
+    expect(find.textContaining('Mỗi lot 100 g đổi 50 g'), findsOneWidget);
+    expect(find.textContaining('Người đã biết offer:'), findsOneWidget);
+    expect(
+      find.textContaining('Lô hàng đã giữ: ngũ cốc thô 100 g'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Vật thanh toán đã giữ: dược thảo khô 50 g'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('market-shipment-MS-GRAIN-M01-01')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Tuyến RT-ANKHE-MARKET-RETURN'), findsOneWidget);
+    expect(find.textContaining('hao dự kiến'), findsOneWidget);
+    expect(find.text('Thiếu ngũ cốc thô'), findsOneWidget);
+    expect(find.textContaining('mưa kéo dài làm ẩm mốc'), findsOneWidget);
+    expect(
+      find.byKey(
+        const Key('supply-disruption-SS-GRAIN-RAIN-01-I-GRAIN-SERVICE-01'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Chưa tới lần đối chiếu cuối ngày đầu tiên.'),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const Key('nav-3')));
     await tester.pumpAndSettle();
     expect(find.text('Lịch sử đã xảy ra'), findsOneWidget);
@@ -122,6 +227,10 @@ void main() {
     expect(find.byKey(const Key('world-history-summary')), findsOneWidget);
     expect(find.byKey(const Key('historical-legacy-summary')), findsOneWidget);
     expect(
+      find.byKey(const Key('historical-compression-summary')),
+      findsOneWidget,
+    );
+    expect(
       find.byKey(const Key('legacy-adjustment-I-FOOD-01')),
       findsOneWidget,
     );
@@ -145,8 +254,23 @@ void main() {
     expect(find.byKey(const Key('birth-site-SITE-FIELD')), findsOneWidget);
     expect(find.byKey(const Key('birth-site-SITE-MARKET')), findsOneWidget);
     expect(find.byKey(const Key('birth-risk-SITE-FIELD-0')), findsOneWidget);
+    expect(find.byKey(const Key('birth-terrain-SITE-HOME')), findsOneWidget);
+    expect(find.byKey(const Key('birth-resources-SITE-RIVER')), findsOneWidget);
+    expect(find.byKey(const Key('birth-resources-SITE-FIELD')), findsOneWidget);
+    expect(find.byKey(const Key('birth-ecology-SITE-FIELD')), findsOneWidget);
+    expect(find.byKey(const Key('birth-ecology-SITE-PASS')), findsOneWidget);
+    expect(find.byKey(const Key('birth-settlement-SITE-HOME')), findsOneWidget);
+    expect(
+      find.byKey(const Key('birth-settlement-SITE-FIELD')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('birth-settlement-SITE-MARKET')),
+      findsOneWidget,
+    );
     final GeneratedWorld generated = WorldGenerator.generate(
       rootSeed: 20260907,
+      includeTerrainProfile: true,
     );
     final GeneratedWorldHistory generatedHistory =
         WorldHistoryGenerator.generate(
@@ -239,10 +363,10 @@ void main() {
     expect(repository.value, contains('"family_relationships"'));
     expect(repository.value, contains('"world_history"'));
     expect(repository.value, contains('"historical_legacy"'));
-    expect(repository.value, contains('"formula_version": "v2.18.0"'));
+    expect(repository.value, contains('"formula_version": "v5.0-dev.6"'));
     expect(
       repository.value,
-      contains('"plan_fingerprint": "582235ed607d383c"'),
+      contains('"plan_fingerprint": "${generatedHistory.fingerprint}"'),
     );
     await tester.tap(find.byKey(const Key('nav-2')));
     await tester.pumpAndSettle();
@@ -289,8 +413,12 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav-4')));
     await tester.pumpAndSettle();
-    final GeneratedWorld expected = WorldGenerator.generate(rootSeed: 42);
+    final GeneratedWorld expected = WorldGenerator.generate(
+      rootSeed: 42,
+      includeTerrainProfile: true,
+    );
     expect(find.textContaining('Seed 42'), findsOneWidget);
+    expect(find.byKey(const Key('region-terrain-REG-ANKHE')), findsOneWidget);
     expect(find.textContaining(expected.fingerprint), findsOneWidget);
     expect(repository.value, contains('"seed": 42'));
     expect(repository.value, contains(expected.fingerprint));
@@ -1221,4 +1349,243 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('household-panel')), findsOneWidget);
   });
+
+  testWidgets('mobile exposes the complete V4 childhood record', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final Simulation childhood = await _v4GuiSimulation(tester);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        requireBirthSelection: false,
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: childhood,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('narrow-layout')), findsOneWidget);
+    expect(find.byKey(const Key('child-intent-observe')), findsOneWidget);
+    expect(find.byKey(const Key('child-intent-vocalize')), findsOneWidget);
+    expect(
+      find.byKey(const Key('child-intent-practice_reach')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('child-intent-floor_play')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('nav-1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('child-development-stage')), findsOneWidget);
+    expect(find.byKey(const Key('child-body-mass')), findsOneWidget);
+    expect(find.byKey(const Key('child-activity-experience')), findsOneWidget);
+    expect(
+      find.byKey(const Key('child-physical-activity-summary')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('child-learning-activity-summary')),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.byKey(const Key('child-memory-counts')));
+    expect(find.byKey(const Key('child-memory-counts')), findsOneWidget);
+    await tester.ensureVisible(
+      find.byKey(const Key('child-caregiver-preference-N01')),
+    );
+    expect(
+      find.byKey(const Key('child-caregiver-preference-N01')),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.byKey(const Key('child-hazard-outcome')));
+    expect(find.byKey(const Key('child-hazard-outcome')), findsOneWidget);
+  });
+
+  testWidgets('desktop exposes the complete V4 childhood record', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final Simulation childhood = await _v4GuiSimulation(tester);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      RealityCultivationApp(
+        requireBirthSelection: false,
+        autoStart: false,
+        autoRestore: false,
+        saveRepository: MemorySaveRepository(),
+        initialSimulation: childhood,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('wide-layout')), findsOneWidget);
+    expect(find.byKey(const Key('child-intent-floor_play')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('nav-1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('child-development-stage')), findsOneWidget);
+    expect(find.byKey(const Key('child-body-mass')), findsOneWidget);
+    expect(find.byKey(const Key('child-activity-experience')), findsOneWidget);
+    expect(
+      find.byKey(const Key('child-physical-activity-summary')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('child-learning-activity-summary')),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.byKey(const Key('child-memory-counts')));
+    expect(find.byKey(const Key('child-memory-counts')), findsOneWidget);
+    await tester.ensureVisible(
+      find.byKey(const Key('child-caregiver-preference-N01')),
+    );
+    expect(
+      find.byKey(const Key('child-caregiver-preference-N01')),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.byKey(const Key('child-hazard-outcome')));
+    expect(find.byKey(const Key('child-hazard-outcome')), findsOneWidget);
+  });
+}
+
+Future<Simulation> _v4GuiSimulation(WidgetTester tester) async {
+  final MemorySaveRepository repository = MemorySaveRepository();
+  await tester.pumpWidget(
+    RealityCultivationApp(
+      requireBirthSelection: false,
+      autoStart: false,
+      autoRestore: false,
+      saveRepository: repository,
+    ),
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const Key('nav-4')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const Key('save-world')));
+  await tester.pumpAndSettle();
+
+  final Simulation simulation = Simulation.fromSave(repository.value!)
+    ..advanceTo(const SimTime(31 * gameSecondsPerDay + 60));
+  final ChildhoodState base = simulation.state.people['P00']!.childhood!;
+  final int now = simulation.state.now.seconds;
+  final ChildhoodState representative = ChildhoodState(
+    startedAtSeconds: base.startedAtSeconds,
+    lastAdvancedAgeDays: 1100,
+    security: 820,
+    grossMotor: 510,
+    fineMotor: 430,
+    receptiveLanguage: 620,
+    expressiveLanguage: 470,
+    observationExperience: 18,
+    movementPractice: 12,
+    languageExposure: 9,
+    playExperience: 7,
+    body: const ChildBodyState(
+      massGrams: 14920,
+      expectedMassGrams: 15300,
+      nutrition: 780,
+      hydration: 840,
+      totalFoodGrams: 198000,
+      totalWaterMl: 742000,
+      supportedGrowthDays: 814,
+      constrainedGrowthDays: 256,
+      lastFoodGrams: 310,
+      lastWaterMl: 980,
+      lastGrowthGrams: 5,
+    ),
+    maturationProgressPerMille: 1012000,
+    completedPhysicalActivities: 19,
+    successfulPhysicalActivities: 15,
+    failedPhysicalActivities: 4,
+    completedLearningActivities: 27,
+    successfulLearningActivities: 21,
+    failedLearningActivities: 6,
+    lastIntent: ChildIntent.floorPlay,
+    lastIntentAtSeconds: now - 3600,
+    lastOutcome: 'failed',
+    lastActivityRoomId: 'R-HOME',
+    lastActivityItemId: 'I-CHILD-P00-PLAY-01',
+    lastActivityDurationSeconds: ChildIntent.floorPlay.durationSeconds,
+    lastLearnedConceptId: 'object:soft_play_object',
+    lastLearningSourceId: 'I-CHILD-P00-PLAY-01',
+    hazardIncidents: 3,
+    hazardsNoticedBeforeHarm: 2,
+    hazardsResolvedByCaregiver: 3,
+    lastHazard: ChildHazardIncidentState(
+      id: 'child-hazard-widget-fixture',
+      kind: 'floor_balance_loss',
+      detectedAtSeconds: now - 3500,
+      noticedBeforeHarm: true,
+      childReaction: 'stopped_and_reached_for_caregiver',
+      severity: 180,
+      outcome: 'soothed',
+      caregiverId: 'N01',
+      resolvedAtSeconds: now - 3400,
+      securityChange: 35,
+    ),
+    recentMemories: <ChildMemoryEpisodeState>[
+      ChildMemoryEpisodeState(
+        id: 'memory-widget-recent',
+        atSeconds: now - 3600,
+        kind: ChildIntent.floorPlay.code,
+        outcome: 'failed',
+        summary: 'Mất thăng bằng khi chơi rồi tìm người chăm',
+        importance: 650,
+        sourceIds: const <String>['R-HOME', 'N01'],
+      ),
+    ],
+    memoryAnchors: <ChildMemoryEpisodeState>[
+      ChildMemoryEpisodeState(
+        id: 'memory-widget-anchor',
+        atSeconds: now - 12 * gameSecondsPerDay,
+        kind: 'hazard_resolved',
+        outcome: 'soothed',
+        summary: 'Được người chăm trấn an sau nguy hiểm',
+        importance: 800,
+        sourceIds: const <String>['N01'],
+      ),
+    ],
+    memorySummaries: <ChildMemorySummaryState>[
+      ChildMemorySummaryState(
+        periodIndex: 4,
+        firstAtSeconds: now - 60 * gameSecondsPerDay,
+        lastAtSeconds: now - 31 * gameSecondsPerDay,
+        episodeCount: 23,
+        successCount: 15,
+        failureCount: 8,
+        hazardCount: 2,
+        kindCounts: const <String, int>{
+          'observe': 10,
+          'floor_play': 11,
+          'hazard_resolved': 2,
+        },
+        sourceIds: const <String>['N01', 'I-CHILD-P00-PLAY-01'],
+      ),
+    ],
+    compressedMemoryCount: 76,
+  );
+  final Map<String, Object?> save = (jsonDecode(simulation.state.save()) as Map)
+      .cast<String, Object?>();
+  final List<Object?> people = save['people']! as List<Object?>;
+  final Map<String, Object?> player =
+      (people.firstWhere((Object? value) => (value! as Map)['id'] == 'P00')!
+              as Map)
+          .cast<String, Object?>();
+  player['childhood'] = representative.toJson();
+  player['family_relationships'] = <String, String>{
+    ...((player['family_relationships'] as Map?)?.cast<String, String>() ??
+        const <String, String>{}),
+    'N01': 'mother',
+  };
+  return Simulation.fromSave(jsonEncode(save));
 }

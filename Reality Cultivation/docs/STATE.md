@@ -1,6 +1,6 @@
 # Trạng thái hiện tại
 
-Cập nhật: 2026-09-13.
+Cập nhật: 2026-09-19.
 
 > Trợ lý mới tiếp nhận dự án: đọc [[CHUYEN_GIAO]] trước tiên.
 
@@ -48,8 +48,10 @@ Lịch sử đầy đủ từng lượt việc nằm trong [[CHANGELOG]]. Tóm t
 | V2.20 | Hộ ở đồng/chợ sinh từ seed và lịch sử; P00 có cha mẹ hoặc người giám hộ hai chiều | [[K5_27_V2_20_SINH_HO_VA_QUAN_HE_GIA_DINH]] · `4dc1efdae4d7e0b3` |
 | V2.21 | Hộ sinh có hai người lớn, quan hệ nội bộ; lịch và quyền tài nguyên chọn người chăm thật | [[K5_28_V2_21_HO_NHIEU_THANH_VIEN_VA_LICH_CHAM_TRE]] · `a3e5fd6ed1915a27` |
 | V3 | Làng nhỏ 50 NPC/12 hộ tự vận hành 30 ngày; trao đổi, tri thức và quan hệ xuyên hộ | [[K5_29_V3_LANG_NHO_TU_VAN_HANH_30_NGAY]] · `8b27413973a433d7` |
-
-Hiện có **27/27 runner**, **20/20 widget test** và **530 điều kiện catalog chạy được**; đây là bộ kiểm chứng triển khai riêng, không cộng vào 1.860 điều kiện thiết kế chưa chạy.
+| V4 | Tuổi thơ liên tục sáu năm; cơ thể, hoạt động, gắn bó, nguy hiểm và nén ký ức | [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]] · `afefc3dd5537605a` |
+| V5 | Worldgen nhỏ có địa hình, nguồn, sinh thái, khu dân cư và 741 năm tiền sử | [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]] · `4e03e202361d0363` |
+| V6 | Sinh kế 30 ngày: sản xuất, dịch vụ, lao động, chợ, vận tải và cú sốc | [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]] · `b8fea49e313fe8ab` |
+Hiện có **36/36 runner**, **22/22 widget test** và **592/592 điều kiện trong 29 catalog** đã chạy đạt ở mốc phát hành V4–V6. Hash đóng cổng là V4 `afefc3dd5537605a`, V5 `4e03e202361d0363` và V6 `b8fea49e313fe8ab`.
 
 Web đang chạy: **https://cowphuc123.github.io/reality-cultivation/** — tự động build lại mỗi lần đẩy `client/` lên GitHub (`.github/workflows/deploy-web.yml`). Bản cũ trên Sites (`chatgpt.site`) vẫn còn, chưa gỡ.
 
@@ -64,9 +66,9 @@ Làm tiếp từ điện thoại: ưu tiên Remote vào chính PC; xem [[HUONG_D
 
 - Chưa chọn công nghệ cuối cùng. S2 Dart/Flutter là working stack PROPOSED (ADR chưa ACCEPTED); S1/S3, full workload, APK/EXE chưa chạy.
 - Chưa chốt phạm vi bản đầu, quy tắc tạm dừng, mô phỏng khi đóng game hoặc hệ cảnh giới.
-- Chưa có: giải phẫu đa bộ phận, thương tích, già đi, chết; diễn biến cơ thể trong ngày (cơ thể người lớn chạy theo ngày); nước bẩn và bệnh do nước; khẩu phần riêng từng người; danh tiếng xã hội gián tiếp từ lời kể về giúp đỡ/từ chối; mục tiêu cá nhân dài hạn; lây bệnh và thuốc; chuỗi game sau tháng đầu.
+- Chưa có: giải phẫu đa bộ phận, thương tích, già đi, chết; diễn biến cơ thể trong ngày (cơ thể người lớn chạy theo ngày); nước bẩn và bệnh do nước; danh tiếng xã hội gián tiếp từ lời kể về giúp đỡ/từ chối; mục tiêu cá nhân dài hạn; lây bệnh và thuốc. Trẻ sau tháng đầu đã có khẩu phần riêng và tăng trưởng theo ngày ở mức V4, nhưng chưa có tiêu hóa chi tiết, bệnh tuổi thơ hoặc vi chất.
 - Nghỉ bệnh vẫn là **tất cả hoặc không có gì**: chưa có làm nhẹ hay nửa buổi. Ca nay có thể chuyển nguyên khối cho một người khác, nhưng chưa chia ca, đổi công hay tạo nghĩa vụ bù; xem [[K5_20_V2_13_GANH_VIEC_KHI_NGHI_BENH]].
-- Seed đã sinh được kích thước một vùng cùng tọa độ/bán kính năm địa điểm; người/phòng/vật và tuyến client bám kết quả đó. Bản V3 đã sinh dân số chi tiết từ cohort. Tên, loại và số lượng địa điểm vẫn là template An Khê: chưa có ô đất, độ cao, khí hậu, tài nguyên, biên giới hay đồ thị đường sinh từ địa hình.
+- Seed đã sinh một vùng có địa hình, độ cao, khí hậu, lượng mưa, nguồn tự nhiên, quần thể sinh thái và điểm khu dân cư; người/phòng/vật cùng tuyến client bám snapshot đó. Tên, loại và số lượng năm địa điểm vẫn là template An Khê; chưa có lưới ô đất, biên giới động hoặc đồ thị đường tự sinh từ địa hình.
 - Đã tách thế giới khỏi P00 và có ba hoàn cảnh sinh thật tại H01/H02/H03. H02/H03 nay sinh xác định từ seed + chỉ số lịch sử; mỗi hộ có hai người lớn, quan hệ nội bộ, ca bận và quyền dùng sữa ảnh hưởng trực tiếp tới người chăm trẻ. H01 vẫn viết tay và chỉ có một người lớn; chưa có phả hệ nhiều thế hệ, ký ức chung, mức thân thiết hoặc đời sống họ hàng.
 - Tiền sử đã chạy 300–30.000 năm theo seed qua ba epoch và cohort vùng; đất, giao thương, áp lực tài nguyên và lũ nay đổi lượng bốn kho cùng sản lượng tiếp tế thật. Sáu loại anchor, số hộ và loại hàng vẫn là template An Khê. Bản V3 đã vật chất hóa 20–50 người từ cohort nhưng lịch sử vẫn chưa mô phỏng từng lần sinh/xóa hộ, địa điểm, nghề, quyền hay quan hệ qua các epoch; chưa có tạm dừng/tiếp tục giữa worldgen.
 - Thân nhiệt người lớn **cố ý chưa làm**: chưa có mùa, thời tiết hay nhiệt độ môi trường để nó phản ứng lại; xem [[K5_15_V2_8_NUOC_VA_CON_KHAT]].
@@ -74,7 +76,7 @@ Làm tiếp từ điện thoại: ưu tiên Remote vào chính PC; xem [[HUONG_D
 
 ## Bước tiếp theo
 
-**V3 đã kết thúc.** Không thêm `V3.0-dev.21`; danh tiếng gián tiếp và các mở rộng xã hội vẫn ở backlog. Chặng kế tiếp theo roadmap là V4 tuổi thơ. Chỉ bắt đầu V4 khi người dùng yêu cầu, trước hết đối chiếu phần nền `V4.0-dev.1` với các cổng hữu hạn trong [[LO_TRINH_PHIEN_BAN_VA_DIEU_KIEN_KET_THUC]], rồi chọn đúng phần còn thiếu thay vì tự sinh lát cắt vô tận.
+**V4, V5 và V6 đã đóng cổng tại [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]].** Chặng chức năng kế tiếp là V7 tu luyện. Trước khi viết lát cắt đầu, khóa danh sách cổng hữu hạn V7 từ mục đích đã ghi trong lộ trình; không tự mở rộng sang xung đột hoặc tổ chức của V8/V9.
 
 Shared fixture V1 chưa chạy parity PWA. TN01–TN08 ([[LUA_CHON_TRAI_NGHIEM]]) và ADR công nghệ ACCEPTED vẫn mở.
 

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v4-childhood-six-years",
+  "conditions": [
+    {"id":"V4-TIME-001","title":"Tuổi thơ chạy liên tục ít nhất sáu năm qua hàng đợi","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"P00 reaches age day 2190 without a mandatory age-skip command"},
+    {"id":"V4-BODY-001","title":"Thức ăn và nước thật chi phối tăng trưởng","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"The child records both supported and constrained growth days from finite stores"},
+    {"id":"V4-DEV-001","title":"Trưởng thành phụ thuộc cơ thể và trải nghiệm","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"Maturation-equivalent days remain below chronological age under constrained nutrition"},
+    {"id":"V4-ACT-001","title":"Quan sát phát âm tập với vật và chơi đều chạy thật","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"All four child intent kinds consume time and remain represented in memory"},
+    {"id":"V4-LEARN-001","title":"Điều trẻ học giữ nguồn người hoặc vật","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"At least one child belief preserves its learning activity and source"},
+    {"id":"V4-BOND-001","title":"Kinh nghiệm chăm sơ sinh tiếp tục ảnh hưởng lựa chọn","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"Care expectations for N01 feed the post-infancy caregiver preference"},
+    {"id":"V4-HAZARD-001","title":"Nguy hiểm đi qua phát hiện phản ứng và trấn an","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"A hazard is resolved by N01 and leaves a soothed outcome"},
+    {"id":"V4-MEM-001","title":"Ký ức gần được giới hạn hữu hạn","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"Recent memories are capped at 64 episodes"},
+    {"id":"V4-MEM-002","title":"Ký ức nổi bật và tóm tắt được giới hạn","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"Anchors stay within 32 and summaries within 84 periods"},
+    {"id":"V4-MEM-003","title":"Nén vẫn giữ nguy hiểm và nguồn người chăm","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"The compressed six-year record retains a hazard anchor sourced to N01"},
+    {"id":"V4-SAFE-001","title":"Không còn hoạt động trẻ mắc kẹt hay vật phẩm âm","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"The final time commitment is clear and every item quantity is non-negative"},
+    {"id":"V4-SAVE-001","title":"Lưu tải giữa năm thứ ba giữ nguyên snapshot","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"The midpoint save round trip preserves its semantic hash"},
+    {"id":"V4-SAVE-002","title":"Chạy liền và lưu tải giữa kỳ hội tụ","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"Both paths end at semantic hash afefc3dd5537605a"},
+    {"id":"V4-REPLAY-001","title":"Replay cùng seed và lệnh hội tụ","status":"automated","runner":"tool/verify_v4_childhood_six_years.dart","oracle":"A fresh replay ends at semantic hash afefc3dd5537605a"},
+    {"id":"V4-UI-001","title":"Điện thoại xem được hồ sơ tuổi thơ đầy đủ","status":"automated","runner":"../client/test/widget_test.dart","oracle":"390x844 renders development body activities bonds hazards and compressed memory without overflow"},
+    {"id":"V4-UI-002","title":"Máy tính xem được hồ sơ tuổi thơ đầy đủ","status":"automated","runner":"../client/test/widget_test.dart","oracle":"1280x800 renders development body activities bonds hazards and compressed memory without overflow"}
+  ]
+}

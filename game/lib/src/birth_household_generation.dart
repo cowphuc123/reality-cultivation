@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'region.dart';
 import 'world_generation.dart';
 import 'world_history.dart';
 
@@ -15,6 +16,7 @@ const String promisedBirthHouseholdGeneratorVersion = 'v3.0.0-dev.7';
 const String reliableBirthHouseholdGeneratorVersion = 'v3.0.0-dev.8';
 const String witnessedBirthHouseholdGeneratorVersion = 'v3.0.0-dev.9';
 const String attachedBirthHouseholdGeneratorVersion = 'v4.0.0-dev.1';
+const String environmentalBirthHouseholdGeneratorVersion = 'v5.0-dev.5';
 
 class GeneratedFamilyMember {
   const GeneratedFamilyMember({
@@ -153,6 +155,7 @@ class GeneratedBirthHouseholds {
     required this.worldFingerprint,
     required this.historyFingerprint,
     required List<GeneratedBirthHousehold> households,
+    this.settlementAssessments = const <String, SettlementAssessmentState>{},
     this.generatorVersion = birthHouseholdGeneratorVersion,
   }) : households = List<GeneratedBirthHousehold>.unmodifiable(households) {
     final Set<String> siteIds = <String>{};
@@ -208,6 +211,17 @@ class GeneratedBirthHouseholds {
         }
       }
     }
+    for (final MapEntry<String, SettlementAssessmentState> entry
+        in settlementAssessments.entries) {
+      final SettlementAssessmentState assessment = entry.value;
+      if (entry.key.isEmpty ||
+          assessment.score < 0 ||
+          assessment.score > 1000 ||
+          assessment.reasons.isEmpty ||
+          assessment.historyFingerprint != historyFingerprint) {
+        throw ArgumentError('Generated settlement assessment is invalid.');
+      }
+    }
     fingerprint = _fingerprint(<String, Object?>{
       'root_seed': rootSeed,
       'world_fingerprint': worldFingerprint,
@@ -216,6 +230,15 @@ class GeneratedBirthHouseholds {
       'households': this.households
           .map((GeneratedBirthHousehold value) => value.toJson())
           .toList(),
+      if (settlementAssessments.isNotEmpty)
+        'settlement_assessments': <Map<String, Object>>[
+          for (final MapEntry<String, SettlementAssessmentState> entry
+              in settlementAssessments.entries)
+            <String, Object>{
+              'site_id': entry.key,
+              ...entry.value.toJson(),
+            },
+        ],
     });
   }
 
@@ -223,6 +246,7 @@ class GeneratedBirthHouseholds {
   final String worldFingerprint;
   final String historyFingerprint;
   final List<GeneratedBirthHousehold> households;
+  final Map<String, SettlementAssessmentState> settlementAssessments;
   final String generatorVersion;
   late final String fingerprint;
 }
@@ -253,11 +277,38 @@ class BirthHouseholdGenerator {
     final HistoricalMetrics metrics = history.epochs.isEmpty
         ? const HistoricalMetrics.initial()
         : history.epochs.last.metricsAfter;
+    final bool useEnvironmentalPlacement =
+        world.generatorVersion.startsWith('v5.');
+    final Map<String, SettlementAssessmentState> settlementAssessments =
+        useEnvironmentalPlacement
+        ? _assessSettlementSites(
+            world: world,
+            metrics: metrics,
+            historyFingerprint: history.fingerprint,
+          )
+        : const <String, SettlementAssessmentState>{};
+    final List<String> selectedSiteIds = useEnvironmentalPlacement
+        ? <String>[
+            for (final MapEntry<String, SettlementAssessmentState> entry
+                in settlementAssessments.entries)
+              if (entry.value.selectedForBirthHousehold) entry.key,
+          ]
+        : const <String>['SITE-FIELD', 'SITE-MARKET'];
+    if (selectedSiteIds.length != 2) {
+      throw StateError(
+        'Environmental placement must select exactly two birth settlements.',
+      );
+    }
+    final WorldSite firstSite = world.site(selectedSiteIds[0]);
+    final WorldSite secondSite = world.site(selectedSiteIds[1]);
     return GeneratedBirthHouseholds(
       rootSeed: world.rootSeed,
       worldFingerprint: world.fingerprint,
       historyFingerprint: history.fingerprint,
-      generatorVersion: includeInfantAttachmentLearning
+      settlementAssessments: settlementAssessments,
+      generatorVersion: useEnvironmentalPlacement
+          ? environmentalBirthHouseholdGeneratorVersion
+          : includeInfantAttachmentLearning
           ? attachedBirthHouseholdGeneratorVersion
           : includeFamilyCareWitnessMemory
           ? witnessedBirthHouseholdGeneratorVersion
@@ -285,20 +336,12 @@ class BirthHouseholdGenerator {
           world: world,
           metrics: metrics,
           historyFingerprint: history.fingerprint,
-          siteId: 'SITE-FIELD',
+          siteId: firstSite.id,
           householdId: 'H02',
           roomId: 'ROOM-FIELD-HOME',
           caregiverId: 'N05',
-          householdKinds: const <String>[
-            'Hộ giữ đồng',
-            'Hộ trồng kê',
-            'Hộ canh ruộng',
-          ],
-          roomKinds: const <String>[
-            'Chòi giữ đồng',
-            'Nhà đất cạnh ruộng',
-            'Lều ruộng phía nam',
-          ],
+          householdKinds: _householdKinds(firstSite),
+          roomKinds: _roomKinds(firstSite),
           roleKinds: const <String>['mother', 'father', 'guardian'],
           skillBase: 470,
           foodBase: 19000,
@@ -384,20 +427,12 @@ class BirthHouseholdGenerator {
           world: world,
           metrics: metrics,
           historyFingerprint: history.fingerprint,
-          siteId: 'SITE-MARKET',
+          siteId: secondSite.id,
           householdId: 'H03',
           roomId: 'ROOM-MARKET-LOFT',
           caregiverId: 'N06',
-          householdKinds: const <String>[
-            'Hộ quán trọ chợ',
-            'Hộ hàng thuốc',
-            'Hộ bán trà',
-          ],
-          roomKinds: const <String>[
-            'Gác quán trọ',
-            'Phòng sau hiệu thuốc',
-            'Buồng trên quán trà',
-          ],
+          householdKinds: _householdKinds(secondSite),
+          roomKinds: _roomKinds(secondSite),
           roleKinds: const <String>['guardian', 'mother', 'father'],
           skillBase: 720,
           foodBase: 7500,
@@ -483,6 +518,162 @@ class BirthHouseholdGenerator {
     );
   }
 
+  static Map<String, SettlementAssessmentState> _assessSettlementSites({
+    required GeneratedWorld world,
+    required HistoricalMetrics metrics,
+    required String historyFingerprint,
+  }) {
+    final int distanceScale = world.region.widthMm + world.region.heightMm;
+
+    int proximity(WorldSite from, WorldSite to) =>
+        (1000 - from.distanceTo(to.center) * 1000 ~/ distanceScale)
+            .clamp(0, 1000)
+            .toInt();
+
+    int resourceAccess(WorldSite target, String kind) {
+      int best = 0;
+      for (final WorldSite source in world.sites) {
+        for (final NaturalResourceDeposit resource
+            in source.resourceDeposits) {
+          if (resource.kind != kind) continue;
+          final int fullness = resource.quantity * 1000 ~/ resource.capacity;
+          final int value =
+              (fullness * 4 +
+                  resource.accessibility * 3 +
+                  proximity(target, source) * 3) ~/
+              10;
+          if (value > best) best = value;
+        }
+      }
+      return best;
+    }
+
+    int ecologicalSupport(WorldSite target) {
+      int best = 0;
+      for (final WorldSite source in world.sites) {
+        for (final EcologicalPopulationState population
+            in source.ecologicalPopulations) {
+          final int abundance =
+              population.population * 1000 ~/ population.carryingCapacity;
+          final int value =
+              (population.health * 4 +
+                  abundance * 3 +
+                  proximity(target, source) * 3) ~/
+              10;
+          if (value > best) best = value;
+        }
+      }
+      return best;
+    }
+
+    final Map<String, SettlementAssessmentState> raw =
+        <String, SettlementAssessmentState>{};
+    for (final WorldSite site in world.sites) {
+      if (site.kind == 'river') continue;
+      final int terrain = switch (site.terrainCode) {
+        'alluvial_terrace' => 850,
+        'floodplain' => 680,
+        'mountain_pass' => 360,
+        _ => 500,
+      };
+      final int water = resourceAccess(site, 'surface_water');
+      final int farmland = resourceAccess(site, 'fertile_topsoil');
+      final int timber = resourceAccess(site, 'timber_stand');
+      final int ecology = ecologicalSupport(site);
+      final int cultivation = (metrics.cultivatedLandMu * 20)
+          .clamp(0, 1000)
+          .toInt();
+      final int historicalBase =
+          ((1000 - metrics.resourcePressure) +
+                  metrics.tradeReach +
+                  cultivation) ~/
+              3;
+      final int specialization = switch (site.kind) {
+        'market' => metrics.tradeReach ~/ 5,
+        'field' => cultivation ~/ 5,
+        'household' => (1000 - metrics.resourcePressure) ~/ 8,
+        _ => 0,
+      };
+      final int score =
+          ((terrain * 30 +
+                          water * 25 +
+                          farmland * 15 +
+                          timber * 10 +
+                          ecology * 10 +
+                          historicalBase * 10) ~/
+                      100 +
+                  specialization)
+              .clamp(0, 1000)
+              .toInt();
+      final bool viable = water >= 250 && score >= 450;
+      raw[site.id] = SettlementAssessmentState(
+        score: score,
+        viable: viable,
+        reasons: <String>[
+          'Địa hình ${site.terrainCode}: $terrain/1000',
+          'Tiếp cận nước: $water/1000',
+          'Tiếp cận đất canh tác: $farmland/1000',
+          'Tiếp cận gỗ: $timber/1000',
+          'Hỗ trợ sinh thái: $ecology/1000',
+          'Dấu vết lịch sử: $historicalBase/1000',
+        ],
+        historyFingerprint: historyFingerprint,
+        selectedForBirthHousehold: false,
+      );
+    }
+    final List<MapEntry<String, SettlementAssessmentState>> ranked = raw.entries
+        .where(
+          (MapEntry<String, SettlementAssessmentState> entry) =>
+              entry.value.viable && world.site(entry.key).kind != 'household',
+        )
+        .toList()
+      ..sort((a, b) {
+        final int byScore = b.value.score.compareTo(a.value.score);
+        return byScore != 0 ? byScore : a.key.compareTo(b.key);
+      });
+    if (ranked.length < 2) {
+      throw StateError('World history leaves fewer than two viable settlements.');
+    }
+    final Set<String> selected = <String>{ranked[0].key, ranked[1].key};
+    return <String, SettlementAssessmentState>{
+      for (final MapEntry<String, SettlementAssessmentState> entry
+          in raw.entries)
+        entry.key: SettlementAssessmentState(
+          score: entry.value.score,
+          viable: entry.value.viable,
+          reasons: entry.value.reasons,
+          historyFingerprint: entry.value.historyFingerprint,
+          selectedForBirthHousehold: selected.contains(entry.key),
+        ),
+    };
+  }
+
+  static List<String> _householdKinds(WorldSite site) => switch (site.kind) {
+    'field' => const <String>['Hộ giữ đồng', 'Hộ trồng kê', 'Hộ canh ruộng'],
+    'market' => const <String>['Hộ quán trọ chợ', 'Hộ hàng thuốc', 'Hộ bán trà'],
+    'pass' => const <String>['Hộ giữ đèo', 'Hộ tiều phu', 'Hộ dẫn đường'],
+    _ => const <String>['Hộ ven suối', 'Hộ làm vườn', 'Hộ bám thung lũng'],
+  };
+
+  static List<String> _roomKinds(WorldSite site) => switch (site.kind) {
+    'field' => const <String>[
+      'Chòi giữ đồng',
+      'Nhà đất cạnh ruộng',
+      'Lều ruộng phía nam',
+    ],
+    'market' => const <String>[
+      'Gác quán trọ',
+      'Phòng sau hiệu thuốc',
+      'Buồng trên quán trà',
+    ],
+    'pass' => const <String>[
+      'Nhà đá chân đèo',
+      'Lều gỗ ven rừng',
+      'Trạm nghỉ đường núi',
+    ],
+    _ => const <String>['Nhà đất ven suối', 'Nhà sàn thấp', 'Nhà vườn'],
+  };
+
   static GeneratedBirthHousehold _generate({
     required GeneratedWorld world,
     required HistoricalMetrics metrics,
@@ -512,6 +703,7 @@ class BirthHouseholdGenerator {
     required bool includeInfantAttachmentLearning,
     required String supportingCaregiverId,
   }) {
+    final WorldSite site = world.site(siteId);
     final _SeedStream stream = _SeedStream.derived(
       world.rootSeed,
       '$historyFingerprint:$siteId:${metrics.populationEstimate}:'
@@ -540,9 +732,12 @@ class BirthHouseholdGenerator {
         ? <Map<String, Object?>>[
             <String, Object?>{
               'id': 'R-$caregiverId-MORNING',
-              'activity': siteId == 'SITE-FIELD'
-                  ? 'làm việc ngoài ruộng'
-                  : 'trông quầy buổi sáng',
+              'activity': switch (site.kind) {
+                'field' => 'làm việc ngoài ruộng',
+                'market' => 'trông quầy buổi sáng',
+                'pass' => 'kiểm tra đường đèo',
+                _ => 'chăm nom vườn nhà',
+              },
               'start_second_of_day': 6 * 3600,
               'duration_seconds': 6 * 3600,
               'room_id': roomId,
@@ -563,9 +758,12 @@ class BirthHouseholdGenerator {
               routine: <Map<String, Object?>>[
                 <String, Object?>{
                   'id': 'R-$supportingCaregiverId-AFTERNOON',
-                  'activity': siteId == 'SITE-FIELD'
-                      ? 'gánh nước cuối ngày'
-                      : 'trông quầy buổi chiều',
+                  'activity': switch (site.kind) {
+                    'field' => 'gánh nước cuối ngày',
+                    'market' => 'trông quầy buổi chiều',
+                    'pass' => 'gom củi cuối ngày',
+                    _ => 'gánh nước về nhà',
+                  },
                   'start_second_of_day': 12 * 3600,
                   'duration_seconds': 6 * 3600,
                   'room_id': roomId,

@@ -1,5 +1,276 @@
 # Nhật ký dự án
 
+## 2026-09-19 — đóng cổng và phát hành V4, V5, V6
+
+- Chạy đạt 36/36 runner V0–V6. Hash đóng cổng: V4 `afefc3dd5537605a`, V5 `4e03e202361d0363`, V6 tổng hợp 30 ngày `b8fea49e313fe8ab`.
+- Chạy đạt `dart analyze`, `flutter analyze`, 22/22 widget test và Flutter web release build cho base path `/reality-cultivation/`.
+- Thêm catalog V4/V5/V6 và bộ kiểm tra chung; tổng 29 catalog với 592 điều kiện hợp lệ, không trùng mã.
+- Sửa các lỗi được bằng chứng làm lộ ra: bữa hộ với lịch/kho thiếu, tọa độ settlement chợ, giới hạn nén ký ức, thứ tự địa điểm trong legacy và thứ tự map trong fact quyết toán.
+- Cập nhật kỳ vọng GUI theo dữ liệu V5/V6 hiện hành. Hồ sơ đầy đủ tại [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]].
+
+## 2026-09-19 — V6.0-dev.13: runner sinh kế tổng hợp 30 ngày chưa chạy
+
+- Thêm fixture hai hộ nối hai mẻ sản xuất, một dịch vụ xuyên hộ, một ca lao động có trả công, giao dịch, shipment và cú sốc năm ngày trong cùng ledger.
+- Runner đối chiếu lượng đầu với vật còn trong kho, workpiece/vật tư đã giữ, lô gián đoạn, offer và đích sau giao; yêu cầu không kho âm, claim hoặc process mắc kẹt ở ngày 15/30.
+- Chạy liền, save/load ngày 15 và replay được yêu cầu hội tụ cùng semantic hash ngày 30. Chưa chạy nên chưa có hash hoặc chứng nhận.
+- Mã chức năng/bằng chứng cổng V6 1–8 đã có. Dừng thêm tính năng V6; cổng 9 kiểm chứng, sửa lỗi, commit/push và web chỉ thực hiện khi người dùng yêu cầu.
+
+## 2026-09-19 — V6.0-dev.12: cú sốc đại diện, GUI và bằng chứng chưa chạy
+
+- Client tạo cú sốc mưa năm ngày làm mất ngũ cốc thật của H01 và hộ đổi dược thảo; H01 hong củ thành lương thực thay thế còn hộ kia đặt đơn chợ để bù kho, với batch/order làm bằng chứng sau mốc bắt đầu cú sốc.
+- GUI hộ hiện nguyên nhân, thời hạn, lô mất, tồn kho so với hàng đang đi và phản ứng của từng hộ; nhật ký nhận bốn loại sự kiện cú sốc. Widget test hai bố cục đã thêm điểm tìm nhưng chưa chạy.
+- Thêm `verify_v6_supply_shock.dart`: mã bằng chứng chạy năm ngày, từ chối phản ứng giả, đối chiếu hai phản ứng thật, mười ảnh chụp hộ-ngày, bảo toàn ledger, không kho âm hoặc item cứu hộ sau khởi tạo.
+- Runner yêu cầu chạy liền, save/load ngày 2 và replay hội tụ. Chưa chạy kiểm chứng; cổng 6 chưa được chứng nhận. Tiếp theo chỉ dựng kịch bản V6 30 ngày từ các hệ hiện có.
+
+## 2026-09-19 — V6.0-dev.11: lõi cú sốc thiếu hàng nhiều hộ
+
+- Thêm cú sốc nguồn cung kéo dài tối thiểu hai ngày, bắt buộc làm mất khả dụng lô vật thật của ít nhất hai hộ; hồ sơ giữ nguồn, lượng và chất lượng bị gián đoạn thay vì chỉ gắn cờ kể chuyện.
+- Audit mỗi ngày ghi riêng tồn kho dùng được và cargo đang vận chuyển của từng hộ, rồi chuyển cú sốc sang resolved đúng hạn qua cùng hàng đợi sự kiện.
+- Phản ứng sản xuất, dịch vụ hoặc giao dịch chỉ được ghi khi batch, appointment hoặc order thật thuộc hộ và nằm trong thời gian cú sốc; sự kiện phản ứng không tự cấp hàng.
+- Trạng thái, phản ứng và chuỗi audit đi qua save/load/hash. Chưa nối client/GUI/runner và chưa chạy kiểm chứng; tiếp theo hoàn thiện bằng chứng hữu hạn cổng 6.
+
+## 2026-09-19 — V6.0-dev.10: chuyến hàng đại diện, GUI và bằng chứng chưa chạy
+
+- Client tạo kho của hộ đổi dược thảo tại chợ và tuyến giao hàng từ gian bếp H01; M01 mang 100 g ngũ cốc vừa settlement, nên hàng rời kho đầu và người chở bị giữ lịch ngay khi khởi hành.
+- GUI bảng chợ hiện shipment, waypoint, quãng đường, giờ dự kiến/thực tế, độ trễ, cargo, hao chất lượng, kho đích và lý do thất bại; nhật ký có nội dung riêng cho khởi hành, giao thành công và giao thất bại.
+- Thêm `verify_v6_market_transport.dart`: mã bằng chứng yêu cầu cargo không thể bị production dùng giữa đường, lượng được bảo toàn, trễ/hao đổi kết quả, save/load/replay hội tụ và ledger đích sai không sinh hàng bù.
+- Widget test hai bố cục đã thêm điểm tìm chuyến đại diện. Chưa chạy analyzer, runner hoặc widget test theo yêu cầu chỉ viết mã; cổng 5 chưa được chứng nhận. Tiếp theo cổng 6 về cú sốc thiếu hàng nhiều hộ.
+
+## 2026-09-19 — V6.0-dev.9: lõi vận tải hàng giao dịch trên tuyến thật
+
+- Thêm `MarketShipmentState` với order nguồn, chủ hàng, người chở, tuyến/path, phòng đầu/cuối, cargo, khoảng cách, giờ dự kiến/thực, độ trễ, hao chất lượng và kết quả giao. Dữ liệu đi qua save/load cùng semantic hash.
+- Dispatch chỉ nhận order đã settlement và đúng item người mua nhận. Người chở phải thuộc hộ mua, ở phòng đầu, có quyền dùng hàng; waypoint đầu/cuối phải khớp tọa độ phòng và ledger đích phải tương thích.
+- `TradeRoute.fastestPath` chọn đường theo sức, tải và từng ngưỡng địa hình. Thời gian thực cộng từ tốc độ mỗi leg; chênh lệch so với đường bằng thành `lateSeconds`, địa hình chậm tạo hao chất lượng xác định.
+- Khi đi, hàng rời kho vào shipment `inTransit`, người chở nhận cam kết và rời phòng. Đến nơi mới tạo/cộng item đích, áp hao, cấp quyền và trả lịch; mất cam kết hoặc ledger đích đổi sai làm shipment `failed` và giữ cargo đã hao trong hồ sơ.
+- Chưa nối fixture/client, GUI hoặc runner; chưa chạy analyzer/widget/catalog/build, chưa commit/push hay triển khai. Bước code kế tiếp hoàn thiện mã bằng chứng cổng 5; chưa mở cú sốc thiếu hàng.
+
+## 2026-09-19 — V6.0-dev.8: chợ đại diện, GUI và bằng chứng chưa chạy
+
+- Client thêm M01 thuộc hộ đổi dược thảo, 300 g dược thảo khô có quyền dùng và cùng hiện diện với N02 tại gian bếp. N02 dành 200 g ngũ cốc riêng cho offer, chia lot 100 g đổi 50 g dược thảo.
+- M01 là người thực sự đã thấy offer, đặt một lot rồi settlement. Snapshot đầu chơi còn 100 g trong offer; H-MERCHANT nhận 100 g ngũ cốc và H01 nhận 50 g dược thảo qua hai item có chủ/quyền rõ ràng.
+- GUI hộ trên điện thoại và máy tính hiện offer, lượng đầu/còn, chất lượng, giá theo lot, người biết, order, hai escrow và item đích sau đổi chủ. Nhật ký có nhãn/nội dung cho công bố, reserve và settlement.
+- Thêm `game/tool/verify_v6_market_escrow.dart`: người chưa biết không thể đặt; đơn vượt tồn không trừ thêm; hàng đã escrow không thể đăng lại; target sai giữ nguyên semantic hash; target đúng đổi chủ và bảo toàn 500 g ngũ cốc cùng 300 g dược thảo.
+- Runner còn yêu cầu chạy liền, save/load sau reserve và replay hội tụ cùng snapshot. Widget test mới đã có điểm tìm ở 390×844 và 1280×800 nhưng chưa chạy.
+- Chưa chạy analyzer, runner, widget test, catalog hoặc build; chưa commit/push hay triển khai. Phần chức năng và mã bằng chứng cổng 4 đã có; bước code kế tiếp thuộc cổng 5 về vận tải.
+
+## 2026-09-19 — V6.0-dev.7: lõi chợ giữ hàng và thanh toán thật
+
+- Thêm offer chợ chứa người/hộ bán, địa điểm, lô hàng, tỷ lệ đổi, danh sách người đã thấy và trạng thái. Lượng đăng bán bị rút khỏi item nguồn vào `MarketEscrowLot` ngay lúc công bố nên không thể bị dùng hay bán lại.
+- Đơn hàng chỉ được tạo bởi người thuộc hộ khác, đã thấy offer và còn ở đúng chợ. Số lượng phải theo lot và không vượt hàng còn lại; vật thanh toán phải đúng loại/đơn vị, đủ lượng, đúng chủ, đúng nơi và đúng quyền.
+- Khi đặt thành công, cả hàng mua lẫn vật thanh toán đều nằm trong escrow của order. Offer giảm lượng còn lại hoặc chuyển `exhausted`, nên hai người mua không thể giữ cùng một phần hàng.
+- Settlement yêu cầu hai bên có mặt, kiểm tra hai target tương thích rồi mới đổi chủ, cộng lượng và cấp quyền dùng. Target sai trả `false` và giữ nguyên order `reserved`; không mất hàng, không hoàn tất một nửa.
+- `market_offers` và `market_orders` đi qua save/load cùng semantic hash. Chưa nối client/GUI hoặc runner, chưa chạy analyzer/widget/catalog/build, chưa commit/push hay triển khai. Bước code kế tiếp hoàn thiện mã bằng chứng cổng 4; chưa mở vận tải.
+
+## 2026-09-19 — V6.0-dev.6: lao động đại diện, GUI và bằng chứng chưa chạy
+
+- Client tạo một lời mời phân loại vật liệu được N03 nhận theo kỹ năng, sức và lịch, cùng một lời mời gánh thêm bị từ chối vì trạng thái cá nhân. Việc tạo lời mời tương lai chỉ kiểm tra đúng người–hộ–nơi; người làm vẫn phải có mặt khi ca bắt đầu.
+- Bảng hộ trên điện thoại và máy tính hiện trạng thái lời mời, người thuê/người làm, điều kiện kỹ năng, ưu tiên, lịch, quyền lợi hiện vật, lý do quyết định và trạng thái claim. Nhật ký có nội dung riêng cho toàn bộ vòng đời lao động và thanh toán.
+- Thêm `game/tool/verify_v6_labor_obligation.dart`: kiểm tra người đủ điều kiện nhận việc, người quá mệt từ chối, cam kết tồn tại giữa ca, công hoàn tất sinh claim và trả lại lịch.
+- Runner còn yêu cầu thanh toán thiếu giữ nguyên item, công đã làm và claim `outstanding`; thanh toán đủ chuyển đúng 300 g sang hộ người làm, cấp quyền dùng và làm chạy liền/save-load/replay hội tụ cùng snapshot.
+- Chưa chạy runner, analyzer, widget test, catalog hoặc build; chưa commit/push hay triển khai. Phần chức năng và mã bằng chứng cổng 3 đã có; bước code kế tiếp thuộc cổng 4 về chợ địa phương.
+
+## 2026-09-19 — Tách trạng thái và sinh kế khỏi bộ điều phối mô phỏng
+
+- Tách nguyên khối `SimTime`, hàng đợi sự kiện, `PersonState`, `WorldFact`, `WorldState`, lệnh và save/load khỏi `simulation.dart` sang `simulation_state.dart` bằng `part` cùng library.
+- Tách API cùng handler sản xuất, dịch vụ và lao động V6 sang `simulation_livelihood.dart` dưới extension `LivelihoodSimulationOperations`. `Simulation` vẫn là điểm gọi công khai và bộ dispatch chỉ chuyển sự kiện sang module sinh kế.
+- `simulation.dart` giảm từ khoảng 10.717 xuống 8.876 dòng; hai module mới lần lượt khoảng 892 và 966 dòng. Các hệ cũ sẽ tách dần khi được sửa, tránh một lần viết lại lớn làm mất tín hiệu hồi quy.
+- Đây chỉ là thay đổi ranh giới mã: không đổi schema save, semantic hash, API client/runner hoặc luật mô phỏng. Chưa chạy analyzer/runner/widget/catalog/build, chưa commit/push hay triển khai.
+
+## 2026-09-19 — V6.0-dev.5: lời mời lao động và claim trả công
+
+- Thêm `LaborOfferState` với công việc, kỹ năng tối thiểu, mức ưu tiên, người thuê/người làm, hai hộ, địa điểm, lịch và quyền lợi hiện vật đã chào. Người nhận tự cân nhắc theo kỹ năng, lịch cùng `PersonAgenda`; quyết định và lý do được lưu bền.
+- Lời mời đã nhận giữ lịch của người làm và chặn dịch vụ/cam kết khác lấn giờ. Đến giờ người làm phải có mặt, nhận cam kết và giữ nó tới cuối ca; ca bị chặn không tự sinh quyền đòi trả công.
+- Công hoàn tất tạo `LaborCompensationClaim` ở trạng thái `outstanding`. Việc thanh toán chuyển item thật giữa hai hộ và cấp quyền dùng cho người làm; thiếu hàng, sai loại, sai quyền hoặc sai nơi chỉ ghi thất bại, giữ nguyên cả claim lẫn hồ sơ công đã hoàn thành.
+- `labor_offers` và `labor_claims` đi qua save/load và semantic hash. Chưa nối fixture/client, GUI hoặc runner; chưa chạy analyzer/widget/catalog/build, chưa commit/push hay triển khai.
+
+## 2026-09-19 — V6.0-dev.4: dịch vụ đại diện, GUI và bằng chứng chưa chạy
+
+- Client thêm lô 500 g ngũ cốc thực hành riêng tại gian bếp. N02 đặt lịch hướng dẫn N01 nấu cháo từ giờ thứ 3 đến giờ thứ 4; 100 g rời kho vào hồ sơ cuộc hẹn ngay khi chốt, không ảnh hưởng kho lương thực sinh tồn.
+- Màn hộ có bảng lịch dịch vụ trên điện thoại và máy tính, hiện trạng thái, người cung cấp/nhận, mốc giờ, thời gian chờ, từng lot vật tư, claim kết quả và nguyên nhân bị chặn. Nhật ký có nhãn/nội dung cho đặt lịch, bắt đầu, hoàn tất và bị chặn.
+- Thêm `game/tool/verify_v6_service_appointment.dart`: lịch trùng ở bất kỳ phía nào phải bị từ chối trước khi đổi kho; một mẻ sản xuất kéo qua cuộc hẹn cũng không được giữ người hoặc rút nguyên liệu.
+- Runner còn yêu cầu chạy liền, save/load giữa buổi và replay hội tụ cùng snapshot; giữa buổi cả hai người giữ cùng cam kết, cuối buổi tạo đúng claim rồi trả lịch. Runner và widget test mới chưa chạy.
+- Không chạy analyzer, catalog hoặc build; chưa commit/push hay triển khai. Phần code kế tiếp chuyển sang cổng 3 về lời mời lao động và nghĩa vụ trả công.
+
+## 2026-09-19 — V6.0-dev.3: cuộc hẹn dịch vụ giữ lịch hai phía
+
+- Thêm `ServiceDefinition`, `ServiceAppointmentState` và `ServiceResultClaim`. Cuộc hẹn lưu người cung cấp, người nhận, hai hộ, địa điểm, mốc bắt đầu/kết thúc, vật tư, trạng thái và bằng chứng kết quả trong save/hash.
+- Khi đặt hẹn, hệ thống kiểm tra khoảng thời gian của cả hai người. Một lịch dịch vụ trùng bị từ chối trước khi đổi kho; các cam kết cá nhân mới cũng không thể lấn qua một hẹn đã đặt.
+- Vật tư tùy chọn được rút khỏi kho của hộ cung cấp và giữ theo từng lot ngay lúc chốt. Đến giờ, hai người phải cùng có mặt và cùng nhận cam kết; thiếu một bên hoặc mất cam kết làm hẹn bị chặn, còn claim chỉ sinh sau khi hoàn tất thật.
+- Chưa nối dịch vụ đại diện vào client, chưa có GUI/runner và chưa chạy analyzer, widget, catalog hay build; chưa commit/push hoặc triển khai. Bước code tiếp theo hoàn thiện cổng 2 bằng fixture, GUI và bằng chứng chống overbook.
+
+## 2026-09-19 — Dựng bằng chứng workpiece V6, chưa chạy
+
+- Thêm `game/tool/verify_v6_production_workpiece.dart` với fixture hai thợ, hai rìu, 3 kg gỗ và 800 g sợi trong cùng xưởng; mẻ chính rút 1,2 kg gỗ và 250 g sợi trong hai giờ.
+- Mẻ cạnh tranh cùng rìu phải bị từ chối trước khi rút thêm vật hoặc giữ thời gian thợ phụ. Một recipe cần 2 kg gỗ cũng phải thất bại vì 1,2 kg đã nằm trong workpiece và kho chỉ còn 1,8 kg.
+- Chạy liền, save/load sau một giờ và replay cùng phải hoàn tất ở semantic hash giống nhau. Snapshot cuối được yêu cầu có một khung gùi chất lượng 737/1000, rìu giảm từ 850 xuống 825, đúng một lượt sản xuất và quyền dùng đầu ra thuộc người làm.
+- Không cộng lượng nguyên liệu khác đơn vị vào một tổng chung; fact chỉ ghi số lot, còn mỗi lot giữ loại, lượng và đơn vị riêng.
+- Runner chưa chạy nên chưa có hash và cổng 1 chưa được chứng nhận. Không chạy analyzer/widget/catalog/build, không commit/push hoặc triển khai; lượt code kế tiếp chuyển sang dịch vụ cổng 2.
+
+## 2026-09-19 — V6.0-dev.2: chuỗi đóng khung gùi và GUI workpiece
+
+- Client tạo ba vật thật tại sân H01: 3 kg gỗ thô, 800 g sợi thực vật và một rìu tay tình trạng 850/1000; N03 có quyền dùng cả ba.
+- Ngay sau khi thế giới ngày 0 vật chất hóa, N03 bắt đầu mẻ hai giờ: 1,2 kg gỗ và 250 g sợi rời kho vào workpiece; đầu ra dự kiến là một khung gùi gỗ, rìu hao 25 điểm khi mẻ hoàn tất.
+- Màn hộ gia đình có bảng mẻ sản xuất riêng, hiện người làm, đang làm/hoàn tất/bị chặn, thời gian, từng lot nguyên liệu cùng chất lượng, công cụ và mức hao, đầu ra chưa xuất hiện/đã vào kho và lý do bị chặn. Kho hộ được mở rộng để hiện mọi vật do hộ sở hữu.
+- Nhật ký nhận ba loại fact mẻ bắt đầu/hoàn tất/bị chặn. Widget test điện thoại 390×844 và máy tính 1280×800 đã thêm điểm tìm mẻ/workpiece nhưng chưa chạy.
+- Chưa chạy analyzer, runner, widget test, catalog hoặc web build; chưa commit/push hay triển khai. Cổng 1 V6 chưa được chứng nhận; bước code kế tiếp là bằng chứng hẹp cho bảo toàn và save/load giữa mẻ.
+
+## 2026-09-19 — V6.0-dev.1: mẻ sản xuất có workpiece và lao động thật
+
+- Khóa V6 sinh kế bằng chín cổng và sáu bước hữu hạn trước khi viết mã; tiền tệ, tín dụng, luật và tổ chức không được kéo vào chặng này nếu không phục vụ trực tiếp cổng.
+- Thêm recipe tự chứa đầu vào, thời lượng, đầu ra và yêu cầu công cụ. Recipe được chép vào từng mẻ để bản lưu không phụ thuộc một registry bên ngoài đã có thể thay đổi.
+- Khi bắt đầu mẻ, hệ thống kiểm tra người–hộ–phòng, quyền dùng, đúng loại/đơn vị, đủ lượng, công cụ và ledger đầu ra. Nguyên liệu được trừ ngay khỏi kho và giữ thành các lot trong workpiece; hai mẻ không thể tiêu cùng một lượng.
+- Người làm nhận cam kết thời gian. Khi hoàn tất, đầu ra mới xuất hiện, chất lượng suy từ nguyên liệu/công cụ, công cụ bị hao mòn và hộ ghi nhận lượt sản xuất. Nếu điều kiện bị phá giữa chừng, mẻ blocked và nguyên liệu vẫn còn trong workpiece để không mất vật vô nguồn.
+- `production_batches` đi qua save/load và semantic hash. Đây mới là nền cổng 1: chưa nối fixture sản xuất vào client, chưa có GUI và chưa chạy analyzer/runner/widget/catalog/build; chưa commit/push hay triển khai.
+
+## 2026-09-19 — Dựng bằng chứng đóng cổng V5, chưa chạy
+
+- Thêm `game/tool/verify_v5_small_worldgen.dart` với một kịch bản đại diện hữu hạn: cùng seed/cấu hình phải sinh cùng bản đồ, lịch sử và hộ; seed khác phải đổi ít nhất bản đồ hoặc lịch sử.
+- Ba đường chạy liền, save/load ngay trước lúc tiền sử hoàn tất và replay cùng đi qua một lệnh chọn nơi sinh. Runner yêu cầu chúng hội tụ về cùng semantic hash và P00 chỉ xuất hiện ở nơi đã chọn sau khi điều kiện thật được kiểm tra.
+- Bằng chứng còn kiểm tra ít nhất 300 năm qua ba epoch/192 bước vĩ mô, sáu anchor và cửa sổ bốn anchor gần; ledger tiền sử phải đổi thật nguồn tự nhiên, quần thể và điểm khu dân cư; hai nơi sinh phải gắn với hộ cùng người chăm thật.
+- Widget test màn nhập thế hiện có đã bao phủ dữ liệu địa hình, nguồn, sinh thái, khu dân cư, lịch sử và lý do nơi sinh ở 390×844 rồi chuyển sang bố cục rộng 1000×800. Không thêm test trùng lặp.
+- Không tăng số `dev` vì đây là mã bằng chứng cho chức năng `V5.0-dev.1`–`dev.6`, không phải tính năng mới. Chưa chạy runner, analyzer, widget test, catalog hoặc web build; chưa có hash mới, chưa commit/push và chưa triển khai. V5 chưa được tuyên bố hoàn thành.
+
+## 2026-09-19 — V5.0-dev.6: hậu quả môi trường của tiền sử và kho lịch sử hữu hạn
+
+- Mở rộng historical legacy V5 bằng ba ledger: nguồn tự nhiên giữ lượng trước/sau cùng hệ số; quần thể giữ số lượng/sức khỏe trước/sau cùng mức hỗ trợ; khu dân cư giữ điểm trước/sau. Tất cả đi qua save/load và semantic hash.
+- Khi tiền sử hoàn tất, nước, đất màu, gỗ và khoáng vật đổi trong giới hạn 0–sức chứa theo canh tác, giao thương, áp lực tài nguyên và dấu lũ. Quần thể sau đó nhận hỗ trợ từ chính nguồn/thức ăn đã đổi; số lượng không vượt sức chứa và sức khỏe nằm trong 0–1000.
+- Điểm khu dân cư nhận dư âm riêng của giao thương, áp lực tài nguyên và lũ. Trạng thái hộ đã hình thành được giữ, còn validator nơi sinh chạy trên toàn bộ snapshot sau legacy để chặn thế giới không còn chỗ sinh hợp lệ.
+- Giữ tương thích đường V2: legacy môi trường chỉ nhận `sites` và dùng công thức `v5.0-dev.6` khi worldgen mang phiên bản V5; đường cũ tiếp tục công thức `v2.18.0` và không đổi dữ liệu site.
+- Làm rõ nén lịch sử: `WorldHistoryState` tính tổng bước vĩ mô và cửa sổ bốn anchor gần nhất; GUI cho biết 192 bước đã được nén vào ba epoch, tổng anchor được giữ và cửa sổ gần. Sáu anchor quan trọng vẫn có thể xem đầy đủ.
+- Mã widget test mới chỉ thêm điểm tìm tóm tắt nén lịch sử. Chưa chạy analyzer, runner, widget test, catalog hoặc web build; chưa commit/push hay triển khai.
+- Phần chức năng cổng 5 đã có. Bước code kế tiếp là dựng bằng chứng hữu hạn cho cổng 6–7; không thêm chiều sâu worldgen ngoài cổng.
+
+## 2026-09-19 — V5.0-dev.5: khu dân cư và nơi sinh theo môi trường/lịch sử
+
+- Thêm `SettlementAssessmentState` cho từng địa điểm: điểm 0–1000, khả thi hay không, sáu thành phần giải thích, fingerprint lịch sử và dấu nơi được chọn lập hộ sinh mới. Dữ liệu đi qua sự kiện, `WorldSite`, save/load và semantic hash.
+- Nhánh V5 chấm địa điểm từ địa hình, khoảng cách/chất lượng/lượng của nước–đất–gỗ, tình trạng quần thể sinh thái, đất canh tác, giao thương và áp lực tài nguyên cuối tiền sử. Hai nơi khả thi có điểm cao nhất ngoài khu nhà đã có nhận H02/H03; tên hộ, phòng và việc thường nhật đổi theo loại nơi thực tế.
+- Nhánh worldgen cũ tiếp tục đặt hộ ở đồng/chợ để giữ fixture đã phát hành. Điều kiện chọn sinh vẫn được tính ở thời điểm thật từ phòng, người chăm, sữa, quyền và kho; điểm khu dân cư chỉ quyết định lịch sử có đặt hộ ở đó hay không.
+- GUI chọn nơi sinh và bản đồ hiện điểm cùng toàn bộ lý do. Mã widget test đã thêm điểm tìm đánh giá khu dân cư nhưng chưa chạy.
+- Điểm số, trọng số và ngưỡng 450 là fixture kỹ thuật, chưa phải cân bằng được duyệt. Chưa chạy analyzer, runner, widget test, catalog hoặc web build; chưa commit/push hay triển khai.
+- Phần chức năng cổng 4 đã có; bước code tiếp theo là cổng 5 về 300 năm tiền sử để lại hậu quả lên nguồn lực, sinh thái và khu dân cư cùng cơ chế nén lịch sử.
+
+## 2026-09-19 — V5.0-dev.4: quần thể sinh thái phụ thuộc nguồn thật
+
+- Thêm `EcologicalPopulationState`: loài, nhóm thực vật/động vật, số cá thể, sức chứa, sức khỏe, mức tăng trưởng/tử vong năm, nguồn bắt buộc và loài thức ăn. Toàn bộ đi qua seed, fingerprint và save/load.
+- Bộ sinh `v5.0-dev.4` tạo sậy ven sông; cỏ và thỏ ở đồng; thông cùng mang ở vùng đèo. Thỏ/mang phụ thuộc quần thể thức ăn và nước mặt; thực vật phụ thuộc nước, đất màu hoặc trữ lượng rừng tương ứng.
+- Hàng đợi chạy `ecology_yearly_tick` mỗi 365 ngày ở pha bookkeeping, sau nhịp phục hồi nguồn. Tỷ lệ nguồn và thức ăn quyết định mức hỗ trợ; thiếu hụt giảm sinh sản, tăng tử vong và hạ sức khỏe. Số lượng luôn nằm trong 0–sức chứa.
+- Khi công bố worldgen, validator chặn quần thể trùng mã, lượng/sức chứa/chỉ số sai và phụ thuộc vào nguồn hoặc loài không tồn tại.
+- GUI chọn nơi sinh liệt kê hệ sinh thái; bản đồ hiện số lượng/sức chứa, sức khỏe, nguồn bắt buộc và thức ăn. Mã widget test đã thêm điểm tìm sinh thái đồng/đèo nhưng chưa chạy.
+- Loài, sức chứa và hệ số là fixture kỹ thuật, chưa phải cân bằng hay mô hình sinh thái được duyệt. Chưa chạy analyzer, runner, widget test, catalog hoặc web build; chưa commit/push hay triển khai.
+- Phần chức năng cổng 3 đã có; bước code tiếp theo là cổng 4 về khu dân cư/nơi sinh phụ thuộc địa hình, nguồn lực và lịch sử.
+
+## 2026-09-18 — V5.0-dev.3: khai thác và phục hồi đi qua ledger thật
+
+- Thêm API lên lịch khai thác một nguồn tự nhiên tại địa điểm. Khi sự kiện transfer tới hạn, hệ thống kiểm tra nguồn, lượng và việc người thực hiện còn hiện diện trong bán kính địa điểm.
+- Khai thác thành công trừ đúng lượng khỏi `NaturalResourceDeposit`, đồng thời tạo hoặc cộng cùng lượng vào `CareItemState` ở chính địa điểm đó. Vật đầu ra phải cùng loại/đơn vị và không được nằm ở ledger khác.
+- Nếu người thực hiện đã rời đi hoặc một yêu cầu trước đã lấy hết lượng, sự kiện sau ghi `natural_resource_extraction_failed` cùng nguyên nhân; thế giới không dừng và không sinh vật phẩm.
+- Khi vật chất hóa worldgen V5, hàng đợi nhận một nhịp phục hồi sau mỗi 365 ngày. Nước, đất và gỗ tăng theo tốc độ riêng nhưng không vượt sức chứa; khoáng vật giữ nguyên. Mỗi nguồn ghi fact bằng đúng đơn vị của nó.
+- Cổng 2 đã có đường chức năng từ nguồn → khai thác → vật phẩm và phục hồi, nhưng chưa chạy kiểm chứng nên chưa tuyên bố đạt. Bước code tiếp theo là quần thể sinh thái cổng 3.
+- Chưa chạy analyzer, runner, widget test, catalog hoặc web build; chưa commit/push hay triển khai.
+
+## 2026-09-18 — V5.0-dev.2: nguồn tự nhiên hữu hạn theo địa điểm
+
+- Thêm `NaturalResourceDeposit` với mã, loại, lượng hiện tại, sức chứa, đơn vị, chất lượng, khả năng tiếp cận, phục hồi hằng năm và nguồn hình thành. Phép khai thác từ chối lượng không hợp lệ; phục hồi không vượt sức chứa.
+- Bộ sinh `v5.0-dev.2` đặt nước mặt tại sông, đất màu tại đồng, rừng gỗ và đá/quặng tại vùng đèo. Lượng và chỉ số sinh xác định từ seed; khoáng vật không tái tạo, ba nguồn còn lại có tốc độ phục hồi riêng.
+- Nguồn tham gia fingerprint, đi qua `WorldSite`, sự kiện tạo địa điểm và save/load. Validator chặn mã trùng, lượng âm/vượt sức chứa, sức chứa không dương và chỉ số ngoài 0–1000.
+- GUI chọn nơi sinh liệt kê nguồn tự nhiên; chi tiết bản đồ hiện lượng/sức chứa, chất lượng, khả năng tiếp cận và lượng phục hồi. Mã widget test đã thêm điểm tìm nước/đất nhưng chưa chạy.
+- Các con số lượng, chất lượng và phục hồi là fixture kỹ thuật, chưa phải cân bằng sinh thái được duyệt. Hành động khai thác chưa nối vào lịch mô phỏng nên cổng 2 chưa được tuyên bố đạt.
+- Chưa chạy analyzer, runner, widget test, catalog hoặc web build; chưa commit/push hay triển khai.
+
+## 2026-09-18 — V5.0-dev.1: địa hình và khí hậu thung lũng từ seed
+
+- Theo yêu cầu tiếp tục làm nội dung game và sơ đồ phụ thuộc `V0 → V5`, chuyển phần viết mã sang V5 mà không tuyên bố V4 đã kiểm chứng.
+- Khóa V5 bằng tám cổng và sáu bước hữu hạn: địa hình; tài nguyên; sinh thái; khu dân cư; lịch sử 300 năm; bằng chứng/phát hành. Nội dung ngoài danh sách không được dùng để kéo dài V5.
+- Thêm chế độ bộ sinh `v5.0-dev.1`. Seed sinh độ cao đáy/vành thung lũng, lượng mưa năm và một trong ba dải khí hậu; năm địa điểm có loại địa hình và độ cao riêng.
+- Địa hình đi qua `WorldRegion`/`WorldSite`, sự kiện tạo thế giới, save/load và fingerprint. Validator từ chối hồ sơ vùng vô lý hoặc địa điểm có độ cao nằm ngoài đáy/vành.
+- Client bật chế độ V5 khi tạo thế giới. Màn chọn nơi sinh hiện địa hình/độ cao; bản đồ hiện khí hậu, lượng mưa, đáy/vành cùng địa hình từng địa điểm.
+- Cập nhật mã widget test tạo seed mới để dùng đúng chế độ V5 và tìm trực tiếp các bảng địa hình vùng/nơi sinh; test chưa chạy.
+- Đường gọi bộ sinh mặc định vẫn dùng `v2.15.0` và bỏ các trường V5 để fixture cũ không tự đổi nếu chưa bật chế độ mới.
+- Chưa chạy analyzer, runner, widget test, catalog hoặc web build; chưa commit/push hay triển khai. Bước code tiếp theo là nguồn tài nguyên hữu hạn của cổng 2 V5.
+
+## 2026-09-18 — Dựng bằng chứng GUI V4 trên điện thoại và máy tính, chưa chạy
+
+- Thêm hai widget test V4 ở 390×844 và 1280×800; đây là phần bằng chứng cho `V4.0-dev.7`, không phải lát cắt tính năng mới và không tăng số `dev`.
+- Fixture giao diện đi từ bản lưu thật đã chuyển qua tháng sơ sinh, sau đó đặt một snapshot đại diện để kiểm tra đủ bốn lệnh tuổi thơ cùng bảng giai đoạn, cơ thể/dinh dưỡng, hoạt động, nguy hiểm và ký ức gần/nổi bật/tóm tắt.
+- Gắn key ổn định cho kinh nghiệm hoạt động, tổng kết vận động, tổng kết học và điểm xu hướng tìm từng người chăm. Cả hai bố cục nay có mã kiểm tra trực tiếp phần gắn bó, thay vì chỉ suy ra từ bảng nguy hiểm.
+- Hai test mới chỉ kiểm tra khả năng truy cập các bảng V4 trong bố cục hẹp/rộng. Tính đúng của mô phỏng sáu năm và parity vẫn thuộc runner V4 riêng đã dựng.
+- Lệnh Dart formatter cho file test không hoàn tất trong sandbox và đã được dừng. **Chưa chạy widget test**, nên mốc ổn định vẫn là 20/20 của V3; chưa chạy runner, catalog, web build, commit/push hoặc triển khai.
+- Bước tiếp theo chỉ khi người dùng yêu cầu kiểm chứng rõ ràng: chạy runner và hai widget test V4, sửa đúng lỗi cổng nếu có, rồi chạy toàn bộ bộ kiểm chứng phát hành.
+
+## 2026-09-18 — Dựng runner đóng cổng V4, chưa chạy
+
+- Thêm `game/tool/verify_v4_childhood_six_years.dart`; đây là bằng chứng cho `V4.0-dev.7`, không phải lát cắt tính năng mới và không tăng số `dev`.
+- Runner dựng một trẻ từ lúc sinh, tạo lịch chăm có lần thiếu/lần đáp ứng, chuyển tự nhiên qua ngày 30 rồi thực hiện quan sát, phát âm, tập cầm và chơi vận động. Một lần chơi trong điều kiện yếu được dùng để đòi hỏi chuỗi nguy hiểm và trấn an có hậu quả.
+- Kho hộ bị tiêu thật trong tháng sơ sinh; các đợt tiếp tế fixture sau đó đi vào đúng vật phẩm để tạo cả ngày tăng trưởng bị hạn chế lẫn ngày được hỗ trợ. Các lượng fixture chưa được duyệt làm cân bằng game.
+- Sau hoạt động, runner chạy tới sáu năm và kiểm tra giới hạn 64 ký ức gần, 32 ký ức nổi bật, 84 tóm tắt; nguy hiểm và nguồn người chăm phải còn truy được, tri thức phải giữ nguồn người/vật.
+- Cùng chuỗi được chuẩn bị cho chạy liền, save/load ở năm thứ ba và replay; khi chạy thật, ba trạng thái cuối phải cùng semantic hash.
+- `dart analyze` game đạt như kiểm tra cú pháp hẹp. Runner **chưa được thực thi**, nên chưa có kết quả hành vi/hash, chưa chạy widget test, catalog, web build, commit/push hoặc triển khai.
+- Bước tiếp theo chỉ khi người dùng yêu cầu kiểm chứng rõ ràng: chạy runner, sửa lỗi cổng nếu có, rồi hoàn tất phần GUI/catalog/build của cổng phát hành.
+
+## 2026-09-18 — V4.0-dev.7: cơ thể và dinh dưỡng chi phối phát triển tuổi thơ
+
+- Thêm `ChildBodyState` nối trực tiếp từ khối lượng, đói và khát của cơ thể sơ sinh tại mốc qua ngày 30; không đặt lại trẻ về một cơ thể mẫu nếu dữ liệu thật tồn tại.
+- Mỗi nhịp ngày tính nhu cầu thức ăn/nước theo tuổi, lấy đúng lượng đang có từ kho hộ và trừ khỏi vật phẩm. Kho thiếu tạo khẩu phần thiếu; hệ thống không tự sinh phần còn thiếu.
+- Cơ thể lưu khối lượng thật, mốc khối lượng khỏe, mức dinh dưỡng/đủ nước, lượng ăn uống tích lũy, số ngày tăng trưởng đủ hoặc bị hạn chế và kết quả tăng cân gần nhất. Toàn bộ đi qua save/load.
+- Thay việc tuổi tăng thẳng năng lực bằng ngày trưởng thành tương đương tích lũy theo mức hỗ trợ của cơ thể. Thiếu dinh dưỡng/nước hoặc thiếu cân làm chậm trưởng thành; hoạt động thật vẫn là nguồn tiến bộ riêng.
+- Tình trạng cơ thể tham gia điểm kết quả của quan sát, đáp lời, tập cầm, chơi vận động và nhận biết nguy hiểm, nên một cơ thể suy yếu có hậu quả ngoài con số cân nặng.
+- GUI thêm khối lượng, mốc khỏe, dinh dưỡng, đủ nước, khẩu phần gần nhất, tăng cân và ngày trưởng thành tương đương. Nhật ký ngày giữ lượng cần/đã nhận cùng mức hỗ trợ phát triển.
+- Đối chiếu tám cổng V4 sau thay đổi: phần chức năng cổng 1–7 đã có; còn bằng chứng chạy cho cổng 7 và thủ tục cổng 8. Theo quy tắc hữu hạn, không mở thêm tính năng V4 trước khi bằng chứng phát hiện lỗi.
+- Kiểm tra cú pháp hẹp: `dart analyze` game đạt. Chưa chạy runner, widget test, catalog, web build, commit/push hoặc triển khai.
+- Bước tiếp theo khi người dùng yêu cầu kiểm chứng: runner sáu năm và parity chạy liền–save/load–replay, sau đó GUI hai kích thước, catalog và web build; chỉ sửa lỗi cổng.
+
+## 2026-09-14 — V4.0-dev.6: nén ký ức tuổi thơ hữu hạn
+
+- Mỗi hoạt động vận động, chơi, quan sát và đáp lời nay tạo một ký ức chi tiết có thời điểm, kết quả, nội dung, độ quan trọng và mã nguồn người/vật/phòng liên quan.
+- Mỗi lần phát hiện và giải quyết nguy hiểm tạo ký ức riêng. Ký ức đang mang ảnh hưởng của sự cố chưa giải quyết được bảo vệ khỏi nén; sau khi giải quyết, kết quả vẫn có thể trở thành ký ức nổi bật.
+- Giữ tối đa 64 ký ức gần trong cửa sổ 30 ngày game. Phần cũ được gom theo tháng với số lần thành công, thất bại, nguy hiểm, loại hoạt động và tối đa tám nguồn để còn truy nguyên.
+- Ký ức từ 700/1000 điểm được giữ riêng; tối đa 32 ký ức nổi bật. Tóm tắt giữ tối đa 84 giai đoạn và hợp nhất phần xa hơn thành thời kỳ cũ, nên kích thước save không tăng vô hạn qua nhiều năm.
+- Tri thức học thành công tiếp tục nằm riêng trong `BeliefState`, giữ nguồn chính xác ngay cả khi ký ức thường đã nén. Save/load và cổng xem trạng thái mang đầy đủ ký ức gần, nổi bật, tóm tắt và tổng số đã nén.
+- GUI điện thoại/máy tính thêm bảng ký ức ngắn gọn và nhật ký giải thích mỗi lần hệ thống nén.
+- Kiểm tra hẹp: `dart analyze` game đạt. Analyzer client độc lập không thấy các gói Flutter trong cache sandbox nên client chưa được ghi là đạt. Chưa chạy runner, widget test, catalog, build web, commit/push hoặc triển khai.
+- Bước tiếp theo: đối chiếu tám cổng V4; chỉ sửa phần thiếu trực tiếp, trước hết kiểm tra chuỗi cơ thể/dinh dưỡng sau ngày 30 trước khi tạo runner đóng cổng.
+
+## 2026-09-14 — V4.0-dev.5: gắn bó tác động hành vi và nguy hiểm tuổi thơ
+
+- Thêm điểm ưu tiên người chăm nhìn từ phía trẻ: kết hợp an toàn/dễ đoán đã học trong tháng sơ sinh, tin cậy/thiện cảm một chiều, vai trò gia đình và kỹ năng chăm của người kia. Không dùng thông tin xã hội toàn tri.
+- Khi thử phát âm, trẻ chọn người rảnh cùng phòng theo điểm này. Sau một lần mất thăng bằng, trẻ cũng tìm người thân rảnh có điểm cao nhất thay vì luôn gọi mã người chăm cố định.
+- Mở một nguy hiểm hữu hạn `floor_balance_loss` từ lần chơi vận động thất bại. Khả năng hiểu, vận động tinh và kinh nghiệm quan sát quyết định trẻ nhận ra sớm để dừng/tìm người hay ngã rồi khóc; mức nặng khác theo kết quả đó.
+- Người được chọn và trẻ cùng giữ cam kết thời gian trong quãng tới/trấn an. Khoảng cách cùng tốc độ người chăm quyết định thời gian đáp ứng; khi đến, người chăm chuyển tới phòng của trẻ và quan hệ chăm sóc hai chiều được cập nhật.
+- Được trấn an hoặc không được đáp ứng làm cảm giác an toàn tăng/giảm theo việc trẻ có nhận ra nguy hiểm sớm. `ChildhoodState` lưu số sự cố, số lần nhận ra sớm, số lần được giải quyết và hồ sơ sự cố gần nhất qua save/load.
+- GUI hiện xếp hạng người trẻ có xu hướng tìm đến cùng loại nguy hiểm, mức nặng, phản ứng, người được chọn, kết quả và thay đổi cảm giác an toàn.
+- `dart analyze` game và `flutter analyze --no-pub` client đạt như kiểm tra biên dịch hẹp. Chưa chạy runner, widget test, catalog, build web, commit/push hoặc triển khai.
+- Bước code tiếp theo: nén ký ức nhiều năm, giữ sự kiện quan trọng, nguồn gốc và ảnh hưởng còn hoạt động.
+
+## 2026-09-14 — V4.0-dev.4: học và ngôn ngữ có nguồn thật
+
+- Quan sát và thử phát âm không còn tăng điểm tức thời: mỗi hoạt động chiếm 5 phút và dùng cùng hệ cam kết thời gian với vận động/chơi.
+- Quan sát chọn xác định một vật còn dùng được ở cùng phòng/vị trí. Kết thúc kiểm tra vật vẫn còn, rồi tính nhận ra vật từ vận động tinh, khả năng hiểu, kinh nghiệm chú ý và độ bền vật.
+- Thử phát âm chỉ bắt đầu khi có NPC rảnh trong cùng phòng; ưu tiên người thân rồi người có kỹ năng chăm cao. Cả trẻ và người đáp lời bị giữ thời gian; kết quả phụ thuộc khả năng hiểu/tạo âm, cảm giác an toàn và kỹ năng của người kia.
+- Học thành công tạo `BeliefState` trong kho hiểu biết riêng của trẻ: giữ khái niệm, tóm tắt, hoạt động, người/vật nguồn, cách tiếp nhận, thời điểm, bằng chứng gốc và độ tin cậy. Học thất bại không bịa ra tri thức.
+- `ChildhoodState` lưu tổng lượt học, số thành công/thất bại cùng nguồn và khái niệm gần nhất. GUI hiện tối đa bốn điều đã học gần đây với hoạt động, nguồn và độ tin cậy.
+- `dart analyze` game và `flutter analyze --no-pub` client đạt như kiểm tra biên dịch hẹp. Chưa chạy runner, widget test, catalog, build web, commit/push hoặc triển khai.
+- Bước code tiếp theo: gắn bó sau sơ sinh ảnh hưởng lựa chọn tiếp cận và một nguy hiểm tuổi thơ đi qua nhận biết → phản ứng → hậu quả.
+
+## 2026-09-14 — V4.0-dev.3: vận động và chơi trong thế giới thật
+
+- Tập với/giữ vật nay chiếm 15 phút trong game; chơi vận động chiếm 30 phút. Cả hai dùng `PersonalTimeCommitment`, nên trẻ không thể bắt đầu hoạt động chồng lấn và thời gian còn lại đi qua save/load.
+- Mỗi trẻ bật đường V4 có một vật chơi mềm tồn tại như `CareItemState`: có mã, vị trí hai chiều, phòng, chủ hộ, số lượng và độ bền. Vật được tạo qua hàng đợi và không làm đổi fixture cũ nếu V4 chưa bật.
+- Tập cầm chỉ bắt đầu khi có khăn quấn hoặc vật chơi còn dùng được ở cùng phòng/vị trí. Chơi vận động cần phòng thật thuộc đúng hộ. Điều kiện được kiểm tra lại khi hết giờ.
+- Kết quả thành công/thất bại tính xác định từ vận động lớn/tinh, cảm giác an toàn, kinh nghiệm chơi và độ bền vật. Mỗi lần vẫn tạo kinh nghiệm; vật cầm bị hao mòn và lý do thất bại được ghi thành fact.
+- `ChildhoodState` lưu tổng hoạt động vận động/chơi, số thành công/thất bại, kết quả gần nhất, phòng, vật và thời lượng; GUI hiện hoạt động đang chạy, thời gian còn lại cùng toàn bộ kết quả này.
+- `dart analyze` game và `flutter analyze --no-pub` client đạt như kiểm tra biên dịch hẹp. Chưa chạy runner, widget test, catalog, build web, commit/push hoặc triển khai.
+- Bước code tiếp theo: ngôn ngữ và học phải gắn với một người/vật thật, đồng thời giữ nguồn của điều trẻ học được.
+
+## 2026-09-14 — V4.0-dev.2: chuyển liên tục khỏi tháng sơ sinh
+
+- Khóa V4 bằng tám cổng kết thúc và sáu bước triển khai; tu luyện, kinh tế mới, chiến đấu, tổ chức và worldgen không được dùng để kéo dài chặng tuổi thơ.
+- Thêm `ChildhoodState` đi qua save/load: cảm giác an toàn kế thừa từ gắn bó cùng kỳ vọng về từng người chăm; vận động lớn/tinh, hiểu/tạo lời, kinh nghiệm quan sát, vận động, ngôn ngữ và chơi.
+- Client bật mốc ngày 31 riêng cho P00. Một sự kiện mỗi ngày đưa trẻ qua các giai đoạn tới sáu năm, nên không có lệnh nhảy tuổi và các fixture V0–V3 không tự đổi khi chưa bật.
+- Thêm bốn hoạt động do người chơi chọn: quan sát, thử phát âm, tập với/giữ vật và chơi vận động. Quyền chọn đọc năng lực và kinh nghiệm hiện tại; hoạt động thay đổi chính trạng thái đó và để lại fact.
+- GUI hiện giai đoạn, năm năng lực, bốn loại kinh nghiệm và hoạt động gần nhất; sau ngày 31 bảng lệnh chuyển từ phản ứng sơ sinh sang hoạt động tuổi thơ.
+- `dart analyze` game và `flutter analyze --no-pub` client đạt như kiểm tra biên dịch hẹp. Chưa chạy runner, widget test, catalog, build web, commit/push hoặc triển khai.
+- Bước code tiếp theo: vận động và chơi phải chiếm thời gian, dùng không gian/vật thật và có kết quả có thể thất bại.
+
 ## 2026-09-13 — K5.29: đóng và phát hành V3 làng nhỏ
 
 - Thêm runner tích hợp `verify_v3_village_30_days.dart`: seed `20260907` tạo 50 NPC trong 12 hộ, chạy 30 ngày cộng hai ngày lắng, kiểm tra vật chất, yêu cầu, thời gian, tri thức, quan hệ và cứu hộ.

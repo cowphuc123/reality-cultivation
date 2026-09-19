@@ -124,6 +124,8 @@ class BirthSiteCandidate {
     this.caregiverRole,
     this.familyOriginSummary,
     this.familyMembers = const <BirthFamilyMemberSummary>[],
+    this.settlementScore,
+    this.settlementReasons = const <String>[],
   });
 
   final String siteId;
@@ -145,6 +147,8 @@ class BirthSiteCandidate {
   final String? caregiverRole;
   final String? familyOriginSummary;
   final List<BirthFamilyMemberSummary> familyMembers;
+  final int? settlementScore;
+  final List<String> settlementReasons;
 }
 
 class BirthFamilyMemberSummary {

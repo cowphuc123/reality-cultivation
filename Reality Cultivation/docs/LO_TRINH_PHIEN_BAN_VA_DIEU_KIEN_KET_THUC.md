@@ -11,7 +11,7 @@ tags:
 
 # Lộ trình phiên bản và điều kiện kết thúc
 
-Cập nhật: 2026-09-10.
+Cập nhật: 2026-09-18.
 
 ## Quy tắc đánh số
 
@@ -30,9 +30,9 @@ Cập nhật: 2026-09-10.
 | V1 | Một tháng sơ sinh | sinh, cơ thể sơ sinh, ngủ/đói/khóc, người chăm, bú/chăm và tăng trưởng 30 ngày | Đã hoàn thành |
 | V2 | Một hộ sống | hộ 3–5 người; kho hữu hạn; vật, quyền, lịch, bệnh nhẹ; chạy một tháng; nguồn và chỗ tiêu tài nguyên có dấu vết | Đã hoàn thành về chức năng tại V2.3; V2.4–V2.13 là phần làm sâu/hardening lịch sử |
 | V3 | Làng nhỏ tự vận hành | 20–50 NPC chi tiết thuộc nhiều hộ; nghề và trao đổi; thông tin truyền giữa người; quan hệ xuyên hộ; cộng đồng tự duy trì 30 ngày; save/replay xác định | Đã hoàn thành; xem [[K5_29_V3_LANG_NHO_TU_VAN_HANH_30_NGAY]] |
-| V4 | Tuổi thơ | lớn lên nhiều năm không time-skip bắt buộc; vận động, ngôn ngữ, học, chơi, gắn bó, nguy hiểm và nén ký ức | Có một phần nền viết sớm, chưa bắt đầu chính thức |
-| V5 | Worldgen nhỏ | sinh địa lý vĩ mô, một vùng, tài nguyên, sinh thái, khu dân cư và 300 năm lịch sử; chọn nơi sinh; cùng seed tái hiện được | Có nhiều phần nền viết sớm, chưa đạt đủ cổng |
-| V6 | Sinh kế | sản xuất, chế tác, dịch vụ, lao động, chợ địa phương, vận chuyển và cú sốc thiếu hàng; ledger bảo toàn | Chưa bắt đầu chính thức |
+| V4 | Tuổi thơ | lớn lên nhiều năm không time-skip bắt buộc; vận động, ngôn ngữ, học, chơi, gắn bó, nguy hiểm và nén ký ức | Đã hoàn thành; hash `afefc3dd5537605a`, xem [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]] |
+| V5 | Worldgen nhỏ | sinh địa lý vĩ mô, một vùng, tài nguyên, sinh thái, khu dân cư và 300 năm lịch sử; chọn nơi sinh; cùng seed tái hiện được | Đã hoàn thành; 741 năm, hash `4e03e202361d0363` |
+| V6 | Sinh kế | sản xuất, chế tác, dịch vụ, lao động, chợ địa phương, vận chuyển và cú sốc thiếu hàng; ledger bảo toàn | Đã hoàn thành; runner 30 ngày hash `b8fea49e313fe8ab` |
 | V7 | Tu luyện | nguồn tri thức, ít nhất ba công pháp khác cơ chế, luyện tập đổi cơ thể/tài nguyên và một lần đột phá có hậu quả | Chưa bắt đầu |
 | V8 | Xung đột | nhận thức, quyết định, di chuyển, tiếp xúc, vật/cơ thể bị thương, rút lui, cứu hộ và chứng cứ | Chưa bắt đầu |
 | V9 | Tổ chức | vai trò, quyền lực, tông môn nhỏ, kho, lớp học, đề xuất, quyết định và tranh chấp | Chưa bắt đầu |
@@ -100,7 +100,88 @@ Sau khi 1–5 đạt, V3 đủ điều kiện đóng về chức năng. Mục 6 
 - Thêm loại quan hệ, hội thoại, tâm lý, nghề, hàng hóa hoặc biến cố xã hội.
 - Mở rộng lớp nhận thức sang mọi loại sự kiện trong toàn bộ game.
 
+## Chặng đã hoàn thành: V4 — tuổi thơ
+
+V4 kết thúc bằng một đường chơi liên tục từ sơ sinh qua nhiều năm tuổi thơ. Các ngưỡng tuổi và tốc độ học trong fixture là tham số kỹ thuật để kiểm chứng, không phải giới hạn thiết kế cuối của trò chơi.
+
+### Danh sách hữu hạn để đóng V4
+
+1. Thời gian chạy liên tục từ lúc sinh qua ít nhất sáu năm trong game, không có lệnh nhảy tuổi bắt buộc; mỗi ngày vẫn đi qua hàng đợi mô phỏng.
+2. Trạng thái phát triển thật mở và cải thiện năng lực từ tuổi, tình trạng cơ thể, cơ hội cùng hoạt động đã diễn ra; số tuổi một mình không tự cấp mọi kỹ năng.
+3. Có chuỗi hoạt động chạy được cho bốn trục: vận động, ngôn ngữ, học qua quan sát/thực hành và chơi. Mỗi hoạt động cần điều kiện, tốn thời gian và để lại thay đổi trạng thái hoặc ký ức.
+4. Kinh nghiệm chăm sóc với từng người từ `V4.0-dev.1` tiếp tục ảnh hưởng cảm giác an toàn, lựa chọn tiếp cận và phản ứng của trẻ sau tháng sơ sinh.
+5. Có ít nhất một nguy hiểm tuổi thơ đi qua nhận biết → phản ứng của trẻ/người chăm → hậu quả cơ thể hoặc tâm lý; kết quả phụ thuộc năng lực và hoàn cảnh thật.
+6. Ký ức ngày thường được nén theo quy tắc hữu hạn khi chạy nhiều năm, nhưng sự kiện quan trọng, nguồn gốc và ảnh hưởng còn hoạt động vẫn truy ra được.
+7. Save/load và replay từ cùng seed, cùng lệnh cho cùng trạng thái cuối; GUI điện thoại và máy tính cho xem giai đoạn, năng lực, hoạt động, gắn bó, nguy hiểm và ký ức đã nén.
+8. Khi người dùng yêu cầu phát hành: chạy runner nhiều năm, save/load/replay, widget test hai kích thước, catalog và web build; chỉ sửa lỗi làm các cổng trên thất bại rồi mới commit/push và triển khai.
+
+### Thứ tự triển khai đã khóa để tránh lan phạm vi
+
+1. Chuyển liên tục khỏi tháng sơ sinh và tạo trạng thái phát triển lưu được.
+2. Vận động và chơi.
+3. Ngôn ngữ và học qua người/vật thật.
+4. Gắn bó sau sơ sinh và nguy hiểm tuổi thơ.
+5. Nén ký ức nhiều năm.
+6. Runner đóng cổng, GUI và thủ tục phát hành khi được yêu cầu.
+
+Đóng cổng ngày 2026-09-19: runner sáu năm, save/load năm thứ ba và replay cùng đạt hash `afefc3dd5537605a`; 91 ký ức được nén trong giới hạn hữu hạn và mốc nguy hiểm vẫn giữ nguồn. Hai widget test điện thoại/máy tính đạt. Xem [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]].
+
+Mọi công pháp, tu luyện, kinh tế mới, chiến đấu, tổ chức hoặc mở rộng worldgen đều thuộc phiên bản sau và không được thêm để kéo dài V4.
+
 Các mục này chỉ được lấy ra khi một phiên bản tương lai thật sự cần hoặc người dùng yêu cầu trực tiếp.
+
+## Chặng đã hoàn thành: V5 — worldgen nhỏ
+
+V5 tạo một thung lũng có địa hình, nguồn lực, sinh thái, khu dân cư và lịch sử đủ để trạng thái lúc nhập thế là hậu quả của cùng seed. V4 vẫn chờ kiểm chứng riêng; sơ đồ phụ thuộc K4 cho phép V5 đi trực tiếp từ V0 nên không dùng V5 để tuyên bố V4 đã đạt.
+
+### Danh sách hữu hạn để đóng V5
+
+1. Cùng seed sinh đúng một thung lũng có kích thước, đáy/vành, khí hậu, lượng mưa và các địa điểm mang địa hình/độ cao nhất quán; dữ liệu đi qua save/load và provenance.
+2. Có nguồn nước, đất canh tác, gỗ và khoáng vật với lượng, chất lượng, khả năng tiếp cận và nguồn sinh rõ ràng; khai thác không được tạo vật chất ngoài ledger.
+3. Có lớp sinh thái tối thiểu cho thực vật và động vật: quần thể chịu sức chứa/tài nguyên, thay đổi theo thời gian và có thể suy giảm thay vì tự hồi đầy vô điều kiện.
+4. Ít nhất một khu dân cư và các nơi sinh khả thi được đặt từ địa hình, nguồn lực và lịch sử; không chỉ dùng tên/vị trí template mà bỏ qua trạng thái đã sinh.
+5. Chạy ít nhất 300 năm tiền sử trước P00, giữ bản tóm tắt dài hạn cùng cửa sổ sự kiện gần; biến cố để lại hậu quả lên nguồn lực, sinh thái hoặc khu dân cư trong snapshot nhập thế.
+6. Người chơi xem được khác biệt hoàn cảnh rồi chọn nơi sinh; cùng seed/cấu hình/lệnh cho cùng bản đồ và trạng thái cuối qua chạy liền, save/load và replay.
+7. GUI điện thoại và máy tính xem được địa hình, nguồn lực, sinh thái, khu dân cư, lịch sử và lý do một nơi đủ/không đủ điều kiện sinh.
+8. Khi người dùng yêu cầu phát hành: chạy runner worldgen/lịch sử, parity, widget test hai kích thước, catalog và web build; chỉ sửa lỗi cổng rồi mới commit/push và triển khai.
+
+### Thứ tự triển khai đã khóa
+
+1. Địa hình, độ cao, khí hậu và lượng mưa của thung lũng.
+2. Nguồn tài nguyên hữu hạn có chất lượng và khả năng tiếp cận.
+3. Quần thể sinh thái cùng biến đổi tài nguyên.
+4. Khu dân cư/nơi sinh phụ thuộc địa hình và nguồn lực.
+5. Lịch sử 300 năm, nén lịch sử và hậu quả lên snapshot.
+6. Runner, GUI và thủ tục phát hành khi được yêu cầu.
+
+Đóng cổng ngày 2026-09-19: seed mặc định chạy 741 năm qua ba epoch, 192 bước, sáu mốc neo và bốn mốc gần. Chạy liền, save/load trước khi hoàn tất tiền sử và replay cùng đạt hash `4e03e202361d0363`; giao diện nhập thế điện thoại/máy tính đạt. Xem [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]].
+
+## Chặng đã hoàn thành: V6 — sinh kế
+
+V6 chứng minh một nền kinh tế địa phương hữu hạn bằng dòng vật, công và nghĩa vụ thật. V6 không chốt tiền tệ, tín dụng, thuế, luật hay tổ chức; các hệ đó thuộc quyết định hoặc chặng sau.
+
+### Danh sách hữu hạn để đóng V6
+
+1. Một mẻ sản xuất/chế tác phải rút đúng nguyên liệu vào workpiece, giữ thời gian người làm, cần công cụ/nơi phù hợp và chỉ tạo đầu ra khi process hoàn tất; chất lượng cùng hao mòn có nguồn.
+2. Ít nhất một dịch vụ giữ lịch của người cung cấp và người nhận, tiêu đầu vào nếu có, tạo kết quả/claim có thể kiểm tra và không overbook.
+3. Lao động có lời mời, điều kiện, chấp nhận hoặc từ chối và nghĩa vụ trả công/quyền lợi sau khi công thật đã làm; thiếu thanh toán không xóa công.
+4. Chợ địa phương chỉ đăng lượng hàng có thật; đặt hàng phải reserve trước khi settlement, không bán hoặc tiêu cùng một lượng hai lần, và NPC chỉ dùng offer họ có thể biết/tiếp cận.
+5. Hàng giao dịch đi trên tuyến thật và nằm trong trạng thái in-transit; chậm/hỏng/thiếu đầu vào phải làm production hoặc giao hàng đổi kết quả thay vì được bù ẩn.
+6. Một cú sốc thiếu hàng kéo dài buộc ít nhất hai hộ đổi sản xuất, dịch vụ, trao đổi hoặc tiêu dùng; không kho âm, không cửa hàng vô hạn và không nguồn cứu vô căn cứ.
+7. Kịch bản đại diện chạy ít nhất 30 ngày với nhiều sinh kế, đối chiếu nguồn–process–đích của vật/công; chạy liền, save/load và replay hội tụ cùng snapshot.
+8. GUI điện thoại và máy tính xem được mẻ đang làm, nguyên liệu/workpiece, công cụ, lao động, offer/order, hàng đang đi, nghĩa vụ và nguyên nhân thiếu hụt.
+9. Khi người dùng yêu cầu phát hành: chạy runner V6, parity, widget test hai kích thước, catalog và web build; chỉ sửa lỗi cổng rồi mới commit/push và triển khai.
+
+### Thứ tự triển khai đã khóa
+
+1. Workpiece sản xuất: nguyên liệu, công cụ, thời gian, chất lượng và đầu ra.
+2. Dịch vụ cùng lịch người cung cấp/người nhận.
+3. Lời mời lao động, nghĩa vụ và claim trả công.
+4. Offer/order/reservation/settlement tại chợ địa phương.
+5. Vận tải nối thị trường và cú sốc thiếu hàng nhiều hộ.
+6. Runner 30 ngày, GUI và thủ tục phát hành khi được yêu cầu.
+
+Đóng cổng ngày 2026-09-19: sáu runner hệ riêng và runner tổng hợp hai hộ/30 ngày đều đạt. Ledger nguồn–process–đích bảo toàn, không quy trình mắc kẹt hoặc kho âm; chạy liền, save/load ngày 15 và replay cùng đạt hash `b8fea49e313fe8ab`. GUI cùng thủ tục catalog/web đạt. Xem [[K5_30_V4_V5_V6_DONG_CONG_PHAT_HANH]].
 
 ## Kỷ luật thay đổi phạm vi
 

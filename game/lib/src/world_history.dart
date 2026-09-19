@@ -211,6 +211,8 @@ class GeneratedWorldHistory {
 }
 
 class WorldHistoryState {
+  static const int recentAnchorWindowSize = 4;
+
   const WorldHistoryState({
     required this.rootSeed,
     required this.worldFingerprint,
@@ -248,6 +250,23 @@ class WorldHistoryState {
   List<HistoricalAnchor> get anchors => <HistoricalAnchor>[
     for (final HistoricalEpochResult epoch in epochs) ...epoch.anchors,
   ];
+
+  int get macroStepCount => epochs.fold<int>(
+    0,
+    (int total, HistoricalEpochResult epoch) => total + epoch.macroStepCount,
+  );
+
+  /// Cửa sổ biến cố gần được suy từ kho neo hữu hạn, không lưu lại từng năm.
+  List<HistoricalAnchor> get recentAnchors {
+    final List<HistoricalAnchor> ordered = anchors.toList()
+      ..sort(
+        (HistoricalAnchor a, HistoricalAnchor b) =>
+            a.yearsBeforePresent.compareTo(b.yearsBeforePresent),
+      );
+    return List<HistoricalAnchor>.unmodifiable(
+      ordered.take(recentAnchorWindowSize),
+    );
+  }
 
   HistoricalMetrics? get currentMetrics =>
       epochs.isEmpty ? null : epochs.last.metricsAfter;

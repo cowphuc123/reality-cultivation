@@ -17,6 +17,8 @@ class BeliefState {
     required this.originEvidenceId,
     required this.confidence,
     this.transmissionCount = 0,
+    this.sourceObjectId,
+    this.learningActivity,
   });
 
   final String id;
@@ -35,6 +37,12 @@ class BeliefState {
   final String originEvidenceId;
   final int confidence;
   final int transmissionCount;
+
+  /// Vật thật làm nguồn học trực tiếp, nếu bằng chứng đến từ quan sát vật.
+  final String? sourceObjectId;
+
+  /// Hoạt động đã tạo ra hiểu biết này; để trống với tri thức xã hội cũ.
+  final String? learningActivity;
 
   BeliefState relayedBy({
     required String speakerId,
@@ -55,6 +63,8 @@ class BeliefState {
       originEvidenceId: originEvidenceId,
       confidence: nextConfidence,
       transmissionCount: transmissionCount + 1,
+      sourceObjectId: sourceObjectId,
+      learningActivity: learningActivity,
     );
   }
 
@@ -72,6 +82,8 @@ class BeliefState {
     'origin_evidence_id': originEvidenceId,
     'confidence': confidence,
     if (transmissionCount > 0) 'transmission_count': transmissionCount,
+    if (sourceObjectId != null) 'source_object_id': sourceObjectId,
+    if (learningActivity != null) 'learning_activity': learningActivity,
   };
 
   factory BeliefState.fromJson(Map<String, Object?> json) => BeliefState(
@@ -90,5 +102,7 @@ class BeliefState {
     originEvidenceId: json['origin_evidence_id']! as String,
     confidence: json['confidence']! as int,
     transmissionCount: json['transmission_count'] as int? ?? 0,
+    sourceObjectId: json['source_object_id'] as String?,
+    learningActivity: json['learning_activity'] as String?,
   );
 }

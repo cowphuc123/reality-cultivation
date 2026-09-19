@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reality-cultivation-v5-small-worldgen",
+  "conditions": [
+    {"id":"V5-SEED-001","title":"Cùng seed sinh cùng thế giới lịch sử và hộ","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"Seed 20260907 reproduces all three fingerprints"},
+    {"id":"V5-SEED-002","title":"Seed khác đổi bản đồ hoặc lịch sử","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"Seed 20260908 differs in world or history fingerprint"},
+    {"id":"V5-GEO-001","title":"Thế giới có địa hình và khí hậu vĩ mô","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"The V5 genesis record and all sites retain terrain metadata"},
+    {"id":"V5-RES-001","title":"Nguồn tự nhiên hữu hạn có nguồn gốc và sức chứa","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"Water soil timber and ore deposits retain bounded quantities and provenance"},
+    {"id":"V5-ECO-001","title":"Quần thể sinh thái phụ thuộc nguồn và thức ăn","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"Five bounded populations retain resource or food dependencies"},
+    {"id":"V5-SETTLE-001","title":"Khu dân cư được chấm từ môi trường và lịch sử","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"Settlement assessments preserve component scores and the history fingerprint"},
+    {"id":"V5-HIST-001","title":"Tiền sử phủ ít nhất ba trăm năm","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"Seed 20260907 simulates 741 years"},
+    {"id":"V5-HIST-002","title":"Lịch sử dài được nén hữu hạn","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"741 years retain 3 epochs 192 macro steps 6 anchors and 4 recent anchors"},
+    {"id":"V5-LEGACY-001","title":"Lịch sử đổi nguồn tự nhiên bằng ledger","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"Legacy records four non-negative natural-resource adjustments"},
+    {"id":"V5-LEGACY-002","title":"Lịch sử đổi sinh thái bằng ledger","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"Legacy records five bounded ecology adjustments"},
+    {"id":"V5-LEGACY-003","title":"Lịch sử đổi điểm khu dân cư bằng ledger","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"Legacy records four settlement adjustments"},
+    {"id":"V5-ENTRY-001","title":"Có ít nhất hai nơi sinh gắn với hộ thật","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"The completed world offers multiple feasible household-backed birth sites"},
+    {"id":"V5-ENTRY-002","title":"Nhân vật chỉ sinh sau lựa chọn nơi hợp lệ","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"P00 appears only after ChooseBirthSiteCommand selects SITE-MARKET"},
+    {"id":"V5-SAVE-001","title":"Lưu tải trước khi tiền sử hoàn tất giữ snapshot","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"The prehistory checkpoint round trip preserves its semantic hash"},
+    {"id":"V5-REPLAY-001","title":"Chạy liền lưu tải và replay hội tụ","status":"automated","runner":"tool/verify_v5_small_worldgen.dart","oracle":"All paths end at semantic hash 4e03e202361d0363"},
+    {"id":"V5-UI-001","title":"Điện thoại xem được thế giới trước khi sinh","status":"automated","runner":"../client/test/widget_test.dart","oracle":"390x844 renders terrain resources ecology settlements history and birth choices"},
+    {"id":"V5-UI-002","title":"Máy tính xem và chọn được nơi sinh","status":"automated","runner":"../client/test/widget_test.dart","oracle":"1000x800 orders feasible birth sites and persists the selected household and caregiver"}
+  ]
+}

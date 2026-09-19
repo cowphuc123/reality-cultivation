@@ -131,7 +131,10 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     int seed = 20260907,
     bool awaitBirthSelection = true,
   }) {
-    final GeneratedWorld generated = WorldGenerator.generate(rootSeed: seed);
+    final GeneratedWorld generated = WorldGenerator.generate(
+      rootSeed: seed,
+      includeTerrainProfile: true,
+    );
     final GeneratedWorldHistory history = WorldHistoryGenerator.generate(
       rootSeed: seed,
       worldFingerprint: generated.fingerprint,
@@ -175,6 +178,18 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           'household_id': 'H01',
           'anchor_position_mm': home.center.xMm,
           'anchor_position_y_mm': home.center.yMm,
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'room_created',
+        payload: <String, Object?>{
+          'room_id': 'ROOM-MERCHANT-STORE',
+          'name': 'Kho hộ đổi dược thảo tại chợ An Khê',
+          'household_id': 'H-MERCHANT',
+          'anchor_position_mm': market.center.xMm,
+          'anchor_position_y_mm': market.center.yMm,
         },
       )
       ..schedule(
@@ -283,6 +298,53 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       ..schedule(
         due: const SimTime(0),
         phase: EventPhase.completion,
+        kind: 'route_created',
+        payload: <String, Object?>{
+          'route': <String, Object?>{
+            'id': 'RT-ANKHE-MARKET-RETURN',
+            'name': 'Tuyến giao ngũ cốc An Khê',
+            'origin_id': 'WP-BEP-H01',
+            'destination_id': 'WP-KHO-THAO-DUOC',
+            'waypoints': <Map<String, Object?>>[
+              <String, Object?>{
+                'id': 'WP-BEP-H01',
+                'name': 'Gian bếp hộ ven suối',
+                'position_mm': home.center.xMm + 5000,
+                'position_y_mm': home.center.yMm,
+              },
+              <String, Object?>{
+                'id': 'WP-DUONG-DONG',
+                'name': 'Đường qua đồng ngoài',
+                'position_mm': field.center.xMm,
+                'position_y_mm': field.center.yMm,
+              },
+              <String, Object?>{
+                'id': 'WP-KHO-THAO-DUOC',
+                'name': 'Kho dược thảo tại chợ',
+                'position_mm': market.center.xMm,
+                'position_y_mm': market.center.yMm,
+              },
+            ],
+            'legs': <Map<String, Object?>>[
+              <String, Object?>{
+                'from_id': 'WP-BEP-H01',
+                'to_id': 'WP-DUONG-DONG',
+                'terrain': 'duong_dat_am',
+                'terrain_speed_per_mille': 700,
+              },
+              <String, Object?>{
+                'from_id': 'WP-DUONG-DONG',
+                'to_id': 'WP-KHO-THAO-DUOC',
+                'terrain': 'duong_cho_ghep_ghenh',
+                'terrain_speed_per_mille': 520,
+              },
+            ],
+          },
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
         kind: 'person_created',
         payload: <String, Object?>{
           'person_id': 'N01',
@@ -370,6 +432,22 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       ..schedule(
         due: const SimTime(0),
         phase: EventPhase.completion,
+        kind: 'person_created',
+        payload: <String, Object?>{
+          'person_id': 'M01',
+          'name': 'Người đổi dược thảo',
+          'birth_seconds': -37 * 365 * gameSecondsPerDay,
+          'position_mm': home.center.xMm + 5000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-KITCHEN',
+          'household_id': 'H-MERCHANT',
+          'agenda': <String, Object?>{'fatigue': 100},
+          'adult_body': <String, Object?>{'mass_g': 51000},
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
         kind: 'item_created',
         payload: <String, Object?>{
           'item_id': 'I-FEED-01',
@@ -381,6 +459,134 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           'energy_kj_per_100ml': 300,
           'water_ml_per_100ml': 92,
           'unit': 'ml',
+          'owner_household_id': 'H01',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-TIMBER-CRAFT-01',
+          'kind': 'raw_timber',
+          'position_mm': home.center.xMm + 12000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-YARD',
+          'quantity': 3000,
+          'condition': 720,
+          'unit': 'g',
+          'owner_household_id': 'H01',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-ROOT-SHORTAGE-01',
+          'kind': 'raw_root',
+          'position_mm': home.center.xMm + 5000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-KITCHEN',
+          'quantity': 900,
+          'condition': 690,
+          'unit': 'g',
+          'owner_household_id': 'H01',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-MERCHANT-GRAIN-RESERVE',
+          'kind': 'raw_grain',
+          'position_mm': home.center.xMm + 5000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-KITCHEN',
+          'quantity': 300,
+          'condition': 710,
+          'unit': 'g',
+          'owner_household_id': 'H-MERCHANT',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-MARKET-HERB-01',
+          'kind': 'dried_herb',
+          'position_mm': home.center.xMm + 5000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-KITCHEN',
+          'quantity': 300,
+          'condition': 740,
+          'unit': 'g',
+          'owner_household_id': 'H-MERCHANT',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-FIBER-CRAFT-01',
+          'kind': 'plant_fiber',
+          'position_mm': home.center.xMm + 12000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-YARD',
+          'quantity': 800,
+          'condition': 680,
+          'unit': 'g',
+          'owner_household_id': 'H01',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-HAND-AXE-01',
+          'kind': 'hand_axe',
+          'position_mm': home.center.xMm + 12000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-YARD',
+          'quantity': 1,
+          'condition': 850,
+          'unit': 'piece',
+          'owner_household_id': 'H01',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-GRAIN-SERVICE-01',
+          'kind': 'raw_grain',
+          'position_mm': home.center.xMm + 5000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-KITCHEN',
+          'quantity': 500,
+          'condition': 760,
+          'unit': 'g',
+          'owner_household_id': 'H01',
+        },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'item_created',
+        payload: <String, Object?>{
+          'item_id': 'I-LABOR-RICE-01',
+          'kind': 'labor_rice',
+          'position_mm': home.center.xMm + 12000,
+          'position_y_mm': home.center.yMm,
+          'room_id': 'ROOM-YARD',
+          'quantity': 1000,
+          'condition': 800,
+          'unit': 'g',
           'owner_household_id': 'H01',
         },
       )
@@ -465,6 +671,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
             'I-FUEL-01': <String>['N02', 'N03'],
             'I-FEED-01': <String>['N01', 'N02'],
             'I-CLOTH-01': <String>['N01', 'N02'],
+            'I-TIMBER-CRAFT-01': <String>['N03'],
+            'I-FIBER-CRAFT-01': <String>['N03'],
+            'I-HAND-AXE-01': <String>['N03'],
+            'I-GRAIN-SERVICE-01': <String>['N02'],
+            'I-ROOT-SHORTAGE-01': <String>['N02'],
+            'I-LABOR-RICE-01': <String>['N01'],
           },
           'scheduled_work_seconds_by_person': <String, int>{
             'N01': 28800,
@@ -487,6 +699,23 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           'supply_carrier_id': 'N04',
           'supply_route_id': 'RT-ANKHE',
         },
+      )
+      ..schedule(
+        due: const SimTime(0),
+        phase: EventPhase.completion,
+        kind: 'household_created',
+        payload: const <String, Object?>{
+          'household_id': 'H-MERCHANT',
+          'name': 'Hộ đổi dược thảo',
+          'member_ids': <String>['M01'],
+          'resource_item_ids': <String, String>{},
+          'authorized_users_by_item_id': <String, List<String>>{
+            'I-MARKET-HERB-01': <String>['M01'],
+            'I-MERCHANT-GRAIN-RESERVE': <String>['M01'],
+          },
+          'scheduled_work_seconds_by_person': <String, int>{'M01': 0},
+          'meal_actor_id': 'M01',
+        },
       );
 
     simulation
@@ -496,6 +725,176 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       ..openWorldEntry();
 
     simulation.advanceTo(const SimTime(0));
+    simulation.startProductionBatch(
+      batchId: 'PB-CARRY-FRAME-01',
+      recipe: const ProductionRecipe(
+        id: 'RECIPE-CARRY-FRAME-01',
+        name: 'đóng khung gùi gỗ',
+        durationSeconds: 2 * 3600,
+        inputs: <ProductionIngredient>[
+          ProductionIngredient(kind: 'raw_timber', quantity: 1200, unit: 'g'),
+          ProductionIngredient(kind: 'plant_fiber', quantity: 250, unit: 'g'),
+        ],
+        outputKind: 'carrying_frame',
+        outputQuantity: 1,
+        outputUnit: 'piece',
+        toolKind: 'hand_axe',
+        toolWear: 25,
+      ),
+      actorId: 'N03',
+      householdId: 'H01',
+      roomId: 'ROOM-YARD',
+      inputItemIdsByKind: const <String, String>{
+        'raw_timber': 'I-TIMBER-CRAFT-01',
+        'plant_fiber': 'I-FIBER-CRAFT-01',
+      },
+      outputItemId: 'I-CARRY-FRAME-01',
+      toolItemId: 'I-HAND-AXE-01',
+    );
+    simulation.bookServiceAppointment(
+      appointmentId: 'SA-COOKING-LESSON-01',
+      definition: const ServiceDefinition(
+        id: 'SERVICE-COOKING-LESSON-01',
+        name: 'hướng dẫn nấu cháo ngũ cốc',
+        durationSeconds: 3600,
+        resultClaimKind: 'cooking_instruction_completed',
+        inputs: <ProductionIngredient>[
+          ProductionIngredient(kind: 'raw_grain', quantity: 100, unit: 'g'),
+        ],
+      ),
+      providerId: 'N02',
+      recipientId: 'N01',
+      providerHouseholdId: 'H01',
+      recipientHouseholdId: 'H01',
+      roomId: 'ROOM-KITCHEN',
+      startsAtSeconds: 3 * 3600,
+      inputItemIdsByKind: const <String, String>{
+        'raw_grain': 'I-GRAIN-SERVICE-01',
+      },
+    );
+    simulation.createLaborOffer(
+      offerId: 'LO-YARD-SORT-01',
+      activity: 'phân loại gỗ và sợi trong sân',
+      skillCode: 'gather_fuel',
+      minimumSkill: 700,
+      priority: 100,
+      employerId: 'N01',
+      workerId: 'N03',
+      employerHouseholdId: 'H01',
+      workerHouseholdId: 'H01',
+      roomId: 'ROOM-YARD',
+      startsAtSeconds: 4 * 3600,
+      durationSeconds: 1800,
+      compensation: const LaborCompensationTerms(
+        itemKind: 'labor_rice',
+        quantity: 300,
+        unit: 'g',
+      ),
+    );
+    simulation.considerLaborOffer('LO-YARD-SORT-01');
+    simulation.createLaborOffer(
+      offerId: 'LO-EXTRA-HAUL-01',
+      activity: 'gánh thêm gỗ cuối ngày',
+      skillCode: 'gather_fuel',
+      minimumSkill: 700,
+      priority: 50,
+      employerId: 'N01',
+      workerId: 'N03',
+      employerHouseholdId: 'H01',
+      workerHouseholdId: 'H01',
+      roomId: 'ROOM-YARD',
+      startsAtSeconds: 19 * 3600,
+      durationSeconds: 3600,
+      compensation: const LaborCompensationTerms(
+        itemKind: 'labor_rice',
+        quantity: 250,
+        unit: 'g',
+      ),
+    );
+    simulation.considerLaborOffer('LO-EXTRA-HAUL-01');
+    simulation.beginSupplyShock(
+      shockId: 'SS-GRAIN-RAIN-01',
+      resourceKind: 'raw_grain',
+      unit: 'g',
+      cause: 'mưa kéo dài làm ẩm mốc kho ngũ cốc ven suối và kho chợ',
+      durationSeconds: 5 * gameSecondsPerDay,
+      affectedHouseholdIds: const <String>['H01', 'H-MERCHANT'],
+      disruptedQuantityByItemId: const <String, int>{
+        'I-GRAIN-SERVICE-01': 150,
+        'I-MERCHANT-GRAIN-RESERVE': 250,
+      },
+    );
+    simulation.startProductionBatch(
+      batchId: 'PB-SHORTAGE-ROOT-01',
+      recipe: const ProductionRecipe(
+        id: 'RECIPE-DRIED-ROOT-01',
+        name: 'thái và hong củ dự trữ thay ngũ cốc',
+        durationSeconds: 3600,
+        inputs: <ProductionIngredient>[
+          ProductionIngredient(kind: 'raw_root', quantity: 600, unit: 'g'),
+        ],
+        outputKind: 'dried_root_food',
+        outputQuantity: 450,
+        outputUnit: 'g',
+      ),
+      actorId: 'N02',
+      householdId: 'H01',
+      roomId: 'ROOM-KITCHEN',
+      inputItemIdsByKind: const <String, String>{
+        'raw_root': 'I-ROOT-SHORTAGE-01',
+      },
+      outputItemId: 'I-DRIED-ROOT-FOOD-01',
+    );
+    simulation.recordSupplyShockResponse(
+      shockId: 'SS-GRAIN-RAIN-01',
+      householdId: 'H01',
+      kind: SupplyShockResponseKind.production,
+      evidenceId: 'PB-SHORTAGE-ROOT-01',
+    );
+    simulation.publishMarketOffer(
+      offerId: 'MO-GRAIN-HERB-01',
+      sellerPersonId: 'N02',
+      sellerHouseholdId: 'H01',
+      roomId: 'ROOM-KITCHEN',
+      sourceItemId: 'I-GRAIN-SERVICE-01',
+      offeredQuantity: 200,
+      lotQuantity: 100,
+      paymentKind: 'dried_herb',
+      paymentQuantityPerLot: 50,
+      paymentUnit: 'g',
+      visibleToPersonIds: const <String>['M01'],
+    );
+    simulation.placeMarketOrder(
+      orderId: 'MO-GRAIN-HERB-01-ORDER-01',
+      offerId: 'MO-GRAIN-HERB-01',
+      buyerPersonId: 'M01',
+      buyerHouseholdId: 'H-MERCHANT',
+      paymentSourceItemId: 'I-MARKET-HERB-01',
+      merchandiseQuantity: 100,
+    );
+    simulation.recordSupplyShockResponse(
+      shockId: 'SS-GRAIN-RAIN-01',
+      householdId: 'H-MERCHANT',
+      kind: SupplyShockResponseKind.marketExchange,
+      evidenceId: 'MO-GRAIN-HERB-01-ORDER-01',
+    );
+    simulation.settleMarketOrder(
+      orderId: 'MO-GRAIN-HERB-01-ORDER-01',
+      buyerTargetItemId: 'I-MARKET-GRAIN-M01',
+      sellerTargetItemId: 'I-MARKET-HERB-H01',
+    );
+    simulation.dispatchMarketShipment(
+      shipmentId: 'MS-GRAIN-M01-01',
+      orderId: 'MO-GRAIN-HERB-01-ORDER-01',
+      carrierId: 'M01',
+      routeId: 'RT-ANKHE-MARKET-RETURN',
+      fromWaypointId: 'WP-BEP-H01',
+      toWaypointId: 'WP-KHO-THAO-DUOC',
+      originRoomId: 'ROOM-KITCHEN',
+      destinationRoomId: 'ROOM-MERCHANT-STORE',
+      sourceItemId: 'I-MARKET-GRAIN-M01',
+      destinationItemId: 'I-MERCHANT-GRAIN-STORE',
+    );
     if (!awaitBirthSelection) {
       simulation.issue(
         const ChooseBirthSiteCommand(
@@ -504,6 +903,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         ),
       );
       simulation.advanceTo(const SimTime(0));
+      simulation.enableChildhoodDevelopment('P00');
     }
 
     return simulation;
@@ -530,6 +930,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         if (!mounted) return;
         if (source != null) {
           _bindSimulation(Simulation.fromSave(source));
+          if (_simulation.state.people['P00']?.infancy != null) {
+            _simulation.enableChildhoodDevelopment('P00');
+          }
           _saveStatus = 'Đã khôi phục bản lưu gần nhất.';
         }
       } on Object catch (error) {
@@ -610,6 +1013,17 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     _showMessage(result.message);
   }
 
+  void _submitChildIntent(ChildIntent intent) {
+    final String commandId =
+        'ui-child-${_simulation.state.revision}-$_commandSequence';
+    _commandSequence++;
+    final CommandResult result = _host.submit(
+      ChildIntentCommand(id: commandId, personId: 'P00', intent: intent),
+    );
+    setState(() {});
+    _showMessage(result.message);
+  }
+
   Future<void> _chooseBirthSite(String siteId) async {
     if (!_ready) return;
     final String commandId =
@@ -623,6 +1037,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       return;
     }
     _simulation.advanceTo(_simulation.state.now);
+    _simulation.enableChildhoodDevelopment('P00');
     Object? saveError;
     try {
       await widget.saveRepository.writeLatest(_simulation.state.save());
@@ -797,11 +1212,114 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       entry?.state.householdId ?? 'H01',
     );
     final List<WorldFact> facts = _host.recentFacts(limit: 50);
+    final List<ProductionBatchState> productionBatches =
+        _simulation.state.productionBatches.values
+            .where(
+              (ProductionBatchState value) =>
+                  value.householdId == (household?.id ?? 'H01'),
+            )
+            .toList()
+          ..sort(
+            (ProductionBatchState a, ProductionBatchState b) =>
+                a.id.compareTo(b.id),
+          );
+    final List<ServiceAppointmentState> serviceAppointments =
+        _simulation.state.serviceAppointments.values
+            .where(
+              (ServiceAppointmentState value) =>
+                  value.providerHouseholdId == (household?.id ?? 'H01') ||
+                  value.recipientHouseholdId == (household?.id ?? 'H01'),
+            )
+            .toList()
+          ..sort(
+            (ServiceAppointmentState a, ServiceAppointmentState b) =>
+                a.startsAtSeconds.compareTo(b.startsAtSeconds),
+          );
+    final List<LaborOfferState> laborOffers =
+        _simulation.state.laborOffers.values
+            .where(
+              (LaborOfferState value) =>
+                  value.employerHouseholdId == (household?.id ?? 'H01') ||
+                  value.workerHouseholdId == (household?.id ?? 'H01'),
+            )
+            .toList()
+          ..sort(
+            (LaborOfferState a, LaborOfferState b) =>
+                a.startsAtSeconds.compareTo(b.startsAtSeconds),
+          );
+    final Map<String, LaborCompensationClaim> laborClaims =
+        <String, LaborCompensationClaim>{
+          for (final LaborCompensationClaim value
+              in _simulation.state.laborClaims.values)
+            if (value.debtorHouseholdId == (household?.id ?? 'H01') ||
+                value.creditorHouseholdId == (household?.id ?? 'H01'))
+              value.id: value,
+        };
+    final List<MarketOfferState> marketOffers =
+        _simulation.state.marketOffers.values
+            .where(
+              (MarketOfferState value) =>
+                  value.sellerHouseholdId == (household?.id ?? 'H01') ||
+                  _simulation.state.marketOrders.values.any(
+                    (MarketOrderState order) =>
+                        order.offerId == value.id &&
+                        order.buyerHouseholdId == (household?.id ?? 'H01'),
+                  ),
+            )
+            .toList()
+          ..sort(
+            (MarketOfferState a, MarketOfferState b) =>
+                a.createdAtSeconds.compareTo(b.createdAtSeconds),
+          );
+    final List<MarketOrderState> marketOrders =
+        _simulation.state.marketOrders.values
+            .where(
+              (MarketOrderState value) =>
+                  value.sellerHouseholdId == (household?.id ?? 'H01') ||
+                  value.buyerHouseholdId == (household?.id ?? 'H01'),
+            )
+            .toList()
+          ..sort(
+            (MarketOrderState a, MarketOrderState b) =>
+                a.createdAtSeconds.compareTo(b.createdAtSeconds),
+          );
+    final Set<String> visibleMarketOrderIds = marketOrders
+        .map((MarketOrderState value) => value.id)
+        .toSet();
+    final List<MarketShipmentState> marketShipments =
+        _simulation.state.marketShipments.values
+            .where(
+              (MarketShipmentState value) =>
+                  visibleMarketOrderIds.contains(value.orderId),
+            )
+            .toList()
+          ..sort(
+            (MarketShipmentState a, MarketShipmentState b) =>
+                a.departedAtSeconds.compareTo(b.departedAtSeconds),
+          );
+    final List<SupplyShockState> supplyShocks =
+        _simulation.state.supplyShocks.values
+            .where(
+              (SupplyShockState value) =>
+                  value.affectedHouseholdIds.contains(household?.id ?? 'H01'),
+            )
+            .toList()
+          ..sort(
+            (SupplyShockState a, SupplyShockState b) =>
+                a.startsAtSeconds.compareTo(b.startsAtSeconds),
+          );
+    final Map<String, String> personNames = <String, String>{
+      for (final PersonState person in _simulation.state.people.values)
+        person.id: person.name,
+    };
     final _CommandPanel command = _CommandPanel(
       controller: _goalController,
       onSubmit: _submitGoal,
       infancy: player.infancy,
+      childhood: player.childhood,
       onInfantIntent: _submitInfantIntent,
+      onChildIntent: _submitChildIntent,
+      currentSeconds: world.time.seconds,
       enabled: _ready,
     );
     final _SavePanel saves = _SavePanel(
@@ -832,7 +1350,19 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
         eyebrow: 'ĐỜI SỐNG CHUNG',
         title: 'Hộ gia đình',
         subtitle: 'Con người, kho vật chất, quyền sử dụng và công việc.',
-        child: _HouseholdPanel(household: household),
+        child: _HouseholdPanel(
+          household: household,
+          productionBatches: productionBatches,
+          serviceAppointments: serviceAppointments,
+          laborOffers: laborOffers,
+          laborClaims: laborClaims,
+          marketOffers: marketOffers,
+          marketOrders: marketOrders,
+          marketShipments: marketShipments,
+          supplyShocks: supplyShocks,
+          personNames: personNames,
+          currentSeconds: world.time.seconds,
+        ),
       ),
       _PageFrame(
         key: const ValueKey<int>(3),
@@ -1192,7 +1722,10 @@ class _HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final InfantView? infant = player.infancy;
-    final String state = infant == null
+    final ChildhoodView? childhood = player.childhood;
+    final String state = childhood != null
+        ? childhood.stage.label
+        : infant == null
         ? 'Đang sinh hoạt'
         : infant.crying
         ? 'Đang khóc'
@@ -1237,7 +1770,8 @@ class _HeroCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Sơ sinh · ${player.ageSeconds ~/ gameSecondsPerDay} ngày tuổi · Hộ ven suối',
+                    '${childhood?.stage.label ?? 'Sơ sinh'} · '
+                    '${player.ageSeconds ~/ gameSecondsPerDay} ngày tuổi · Hộ ven suối',
                   ),
                   const SizedBox(height: 5),
                   Text(
@@ -1340,7 +1874,9 @@ class _AttentionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final InfantView? infant = player.infancy;
-    final bool pending = infant?.careResponsePending ?? false;
+    final ChildhoodView? childhood = player.childhood;
+    final bool pending =
+        childhood == null && (infant?.careResponsePending ?? false);
     final HealthView? health = player.health;
     final bool ill = health != null && health.stage != IllnessStage.resolved;
     return Card(
@@ -1359,6 +1895,8 @@ class _AttentionCard extends StatelessWidget {
             Text(
               pending
                   ? 'Đang chờ chăm sóc'
+                  : childhood != null
+                  ? 'Đang hình thành năng lực'
                   : ill
                   ? 'Đang theo dõi bệnh nhẹ'
                   : 'Chưa có việc khẩn',
@@ -1369,12 +1907,23 @@ class _AttentionCard extends StatelessWidget {
             Text(
               pending
                   ? 'Tín hiệu đã đi vào thế giới. Người chăm sóc cần nghe, di chuyển và dùng đúng vật tư.'
+                  : childhood != null
+                  ? 'Trưởng thành tạo nền, còn quan sát và luyện tập thật mới mở các hoạt động tiếp theo.'
                   : ill
                   ? '${_illnessKindLabel(health.kind)} ở mức ${health.severity}/1000; '
                         'thân nhiệt ${(health.bodyTemperatureMilliC / 1000).toStringAsFixed(2)} °C.'
                   : 'Các nhu cầu vẫn thay đổi theo sinh lý. Thế giới sẽ tạo cảnh báo khi có nguyên nhân đáng chú ý.',
             ),
-            if (infant != null) ...<Widget>[
+            if (childhood != null) ...<Widget>[
+              const SizedBox(height: 18),
+              Text(
+                'Quan sát ${childhood.observationExperience} · '
+                'vận động ${childhood.movementPractice} · '
+                'ngôn ngữ ${childhood.languageExposure} · '
+                'chơi ${childhood.playExperience}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ] else if (infant != null) ...<Widget>[
               const SizedBox(height: 18),
               Text(
                 'Căng thẳng ${infant.distress}/1000 · Đã chăm ${infant.careInteractions} lần',
@@ -2055,6 +2604,28 @@ class _WorldHistorySummary extends StatelessWidget {
                   ),
               ],
             ),
+            const SizedBox(height: 8),
+            Text(
+              '${history.macroStepCount} bước vĩ mô đã được nén vào '
+              '${history.completedEpochCount} bản tóm tắt epoch; chỉ giữ '
+              '${history.anchors.length} biến cố neo và cửa sổ '
+              '${history.recentAnchors.length} biến cố gần nhất.',
+              key: const Key('historical-compression-summary'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: <Widget>[
+                for (final HistoricalAnchor anchor in history.recentAnchors)
+                  Chip(
+                    key: Key('recent-history-anchor-${anchor.id}'),
+                    label: Text(
+                      '${anchor.yearsBeforePresent} năm · ${anchor.kind}',
+                    ),
+                  ),
+              ],
+            ),
             if (metrics != null) ...<Widget>[
               const SizedBox(height: 12),
               Wrap(
@@ -2104,7 +2675,10 @@ class _WorldHistorySummary extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       'Đất canh tác, giao thương và áp lực tài nguyên đã tác '
-                      'động tới ${legacy.adjustments.length} kho vật chất thật.',
+                      'động tới ${legacy.adjustments.length} kho hộ, '
+                      '${legacy.naturalResourceAdjustments.length} nguồn tự nhiên, '
+                      '${legacy.ecologyAdjustments.length} quần thể và '
+                      '${legacy.settlementAdjustments.length} địa điểm dân cư.',
                     ),
                     const SizedBox(height: 7),
                     Wrap(
@@ -2267,6 +2841,35 @@ class _BirthSiteCard extends StatelessWidget {
                 '${mapSite!.population} người · ${mapSite!.roomNames.length} phòng',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              if (site.terrainCode != 'unspecified')
+                Text(
+                  '${_terrainProfileLabel(site.terrainCode)} · cao ${site.elevationM} m',
+                  key: Key('birth-terrain-${candidate.siteId}'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              if (site.resourceDeposits.isNotEmpty)
+                Text(
+                  'Nguồn tự nhiên: ${site.resourceDeposits.map((NaturalResourceDeposit value) => _naturalResourceLabel(value.kind)).join(', ')}',
+                  key: Key('birth-resources-${candidate.siteId}'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              if (site.ecologicalPopulations.isNotEmpty)
+                Text(
+                  'Sinh thái: ${site.ecologicalPopulations.map((EcologicalPopulationState value) => _ecologicalSpeciesLabel(value.speciesCode)).join(', ')}',
+                  key: Key('birth-ecology-${candidate.siteId}'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+            ],
+            if (candidate.settlementScore != null) ...<Widget>[
+              const SizedBox(height: 8),
+              Text(
+                'Khả năng hình thành khu dân cư: '
+                '${candidate.settlementScore}/1000',
+                key: Key('birth-settlement-${candidate.siteId}'),
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+              for (final String reason in candidate.settlementReasons)
+                Text('• $reason', style: Theme.of(context).textTheme.bodySmall),
             ],
             if (candidate.feasible) ...<Widget>[
               const SizedBox(height: 8),
@@ -2427,6 +3030,15 @@ class _WorldMapPanel extends StatelessWidget {
                 '${region.sites.length} địa điểm',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              if (region.region.climateCode != 'unspecified')
+                Text(
+                  '${_climateLabel(region.region.climateCode)} · '
+                  'đáy ${region.region.valleyFloorElevationM} m · '
+                  'vành ${region.region.rimElevationM} m · '
+                  'mưa ${region.region.annualRainfallMm} mm/năm',
+                  key: Key('region-terrain-${region.region.id}'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
@@ -2450,7 +3062,8 @@ class _WorldMapPanel extends StatelessWidget {
                     title: Text(site.site.name),
                     subtitle: Text(
                       '${_siteKindLabel(site.site.kind)} · '
-                      '${site.population} người · ${site.itemCount} vật',
+                      '${site.population} người · ${site.itemCount} vật'
+                      '${site.site.terrainCode == 'unspecified' ? '' : ' · cao ${site.site.elevationM} m'}',
                     ),
                     childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
                     children: <Widget>[
@@ -2460,6 +3073,10 @@ class _WorldMapPanel extends StatelessWidget {
                           'Tọa độ: (${_km(site.site.center.xMm)}, '
                           '${_km(site.site.center.yMm)}) km\n'
                           'Bán kính: ${_km(site.site.radiusMm)} km\n'
+                          '${site.site.terrainCode == 'unspecified' ? '' : 'Địa hình: ${_terrainProfileLabel(site.site.terrainCode)} · cao ${site.site.elevationM} m\n'}'
+                          '${site.site.resourceDeposits.isEmpty ? '' : 'Nguồn tự nhiên:\n${site.site.resourceDeposits.map(_naturalResourceSummary).join('\n')}\n'}'
+                          '${site.site.ecologicalPopulations.isEmpty ? '' : 'Quần thể sinh thái:\n${site.site.ecologicalPopulations.map(_ecologicalPopulationSummary).join('\n')}\n'}'
+                          '${site.site.settlementAssessment == null ? '' : '${_settlementAssessmentSummary(site.site.settlementAssessment!)}\n'}'
                           'Người: ${site.peopleNames.isEmpty ? 'không có' : site.peopleNames.join(', ')}\n'
                           'Phòng: ${site.roomNames.isEmpty ? 'không có' : site.roomNames.join(', ')}\n'
                           'Vật: ${site.itemKinds.isEmpty ? 'không có' : site.itemKinds.map(_itemKindLabel).join(', ')}',
@@ -2486,6 +3103,58 @@ String _siteKindLabel(String kind) => switch (kind) {
   'pass' => 'Đèo',
   _ => kind,
 };
+
+String _terrainProfileLabel(String terrain) => switch (terrain) {
+  'alluvial_terrace' => 'Bậc phù sa',
+  'river_channel' => 'Lòng suối',
+  'floodplain' => 'Bãi bồi',
+  'mountain_pass' => 'Đèo núi',
+  _ => terrain,
+};
+
+String _climateLabel(String climate) => switch (climate) {
+  'humid_monsoon_valley' => 'Thung lũng gió mùa ẩm',
+  'seasonal_monsoon_valley' => 'Thung lũng gió mùa theo mùa',
+  'dry_monsoon_valley' => 'Thung lũng gió mùa khô',
+  _ => climate,
+};
+
+String _naturalResourceLabel(String kind) => switch (kind) {
+  'surface_water' => 'Nước mặt',
+  'fertile_topsoil' => 'Đất màu',
+  'timber_stand' => 'Rừng gỗ',
+  'mixed_stone_ore' => 'Đá và quặng hỗn hợp',
+  _ => kind,
+};
+
+String _naturalResourceSummary(NaturalResourceDeposit resource) =>
+    '${_naturalResourceLabel(resource.kind)}: '
+    '${resource.quantity}/${resource.capacity} ${resource.unit} · '
+    'chất lượng ${resource.quality}/1000 · '
+    'tiếp cận ${resource.accessibility}/1000 · '
+    '${resource.renewable ? 'phục hồi ${resource.annualRenewal} ${resource.unit}/năm' : 'không tái tạo'}';
+
+String _ecologicalSpeciesLabel(String species) => switch (species) {
+  'river_reed' => 'Sậy ven sông',
+  'meadow_grass' => 'Cỏ đồng',
+  'field_hare' => 'Thỏ đồng',
+  'upland_pine' => 'Thông sườn cao',
+  'muntjac_deer' => 'Mang rừng',
+  _ => species,
+};
+
+String _ecologicalPopulationSummary(EcologicalPopulationState population) =>
+    '${_ecologicalSpeciesLabel(population.speciesCode)}: '
+    '${population.population}/${population.carryingCapacity} cá thể · '
+    'sức khỏe ${population.health}/1000'
+    '${population.requiredResourceKind == null ? '' : ' · cần ${_naturalResourceLabel(population.requiredResourceKind!)}'}'
+    '${population.foodSpeciesCode == null ? '' : ' · ăn ${_ecologicalSpeciesLabel(population.foodSpeciesCode!)}'}';
+
+String _settlementAssessmentSummary(SettlementAssessmentState assessment) =>
+    'Khu dân cư: ${assessment.score}/1000 · '
+    '${assessment.viable ? 'đủ nền tảng' : 'chưa đủ nền tảng'} · '
+    '${assessment.selectedForBirthHousehold ? 'được lịch sử chọn cho hộ mới' : 'không được chọn cho hộ mới'}\n'
+    '${assessment.reasons.map((String value) => '• $value').join('\n')}';
 
 IconData _siteIcon(String kind) => switch (kind) {
   'household' => Icons.cottage_outlined,
@@ -2975,7 +3644,9 @@ class _WorldSidebar extends StatelessWidget {
       const SizedBox(height: 12),
       Text(player.name, style: Theme.of(context).textTheme.titleMedium),
       Text(
-        player.infancy?.crying == true
+        player.childhood != null
+            ? player.childhood!.stage.label
+            : player.infancy?.crying == true
             ? 'Đang khóc'
             : player.infancy?.awake == true
             ? 'Đang thức'
@@ -3053,7 +3724,206 @@ class _StatusPanel extends StatelessWidget {
           Text('Mục tiêu hiện tại: ${player.activeGoal ?? 'Chưa có'}'),
           const SizedBox(height: 8),
           Text('Sự kiện đang chờ: ${world.pendingEventCount}'),
-          if (player.infancy case final InfantView infancy) ...<Widget>[
+          if (player.childhood case final ChildhoodView childhood) ...<Widget>[
+            const Divider(height: 24),
+            Text(
+              'Giai đoạn phát triển: ${childhood.stage.label}',
+              key: const Key('child-development-stage'),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 10),
+            _NeedLine(label: 'An toàn', value: childhood.security),
+            _NeedLine(label: 'Vận động lớn', value: childhood.grossMotor),
+            _NeedLine(label: 'Vận động tinh', value: childhood.fineMotor),
+            _NeedLine(
+              label: 'Hiểu ngôn ngữ',
+              value: childhood.receptiveLanguage,
+            ),
+            _NeedLine(label: 'Tạo lời', value: childhood.expressiveLanguage),
+            const SizedBox(height: 12),
+            const _SectionLabel(label: 'CƠ THỂ VÀ DINH DƯỠNG'),
+            const SizedBox(height: 6),
+            Text(
+              'Khối lượng ${(childhood.body.massGrams / 1000).toStringAsFixed(2)} kg · '
+              'mốc khỏe ${(childhood.body.expectedMassGrams / 1000).toStringAsFixed(2)} kg',
+              key: const Key('child-body-mass'),
+            ),
+            _NeedLine(label: 'Dinh dưỡng', value: childhood.body.nutrition),
+            _NeedLine(label: 'Đủ nước', value: childhood.body.hydration),
+            Text(
+              'Hỗ trợ phát triển: ${childhood.body.developmentSupport}/1000 · '
+              'tuổi trưởng thành tương đương ${childhood.maturationEquivalentDays} ngày',
+            ),
+            Text(
+              'Khẩu phần gần nhất: ${childhood.body.lastFoodGrams} g thức ăn · '
+              '${childhood.body.lastWaterMl} ml nước · '
+              'tăng ${childhood.body.lastGrowthGrams} g',
+            ),
+            Text(
+              'Ngày tăng trưởng đủ điều kiện ${childhood.body.supportedGrowthDays} · '
+              'bị hạn chế ${childhood.body.constrainedGrowthDays}',
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Kinh nghiệm: quan sát ${childhood.observationExperience} · '
+              'vận động ${childhood.movementPractice} · '
+              'ngôn ngữ ${childhood.languageExposure} · '
+              'chơi ${childhood.playExperience}',
+              key: const Key('child-activity-experience'),
+            ),
+            Text(
+              childhood.lastIntent == null
+                  ? 'Chưa có hoạt động tuổi thơ do người chơi chọn.'
+                  : 'Hoạt động gần nhất: ${childhood.lastIntent!.label}',
+            ),
+            Text(
+              'Vận động/chơi đã xong: ${childhood.completedPhysicalActivities} · '
+              'thành công ${childhood.successfulPhysicalActivities} · '
+              'chưa thành công ${childhood.failedPhysicalActivities}',
+              key: const Key('child-physical-activity-summary'),
+            ),
+            Text(
+              'Quan sát/ngôn ngữ đã xong: ${childhood.completedLearningActivities} · '
+              'học được ${childhood.successfulLearningActivities} · '
+              'chưa học được ${childhood.failedLearningActivities}',
+              key: const Key('child-learning-activity-summary'),
+            ),
+            if (childhood.lastOutcome != null)
+              Text(
+                'Kết quả gần nhất: '
+                '${childhood.lastOutcome == 'succeeded' ? 'thành công' : 'chưa thành công'} · '
+                'phòng ${childhood.lastActivityRoomId ?? 'không rõ'} · '
+                'vật ${childhood.lastActivityItemId ?? 'không dùng'} · '
+                '${(childhood.lastActivityDurationSeconds ?? 0) ~/ 60} phút',
+              ),
+            if (childhood.activeActivity != null)
+              Text(
+                'Đang thực hiện: ${childhood.activeActivity} · còn '
+                '${((childhood.activeActivityEndsAtSeconds! - world.time.seconds).clamp(0, 86400) / 60).ceil()} phút',
+                key: const Key('child-activity-active'),
+              ),
+            if (childhood.learningRecords.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 12),
+              const _SectionLabel(label: 'ĐIỀU ĐÃ HỌC CÓ NGUỒN'),
+              const SizedBox(height: 6),
+              for (final ChildLearningView learning
+                  in childhood.learningRecords.take(4))
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    learning.sourceObjectId == null
+                        ? Icons.record_voice_over_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  title: Text(learning.summary),
+                  subtitle: Text(
+                    'Qua ${learning.activity == 'observe' ? 'quan sát' : 'đáp lời'} · '
+                    'nguồn ${learning.sourceObjectId ?? learning.sourcePersonId} · '
+                    'tin cậy ${learning.confidence}/1000',
+                  ),
+                ),
+            ],
+            if (childhood.recentMemories.isNotEmpty ||
+                childhood.memoryAnchors.isNotEmpty ||
+                childhood.memorySummaries.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 12),
+              const _SectionLabel(label: 'KÝ ỨC TUỔI THƠ'),
+              const SizedBox(height: 6),
+              Text(
+                'Chi tiết gần đây ${childhood.recentMemories.length} · '
+                'ký ức nổi bật ${childhood.memoryAnchors.length} · '
+                'giai đoạn đã tóm tắt ${childhood.memorySummaries.length} · '
+                'đã nén ${childhood.compressedMemoryCount} lần nhớ',
+                key: const Key('child-memory-counts'),
+              ),
+              for (final ChildMemoryEpisodeState memory
+                  in childhood.recentMemories.take(3))
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.history),
+                  title: Text(memory.summary),
+                  subtitle: Text(
+                    'Cách đây '
+                    '${((world.time.seconds - memory.atSeconds).clamp(0, 1 << 62)) ~/ gameSecondsPerDay} ngày · '
+                    'nguồn ${memory.sourceIds.isEmpty ? 'không có' : memory.sourceIds.join(', ')}',
+                  ),
+                ),
+              for (final ChildMemoryEpisodeState memory
+                  in childhood.memoryAnchors.take(3))
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.bookmark_outline),
+                  title: Text(memory.summary),
+                  subtitle: Text(
+                    'Ký ức nổi bật · mức ${memory.importance}/1000 · '
+                    'cách đây '
+                    '${((world.time.seconds - memory.atSeconds).clamp(0, 1 << 62)) ~/ gameSecondsPerDay} ngày',
+                  ),
+                ),
+              if (childhood.memorySummaries.firstOrNull
+                  case final ChildMemorySummaryState summary)
+                Text(
+                  summary.periodIndex < 0
+                      ? 'Thời kỳ cũ: ${summary.episodeCount} lần nhớ · '
+                            '${summary.successCount} thành công · '
+                            '${summary.failureCount} chưa thành công · '
+                            '${summary.hazardCount} liên quan nguy hiểm'
+                      : 'Tháng tuổi thơ ${summary.periodIndex + 1}: '
+                            '${summary.episodeCount} lần nhớ · '
+                            '${summary.successCount} thành công · '
+                            '${summary.failureCount} chưa thành công · '
+                            '${summary.hazardCount} liên quan nguy hiểm',
+                ),
+            ],
+            if (childhood.caregiverPreferenceScores.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 12),
+              const _SectionLabel(label: 'NGƯỜI TRẺ CÓ XU HƯỚNG TÌM ĐẾN'),
+              const SizedBox(height: 6),
+              for (final MapEntry<String, int> preference
+                  in (childhood.caregiverPreferenceScores.entries.toList()
+                    ..sort(
+                      (MapEntry<String, int> a, MapEntry<String, int> b) =>
+                          b.value.compareTo(a.value),
+                    )))
+                Text(
+                  '${preference.key}: ${preference.value} điểm trải nghiệm',
+                  key: Key('child-caregiver-preference-${preference.key}'),
+                ),
+            ],
+            if (childhood.lastHazard
+                case final ChildHazardIncidentState hazard) ...<Widget>[
+              const SizedBox(height: 12),
+              const _SectionLabel(label: 'NGUY HIỂM TUỔI THƠ GẦN NHẤT'),
+              const SizedBox(height: 6),
+              Text(
+                'Mất thăng bằng trên nền · mức ${hazard.severity}/1000 · '
+                '${hazard.noticedBeforeHarm ? 'đã nhận ra trước khi ngã' : 'không nhận ra kịp'}',
+              ),
+              Text(
+                'Phản ứng: ${hazard.childReaction == 'fell_and_cried' ? 'ngã và khóc' : 'dừng lại, tìm người an toàn'}',
+              ),
+              Text(
+                'Người được tìm đến: ${hazard.caregiverId ?? 'không có'} · '
+                'kết quả ${hazard.outcome == 'pending'
+                    ? 'đang chờ'
+                    : hazard.outcome == 'soothed'
+                    ? 'được trấn an'
+                    : 'không được đáp ứng'} · '
+                'an toàn ${hazard.securityChange >= 0 ? '+' : ''}${hazard.securityChange}',
+                key: const Key('child-hazard-outcome'),
+              ),
+              Text(
+                'Tổng sự cố ${childhood.hazardIncidents} · nhận ra sớm '
+                '${childhood.hazardsNoticedBeforeHarm} · được người chăm giải quyết '
+                '${childhood.hazardsResolvedByCaregiver}',
+              ),
+            ],
+          ],
+          if ((player.childhood == null ? player.infancy : null)
+              case final InfantView infancy) ...<Widget>[
             const Divider(height: 24),
             Text(
               infancy.crying
@@ -3178,9 +4048,31 @@ class _StatusPanel extends StatelessWidget {
 }
 
 class _HouseholdPanel extends StatelessWidget {
-  const _HouseholdPanel({required this.household});
+  const _HouseholdPanel({
+    required this.household,
+    required this.productionBatches,
+    required this.serviceAppointments,
+    required this.laborOffers,
+    required this.laborClaims,
+    required this.marketOffers,
+    required this.marketOrders,
+    required this.marketShipments,
+    required this.supplyShocks,
+    required this.personNames,
+    required this.currentSeconds,
+  });
 
   final HouseholdView? household;
+  final List<ProductionBatchState> productionBatches;
+  final List<ServiceAppointmentState> serviceAppointments;
+  final List<LaborOfferState> laborOffers;
+  final Map<String, LaborCompensationClaim> laborClaims;
+  final List<MarketOfferState> marketOffers;
+  final List<MarketOrderState> marketOrders;
+  final List<MarketShipmentState> marketShipments;
+  final List<SupplyShockState> supplyShocks;
+  final Map<String, String> personNames;
+  final int currentSeconds;
 
   @override
   Widget build(BuildContext context) {
@@ -3514,6 +4406,58 @@ class _HouseholdPanel extends StatelessWidget {
                         ],
                       ),
                     ),
+                  if (productionBatches.isNotEmpty) ...<Widget>[
+                    const Divider(height: 28),
+                    const _SectionLabel(label: 'MẺ SẢN XUẤT & WORKPIECE'),
+                    const SizedBox(height: 10),
+                    _ProductionBatchPanel(
+                      household: value,
+                      batches: productionBatches,
+                      currentSeconds: currentSeconds,
+                    ),
+                  ],
+                  if (serviceAppointments.isNotEmpty) ...<Widget>[
+                    const Divider(height: 28),
+                    const _SectionLabel(label: 'LỊCH DỊCH VỤ'),
+                    const SizedBox(height: 10),
+                    _ServiceAppointmentPanel(
+                      household: value,
+                      appointments: serviceAppointments,
+                      currentSeconds: currentSeconds,
+                    ),
+                  ],
+                  if (laborOffers.isNotEmpty) ...<Widget>[
+                    const Divider(height: 28),
+                    const _SectionLabel(label: 'LỜI MỜI & NGHĨA VỤ LAO ĐỘNG'),
+                    const SizedBox(height: 10),
+                    _LaborOfferPanel(
+                      household: value,
+                      offers: laborOffers,
+                      claims: laborClaims,
+                      currentSeconds: currentSeconds,
+                    ),
+                  ],
+                  if (marketOffers.isNotEmpty) ...<Widget>[
+                    const Divider(height: 28),
+                    const _SectionLabel(label: 'CHỢ ĐỊA PHƯƠNG & ESCROW'),
+                    const SizedBox(height: 10),
+                    _MarketPanel(
+                      offers: marketOffers,
+                      orders: marketOrders,
+                      shipments: marketShipments,
+                      personNames: personNames,
+                    ),
+                  ],
+                  if (supplyShocks.isNotEmpty) ...<Widget>[
+                    const Divider(height: 28),
+                    const _SectionLabel(label: 'THIẾU HÀNG & THÍCH ỨNG'),
+                    const SizedBox(height: 10),
+                    _SupplyShockPanel(
+                      household: value,
+                      shocks: supplyShocks,
+                      currentSeconds: currentSeconds,
+                    ),
+                  ],
                   const Divider(height: 28),
                   const _SectionLabel(label: 'NHU CẦU & KẾ HOẠCH HÔM NAY'),
                   const SizedBox(height: 10),
@@ -3641,6 +4585,800 @@ class _HouseholdPanel extends StatelessWidget {
   String _resourceValue(HouseholdView value, String key) =>
       '${value.resourceQuantities[key] ?? 0} ${value.resourceUnits[key] ?? ''}';
 }
+
+class _ProductionBatchPanel extends StatelessWidget {
+  const _ProductionBatchPanel({
+    required this.household,
+    required this.batches,
+    required this.currentSeconds,
+  });
+
+  final HouseholdView household;
+  final List<ProductionBatchState> batches;
+  final int currentSeconds;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    key: const Key('production-batch-panel'),
+    children: <Widget>[
+      for (final ProductionBatchState batch in batches)
+        Card(
+          key: Key('production-batch-${batch.id}'),
+          color: const Color(0xff111611),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Icon(
+                      switch (batch.status) {
+                        ProductionBatchStatus.inProgress =>
+                          Icons.precision_manufacturing_outlined,
+                        ProductionBatchStatus.completed =>
+                          Icons.inventory_2_outlined,
+                        ProductionBatchStatus.blocked =>
+                          Icons.report_problem_outlined,
+                      },
+                      color: switch (batch.status) {
+                        ProductionBatchStatus.inProgress => const Color(
+                          0xffc6a56a,
+                        ),
+                        ProductionBatchStatus.completed => const Color(
+                          0xff83b993,
+                        ),
+                        ProductionBatchStatus.blocked => const Color(
+                          0xffd49a68,
+                        ),
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            batch.recipe.name,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(
+                            '${_productionStatusLabel(batch.status)} · '
+                            '${_productionActorName(household, batch.actorId)}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  batch.status == ProductionBatchStatus.inProgress
+                      ? 'Còn ${((batch.completesAtSeconds - currentSeconds).clamp(0, batch.recipe.durationSeconds) / 60).ceil()} phút trong game'
+                      : 'Bắt đầu ${_absoluteGameTime(batch.startedAtSeconds)} · '
+                            'kết thúc ${_absoluteGameTime(batch.finishedAtSeconds ?? batch.completesAtSeconds)}',
+                  key: Key('production-time-${batch.id}'),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Workpiece đang giữ ${batch.materials.length} lô nguyên liệu:',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 7,
+                  runSpacing: 7,
+                  children: <Widget>[
+                    for (final ProductionMaterialLot lot in batch.materials)
+                      Chip(
+                        key: Key(
+                          'production-material-${batch.id}-${lot.itemId}',
+                        ),
+                        avatar: const Icon(Icons.category_outlined, size: 15),
+                        label: Text(
+                          '${_itemKindLabel(lot.kind)} ${lot.quantity} ${lot.unit} · chất lượng ${lot.condition}/1000',
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Công cụ: ${batch.toolItemId == null ? 'không cần' : '${_itemKindLabel(batch.recipe.toolKind!)} · ${batch.toolItemId} · hao ${batch.recipe.toolWear}/1000'}',
+                  key: Key('production-tool-${batch.id}'),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Đầu ra: ${_itemKindLabel(batch.recipe.outputKind)} '
+                  '${batch.recipe.outputQuantity} ${batch.recipe.outputUnit} · '
+                  '${batch.status == ProductionBatchStatus.completed ? 'đã vào kho ${batch.outputItemId}' : 'chưa xuất hiện trong kho'}',
+                  key: Key('production-output-${batch.id}'),
+                ),
+                if (batch.failureReason != null) ...<Widget>[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Bị chặn: ${_productionFailureLabel(batch.failureReason!)}. '
+                    'Nguyên liệu vẫn nằm trong workpiece.',
+                    key: Key('production-blocked-${batch.id}'),
+                    style: const TextStyle(color: Color(0xffd49a68)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+String _productionActorName(HouseholdView household, String actorId) =>
+    household.members
+        .where((HouseholdMemberView value) => value.id == actorId)
+        .map((HouseholdMemberView value) => value.name)
+        .firstOrNull ??
+    actorId;
+
+String _productionStatusLabel(ProductionBatchStatus status) => switch (status) {
+  ProductionBatchStatus.inProgress => 'đang chế tác',
+  ProductionBatchStatus.completed => 'đã hoàn tất',
+  ProductionBatchStatus.blocked => 'bị chặn',
+};
+
+String _productionFailureLabel(String reason) => switch (reason) {
+  'labor_commitment_missing' => 'người làm không còn giữ ca',
+  'actor_left_workplace' => 'người làm đã rời nơi chế tác',
+  'tool_unavailable' => 'công cụ không còn dùng được tại chỗ',
+  'output_ledger_changed' => 'kho đầu ra đã đổi sai loại hoặc quyền sở hữu',
+  _ => reason,
+};
+
+String _absoluteGameTime(int seconds) {
+  final int day = seconds ~/ gameSecondsPerDay;
+  final int secondOfDay = seconds % gameSecondsPerDay;
+  return 'ngày $day ${_clock(secondOfDay)}';
+}
+
+class _ServiceAppointmentPanel extends StatelessWidget {
+  const _ServiceAppointmentPanel({
+    required this.household,
+    required this.appointments,
+    required this.currentSeconds,
+  });
+
+  final HouseholdView household;
+  final List<ServiceAppointmentState> appointments;
+  final int currentSeconds;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    key: const Key('service-appointment-panel'),
+    children: <Widget>[
+      for (final ServiceAppointmentState appointment in appointments)
+        Card(
+          key: Key('service-appointment-${appointment.id}'),
+          color: const Color(0xff111611),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Icon(
+                      switch (appointment.status) {
+                        ServiceAppointmentStatus.booked =>
+                          Icons.event_available_outlined,
+                        ServiceAppointmentStatus.inProgress =>
+                          Icons.people_alt_outlined,
+                        ServiceAppointmentStatus.completed =>
+                          Icons.verified_outlined,
+                        ServiceAppointmentStatus.blocked =>
+                          Icons.event_busy_outlined,
+                      },
+                      color: switch (appointment.status) {
+                        ServiceAppointmentStatus.booked => const Color(
+                          0xffc6a56a,
+                        ),
+                        ServiceAppointmentStatus.inProgress => const Color(
+                          0xff8fb6d9,
+                        ),
+                        ServiceAppointmentStatus.completed => const Color(
+                          0xff83b993,
+                        ),
+                        ServiceAppointmentStatus.blocked => const Color(
+                          0xffd49a68,
+                        ),
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            appointment.definition.name,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(
+                            _serviceStatusLabel(appointment.status),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Người cung cấp: ${_productionActorName(household, appointment.providerId)} · '
+                  'người nhận: ${_productionActorName(household, appointment.recipientId)}',
+                  key: Key('service-participants-${appointment.id}'),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${_absoluteGameTime(appointment.startsAtSeconds)}–'
+                  '${_absoluteGameTime(appointment.endsAtSeconds)}'
+                  '${appointment.status == ServiceAppointmentStatus.booked ? ' · còn ${((appointment.startsAtSeconds - currentSeconds).clamp(0, appointment.startsAtSeconds) / 60).ceil()} phút tới giờ hẹn' : ''}',
+                  key: Key('service-time-${appointment.id}'),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Vật tư đã giữ: ${appointment.materials.isEmpty ? 'không có' : '${appointment.materials.length} lô'}',
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+                if (appointment.materials.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: <Widget>[
+                      for (final ProductionMaterialLot lot
+                          in appointment.materials)
+                        Chip(
+                          key: Key(
+                            'service-material-${appointment.id}-${lot.itemId}',
+                          ),
+                          avatar: const Icon(
+                            Icons.inventory_outlined,
+                            size: 15,
+                          ),
+                          label: Text(
+                            '${_itemKindLabel(lot.kind)} ${lot.quantity} ${lot.unit} · chất lượng ${lot.condition}/1000',
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Text(
+                  appointment.resultClaim == null
+                      ? 'Kết quả: chưa có claim; dịch vụ chưa hoàn tất.'
+                      : 'Kết quả: ${_serviceClaimLabel(appointment.resultClaim!.kind)} · '
+                            '${appointment.resultClaim!.id}',
+                  key: Key('service-claim-${appointment.id}'),
+                ),
+                if (appointment.failureReason != null) ...<Widget>[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Bị chặn: ${_serviceFailureLabel(appointment.failureReason!)}. '
+                    'Vật tư vẫn còn trong hồ sơ cuộc hẹn.',
+                    key: Key('service-blocked-${appointment.id}'),
+                    style: const TextStyle(color: Color(0xffd49a68)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+String _serviceStatusLabel(ServiceAppointmentStatus status) => switch (status) {
+  ServiceAppointmentStatus.booked => 'đã giữ lịch hai phía',
+  ServiceAppointmentStatus.inProgress => 'đang thực hiện',
+  ServiceAppointmentStatus.completed => 'đã hoàn tất',
+  ServiceAppointmentStatus.blocked => 'bị chặn',
+};
+
+String _serviceClaimLabel(String kind) => switch (kind) {
+  'cooking_instruction_completed' => 'đã hoàn thành hướng dẫn nấu cháo',
+  _ => kind,
+};
+
+String _serviceFailureLabel(String reason) => switch (reason) {
+  'provider_absent' => 'người cung cấp vắng mặt',
+  'recipient_absent' => 'người nhận vắng mặt',
+  'participant_unavailable' => 'một người đang bận nghĩa vụ khác',
+  'provider_commitment_missing' => 'người cung cấp không giữ trọn lịch',
+  'recipient_commitment_missing' => 'người nhận không giữ trọn lịch',
+  'provider_left_venue' => 'người cung cấp rời địa điểm',
+  'recipient_left_venue' => 'người nhận rời địa điểm',
+  _ => reason,
+};
+
+class _LaborOfferPanel extends StatelessWidget {
+  const _LaborOfferPanel({
+    required this.household,
+    required this.offers,
+    required this.claims,
+    required this.currentSeconds,
+  });
+
+  final HouseholdView household;
+  final List<LaborOfferState> offers;
+  final Map<String, LaborCompensationClaim> claims;
+  final int currentSeconds;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    key: const Key('labor-offer-panel'),
+    children: <Widget>[
+      for (final LaborOfferState offer in offers)
+        Builder(
+          builder: (BuildContext context) {
+            final LaborCompensationClaim? claim =
+                offer.compensationClaimId == null
+                ? null
+                : claims[offer.compensationClaimId];
+            return Card(
+              key: Key('labor-offer-${offer.id}'),
+              color: const Color(0xff111611),
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Icon(
+                          switch (offer.status) {
+                            LaborOfferStatus.offered =>
+                              Icons.mark_email_unread_outlined,
+                            LaborOfferStatus.accepted =>
+                              Icons.assignment_turned_in_outlined,
+                            LaborOfferStatus.refused =>
+                              Icons.do_not_disturb_alt_outlined,
+                            LaborOfferStatus.inProgress =>
+                              Icons.engineering_outlined,
+                            LaborOfferStatus.completed =>
+                              Icons.task_alt_outlined,
+                            LaborOfferStatus.blocked =>
+                              Icons.warning_amber_outlined,
+                          },
+                          color:
+                              offer.status == LaborOfferStatus.refused ||
+                                  offer.status == LaborOfferStatus.blocked
+                              ? const Color(0xffd49a68)
+                              : offer.status == LaborOfferStatus.completed
+                              ? const Color(0xff83b993)
+                              : const Color(0xffc6a56a),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                offer.activity,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              Text(
+                                '${_laborStatusLabel(offer.status)} · '
+                                '${_productionActorName(household, offer.workerId)}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Người thuê: ${_productionActorName(household, offer.employerId)} · '
+                      'kỹ năng ${offer.skillCode} tối thiểu ${offer.minimumSkill}/1000 · '
+                      'ưu tiên ${offer.priority}',
+                      key: Key('labor-terms-${offer.id}'),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${_absoluteGameTime(offer.startsAtSeconds)}–'
+                      '${_absoluteGameTime(offer.endsAtSeconds)}'
+                      '${offer.status == LaborOfferStatus.accepted ? ' · còn ${((offer.startsAtSeconds - currentSeconds).clamp(0, offer.startsAtSeconds) / 60).ceil()} phút tới ca' : ''}',
+                      key: Key('labor-time-${offer.id}'),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Quyền lợi đã hứa: ${_itemKindLabel(offer.compensation.itemKind)} '
+                      '${offer.compensation.quantity} ${offer.compensation.unit}',
+                      key: Key('labor-compensation-${offer.id}'),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      claim == null
+                          ? offer.status == LaborOfferStatus.refused ||
+                                    offer.status == LaborOfferStatus.blocked
+                                ? 'Khoản phải trả: không phát sinh vì công chưa hoàn tất.'
+                                : 'Khoản phải trả: chưa phát sinh; công chưa hoàn tất.'
+                          : 'Khoản phải trả ${claim.id}: '
+                                '${claim.status == LaborClaimStatus.outstanding ? 'chưa thanh toán' : 'đã thanh toán'}',
+                      key: Key('labor-claim-${offer.id}'),
+                    ),
+                    if (offer.decisionReason != null) ...<Widget>[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Lý do quyết định: ${_laborReasonLabel(offer.decisionReason!)}',
+                        key: Key('labor-reason-${offer.id}'),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+    ],
+  );
+}
+
+String _laborStatusLabel(LaborOfferStatus status) => switch (status) {
+  LaborOfferStatus.offered => 'đang chờ quyết định',
+  LaborOfferStatus.accepted => 'đã nhận việc',
+  LaborOfferStatus.refused => 'đã từ chối',
+  LaborOfferStatus.inProgress => 'đang làm',
+  LaborOfferStatus.completed => 'đã làm xong',
+  LaborOfferStatus.blocked => 'ca bị chặn',
+};
+
+String _laborReasonLabel(String reason) => switch (reason) {
+  'conditions_met' => 'đủ kỹ năng, sức và lịch trống',
+  'insufficient_skill' => 'chưa đủ kỹ năng tối thiểu',
+  'schedule_conflict' => 'trùng một lịch đã nhận',
+  'worker_strain' => 'mệt, đói, khát hoặc tâm trạng không đáp ứng mức ưu tiên',
+  'currently_unavailable' => 'đang bận hoặc không đủ sức',
+  'worker_absent' => 'không có mặt tại nơi làm',
+  'worker_unavailable' => 'bị một nghĩa vụ khác giữ thời gian',
+  'labor_commitment_missing' => 'không giữ trọn cam kết lao động',
+  'worker_left_venue' => 'rời nơi làm trước khi xong',
+  _ => reason,
+};
+
+class _MarketPanel extends StatelessWidget {
+  const _MarketPanel({
+    required this.offers,
+    required this.orders,
+    required this.shipments,
+    required this.personNames,
+  });
+
+  final List<MarketOfferState> offers;
+  final List<MarketOrderState> orders;
+  final List<MarketShipmentState> shipments;
+  final Map<String, String> personNames;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    key: const Key('market-panel'),
+    children: <Widget>[
+      for (final MarketOfferState offer in offers)
+        Card(
+          key: Key('market-offer-${offer.id}'),
+          color: const Color(0xff111611),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Icon(
+                      offer.status == MarketOfferStatus.open
+                          ? Icons.storefront_outlined
+                          : Icons.inventory_2_outlined,
+                      color: offer.status == MarketOfferStatus.open
+                          ? const Color(0xffc6a56a)
+                          : const Color(0xff83b993),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            '${_itemKindLabel(offer.merchandise.kind)} tại chợ',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(
+                            '${_marketOfferStatusLabel(offer.status)} · '
+                            '${personNames[offer.sellerPersonId] ?? offer.sellerPersonId}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Hàng thật còn trong offer: ${offer.merchandise.quantity}/'
+                  '${offer.offeredQuantity} ${offer.merchandise.unit} · '
+                  'chất lượng ${offer.merchandise.condition}/1000',
+                  key: Key('market-stock-${offer.id}'),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Mỗi lot ${offer.lotQuantity} ${offer.merchandise.unit} đổi '
+                  '${offer.paymentQuantityPerLot} ${offer.paymentUnit} '
+                  '${_itemKindLabel(offer.paymentKind)}',
+                  key: Key('market-price-${offer.id}'),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Người đã biết offer: ${offer.knownByPersonIds.map((String id) => personNames[id] ?? id).join(', ')}',
+                  key: Key('market-known-${offer.id}'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                for (final MarketOrderState order in orders.where(
+                  (MarketOrderState value) => value.offerId == offer.id,
+                )) ...<Widget>[
+                  const Divider(height: 22),
+                  Container(
+                    key: Key('market-order-${order.id}'),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xff0b100c),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          '${_marketOrderStatusLabel(order.status)} · '
+                          '${personNames[order.buyerPersonId] ?? order.buyerPersonId}',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Lô hàng đã giữ: ${_itemKindLabel(order.merchandise.kind)} '
+                          '${order.merchandise.quantity} ${order.merchandise.unit}',
+                          key: Key('market-order-goods-${order.id}'),
+                        ),
+                        Text(
+                          'Vật thanh toán đã giữ: ${_itemKindLabel(order.payment.kind)} '
+                          '${order.payment.quantity} ${order.payment.unit}',
+                          key: Key('market-order-payment-${order.id}'),
+                        ),
+                        Text(
+                          order.status == MarketOrderStatus.settled
+                              ? 'Đã đổi chủ: ${order.buyerTargetItemId} ↔ ${order.sellerTargetItemId}'
+                              : 'Hai phía còn nằm trong escrow, chưa đổi chủ.',
+                          key: Key('market-order-result-${order.id}'),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        for (final MarketShipmentState shipment
+                            in shipments.where(
+                              (MarketShipmentState value) =>
+                                  value.orderId == order.id,
+                            )) ...<Widget>[
+                          const Divider(height: 18),
+                          Container(
+                            key: Key('market-shipment-${shipment.id}'),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xff151d17),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color:
+                                    shipment.status ==
+                                        MarketShipmentStatus.failed
+                                    ? const Color(0xff8f5b50)
+                                    : const Color(0xff34483a),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  '${_marketShipmentStatusLabel(shipment.status)} · '
+                                  '${personNames[shipment.carrierId] ?? shipment.carrierId}',
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Tuyến ${shipment.routeId}: '
+                                  '${shipment.pathWaypointIds.join(' → ')}',
+                                  key: Key(
+                                    'market-shipment-route-${shipment.id}',
+                                  ),
+                                ),
+                                Text(
+                                  '${_km(shipment.distanceMm)} km · dự kiến '
+                                  '${(shipment.expectedArrivalSeconds - shipment.departedAtSeconds + 59) ~/ 60} phút · '
+                                  'thực tế ${(shipment.scheduledArrivalSeconds - shipment.departedAtSeconds + 59) ~/ 60} phút '
+                                  '(trễ ${(shipment.lateSeconds + 59) ~/ 60} phút)',
+                                  key: Key(
+                                    'market-shipment-time-${shipment.id}',
+                                  ),
+                                ),
+                                Text(
+                                  'Hàng đang giữ: ${_itemKindLabel(shipment.cargo.kind)} '
+                                  '${shipment.cargo.quantity} ${shipment.cargo.unit} · '
+                                  'chất lượng ${shipment.cargo.condition}/1000 · '
+                                  'hao dự kiến ${shipment.plannedConditionLoss}',
+                                  key: Key(
+                                    'market-shipment-cargo-${shipment.id}',
+                                  ),
+                                ),
+                                Text(
+                                  shipment.status ==
+                                          MarketShipmentStatus.delivered
+                                      ? 'Đã vào ${shipment.destinationItemId} tại ${shipment.destinationRoomId}.'
+                                      : shipment.status ==
+                                            MarketShipmentStatus.failed
+                                      ? 'Giao thất bại: ${_marketShipmentFailureLabel(shipment.failureReason)}; hàng vẫn nằm trong hồ sơ chuyến.'
+                                      : 'Đích: ${shipment.destinationRoomId}; hàng đã rời kho đầu và chưa vào kho đích.',
+                                  key: Key(
+                                    'market-shipment-result-${shipment.id}',
+                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+String _marketOfferStatusLabel(MarketOfferStatus status) => switch (status) {
+  MarketOfferStatus.open => 'đang mở',
+  MarketOfferStatus.exhausted => 'đã được giữ hết',
+  MarketOfferStatus.cancelled => 'đã hủy',
+};
+
+String _marketOrderStatusLabel(MarketOrderStatus status) => switch (status) {
+  MarketOrderStatus.reserved => 'đã giữ hai phía',
+  MarketOrderStatus.settled => 'đã thanh toán',
+  MarketOrderStatus.cancelled => 'đã hủy',
+};
+
+String _marketShipmentStatusLabel(MarketShipmentStatus status) =>
+    switch (status) {
+      MarketShipmentStatus.inTransit => 'đang vận chuyển',
+      MarketShipmentStatus.delivered => 'đã giao vào kho',
+      MarketShipmentStatus.failed => 'giao thất bại',
+    };
+
+String _marketShipmentFailureLabel(String? reason) => switch (reason) {
+  'carrier_commitment_missing' => 'người chở mất cam kết hành trình',
+  'destination_unavailable' => 'kho đích không còn hợp lệ',
+  'destination_ledger_changed' => 'sổ vật tại kho đích đã đổi loại hoặc chủ',
+  null => 'chưa rõ nguyên nhân',
+  _ => reason,
+};
+
+class _SupplyShockPanel extends StatelessWidget {
+  const _SupplyShockPanel({
+    required this.household,
+    required this.shocks,
+    required this.currentSeconds,
+  });
+
+  final HouseholdView household;
+  final List<SupplyShockState> shocks;
+  final int currentSeconds;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    key: const Key('supply-shock-panel'),
+    children: <Widget>[
+      for (final SupplyShockState shock in shocks)
+        Card(
+          key: Key('supply-shock-${shock.id}'),
+          color: const Color(0xff111611),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Icon(
+                      shock.status == SupplyShockStatus.active
+                          ? Icons.warning_amber_outlined
+                          : Icons.task_alt_outlined,
+                      color: shock.status == SupplyShockStatus.active
+                          ? const Color(0xffd4a35c)
+                          : const Color(0xff83b993),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Thiếu ${_itemKindLabel(shock.resourceKind)}',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(
+                            shock.status == SupplyShockStatus.active
+                                ? 'đang kéo dài · còn ${((shock.endsAtSeconds - currentSeconds).clamp(0, shock.endsAtSeconds) / gameSecondsPerDay).ceil()} ngày'
+                                : 'đã kết thúc tại ngày ${(shock.resolvedAtSeconds ?? shock.endsAtSeconds) ~/ gameSecondsPerDay}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text('Nguyên nhân: ${shock.cause}'),
+                Text(
+                  'Hộ bị ảnh hưởng: ${shock.affectedHouseholdIds.join(', ')}',
+                  key: Key('supply-shock-households-${shock.id}'),
+                ),
+                const SizedBox(height: 8),
+                for (final SupplyDisruptionLot lot in shock.disruptedLots)
+                  Text(
+                    '${lot.householdId == household.id ? 'Hộ này' : lot.householdId}: '
+                    '${lot.quantity} ${lot.unit} từ ${lot.itemId} không còn dùng được '
+                    '(chất lượng lúc mất ${lot.condition}/1000)',
+                    key: Key('supply-disruption-${shock.id}-${lot.itemId}'),
+                  ),
+                const SizedBox(height: 8),
+                if (shock.householdDays.isEmpty)
+                  const Text('Chưa tới lần đối chiếu cuối ngày đầu tiên.')
+                else
+                  for (final SupplyShockHouseholdDay day
+                      in shock.householdDays.where(
+                        (SupplyShockHouseholdDay value) =>
+                            value.day == shock.householdDays.last.day,
+                      ))
+                    Text(
+                      'Ngày ${day.day} · ${day.householdId}: '
+                      '${day.availableQuantity} ${shock.unit} trong kho, '
+                      '${day.inTransitQuantity} ${shock.unit} đang đi',
+                      key: Key(
+                        'supply-shock-latest-${shock.id}-${day.householdId}',
+                      ),
+                    ),
+                const Divider(height: 20),
+                Text(
+                  'Phản ứng có bằng chứng (${shock.responses.map((SupplyShockResponse value) => value.householdId).toSet().length}/${shock.affectedHouseholdIds.length} hộ)',
+                  key: Key('supply-shock-response-count-${shock.id}'),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                for (final SupplyShockResponse response in shock.responses)
+                  Text(
+                    '${response.householdId}: ${_supplyShockResponseLabel(response.kind)} · ${response.evidenceId}',
+                    key: Key(
+                      'supply-shock-response-${shock.id}-${response.householdId}-${response.evidenceId}',
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+String _supplyShockResponseLabel(SupplyShockResponseKind kind) =>
+    switch (kind) {
+      SupplyShockResponseKind.production => 'đổi sản xuất',
+      SupplyShockResponseKind.service => 'đổi dịch vụ',
+      SupplyShockResponseKind.marketExchange => 'đổi cách mua bán',
+    };
 
 class _PlanPanel extends StatelessWidget {
   const _PlanPanel({required this.household});
@@ -3941,14 +5679,20 @@ class _CommandPanel extends StatelessWidget {
     required this.controller,
     required this.onSubmit,
     required this.infancy,
+    required this.childhood,
     required this.onInfantIntent,
+    required this.onChildIntent,
+    required this.currentSeconds,
     required this.enabled,
   });
 
   final TextEditingController controller;
   final VoidCallback onSubmit;
   final InfantView? infancy;
+  final ChildhoodView? childhood;
   final ValueChanged<InfantIntent> onInfantIntent;
+  final ValueChanged<ChildIntent> onChildIntent;
+  final int currentSeconds;
   final bool enabled;
 
   @override
@@ -3959,11 +5703,36 @@ class _CommandPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Text(
-            infancy == null ? 'Giao mục tiêu' : 'Ý định có thể thực hiện',
+            infancy == null && childhood == null
+                ? 'Giao mục tiêu'
+                : 'Hoạt động có thể thực hiện',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 12),
-          if (infancy case final InfantView value) ...<Widget>[
+          if (childhood case final ChildhoodView value) ...<Widget>[
+            const Text(
+              'Năng lực mở dần từ trưởng thành cơ thể và những gì nhân vật đã thật sự luyện tập.',
+            ),
+            const SizedBox(height: 12),
+            if (value.activeActivity != null) ...<Widget>[
+              Text(
+                'Đang thực hiện: ${value.activeActivity} · còn '
+                '${((value.activeActivityEndsAtSeconds! - currentSeconds).clamp(0, 86400) / 60).ceil()} phút trong game.',
+              ),
+              const SizedBox(height: 12),
+            ],
+            for (final ChildIntent intent in value.allowedIntents)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: FilledButton.tonal(
+                  key: Key('child-intent-${intent.code}'),
+                  onPressed: enabled ? () => onChildIntent(intent) : null,
+                  child: Text(
+                    '${intent.label} · ${intent.durationSeconds ~/ 60} phút',
+                  ),
+                ),
+              ),
+          ] else if (infancy case final InfantView value) ...<Widget>[
             const Text(
               'Ở tuổi này nhân vật chưa hiểu mệnh lệnh bằng lời. Bạn điều khiển sự chú ý và phản ứng cơ thể.',
             ),
@@ -4080,6 +5849,10 @@ class _HistoryPanelState extends State<_HistoryPanel> {
           fact.kind.contains('illness'),
     'household' =>
       fact.kind.startsWith('household') ||
+          fact.kind.startsWith('production_') ||
+          fact.kind.startsWith('service_appointment_') ||
+          fact.kind.startsWith('labor_') ||
+          fact.kind.startsWith('market_') ||
           fact.kind.startsWith('community_exchange') ||
           fact.kind.startsWith('community_resource') ||
           fact.kind.startsWith('community_survival') ||
@@ -4270,6 +6043,7 @@ Color _factColor(String kind) {
   if (kind.contains('illness')) return const Color(0xffd49a68);
   if (kind.startsWith('knowledge_')) return const Color(0xff80a9c7);
   if (kind.startsWith('social_')) return const Color(0xffb091c7);
+  if (kind.startsWith('child')) return const Color(0xff83b993);
   if (kind.startsWith('personal_time_')) return const Color(0xffc7a66f);
   if (kind.contains('care') || kind.contains('infant')) {
     return const Color(0xff83b993);
@@ -4440,7 +6214,9 @@ String _factDetail(WorldFact fact) {
       'Đã đi hết ${values['years'] ?? '?'} năm tiền sử và giữ '
           '${values['anchors'] ?? '?'} biến cố neo.',
     'historical_legacy_applied' =>
-      'Lịch sử đã đổi ${values['adjustments'] ?? '?'} kho; năng lực tiếp tế '
+      'Lịch sử đã đổi ${values['adjustments'] ?? '?'} kho, '
+          '${values['natural'] ?? '0'} nguồn, ${values['ecology'] ?? '0'} quần thể '
+          'và ${values['settlements'] ?? '0'} nơi dân cư; năng lực tiếp tế '
           '${values['supply'] ?? '?'}/1000 và còn '
           '${values['feasible_birth_sites'] ?? '?'} nơi sinh khả thi.',
     'routine_block_rescheduled' =>
@@ -4474,6 +6250,96 @@ String _factDetail(WorldFact fact) {
       'Hộ nhận ${values['food_g'] ?? '0'} g lương thực, ${values['water_ml'] ?? '0'} ml nước và ${values['infant_feed_ml'] ?? '0'} ml dinh dưỡng.',
     'household_production_completed' =>
       '${values['actor'] ?? 'Một thành viên'} bổ sung ${values['amount'] ?? '0'} đơn vị ${values['resource'] == 'fuel' ? 'củi' : values['resource'] ?? 'vật chất'}.',
+    'production_batch_started' =>
+      '${values['actor'] ?? 'Người làm'} bắt đầu ${values['recipe'] ?? 'mẻ sản xuất'}; '
+          'nguyên liệu đã rời kho và nằm trong workpiece tới mốc ${values['completes_at'] ?? '?'}.',
+    'production_batch_completed' =>
+      'Mẻ ${values['recipe'] ?? fact.subjectId} hoàn tất, tạo '
+          '${values['quantity'] ?? '?'} ${values['unit'] ?? ''} vào ${values['output'] ?? 'kho đầu ra'} '
+          'với chất lượng ${values['quality'] ?? '?'}/1000.',
+    'production_batch_blocked' =>
+      'Mẻ ${values['recipe'] ?? fact.subjectId} bị chặn vì '
+          '${_productionFailureLabel(values['reason'] ?? '')}; '
+          '${values['inputs_held'] ?? '?'} lô nguyên liệu vẫn nằm trong workpiece.',
+    'service_appointment_booked' =>
+      '${values['provider'] ?? 'Người cung cấp'} và '
+          '${values['recipient'] ?? 'người nhận'} đã giữ lịch dịch vụ '
+          '${values['service'] ?? fact.subjectId} tới mốc ${values['ends_at'] ?? '?'}.',
+    'service_appointment_started' =>
+      '${values['provider'] ?? 'Người cung cấp'} bắt đầu phục vụ '
+          '${values['recipient'] ?? 'người nhận'}; cả hai cùng bị giữ lịch.',
+    'service_appointment_completed' =>
+      'Dịch vụ ${values['service'] ?? fact.subjectId} hoàn tất và tạo claim '
+          '${values['claim'] ?? '?'} (${_serviceClaimLabel(values['claim_kind'] ?? '')}).',
+    'service_appointment_blocked' =>
+      'Dịch vụ ${values['service'] ?? fact.subjectId} bị chặn vì '
+          '${_serviceFailureLabel(values['reason'] ?? '')}.',
+    'labor_offer_created' =>
+      '${values['employer'] ?? 'Người thuê'} mời ${values['worker'] ?? 'người làm'} '
+          'nhận ${values['activity'] ?? 'một công việc'}; quyền lợi '
+          '${values['compensation_quantity'] ?? '?'} ${values['compensation_unit'] ?? ''} '
+          '${_itemKindLabel(values['compensation_kind'] ?? '')}.',
+    'labor_offer_accepted' =>
+      '${values['worker'] ?? 'Người làm'} nhận việc sau khi đối chiếu kỹ năng, sức và lịch.',
+    'labor_offer_refused' =>
+      '${values['worker'] ?? 'Người làm'} từ chối lời mời vì '
+          '${_laborReasonLabel(values['reason'] ?? '')}.',
+    'labor_work_started' =>
+      '${values['worker'] ?? 'Người làm'} bắt đầu ${values['activity'] ?? 'ca lao động'} '
+          'và bị giữ thời gian tới mốc ${values['ends_at'] ?? '?'}.',
+    'labor_work_completed' =>
+      '${values['worker'] ?? 'Người làm'} hoàn tất ${values['activity'] ?? 'công việc'}; '
+          'khoản phải trả ${values['claim'] ?? '?'} đã phát sinh.',
+    'labor_work_blocked' =>
+      'Ca lao động bị chặn vì ${_laborReasonLabel(values['reason'] ?? '')}; '
+          'không tự sinh claim trả công.',
+    'labor_payment_failed' =>
+      'Chưa trả được ${values['quantity'] ?? '?'} ${values['unit'] ?? ''}; '
+          'claim ${fact.subjectId} vẫn còn.',
+    'labor_payment_settled' =>
+      'Đã chuyển ${values['quantity'] ?? '?'} ${values['unit'] ?? ''} '
+          '${_itemKindLabel(values['kind'] ?? '')} để tất toán ${fact.subjectId}.',
+    'market_offer_published' =>
+      '${values['seller'] ?? 'Người bán'} đưa ${values['quantity'] ?? '?'} '
+          '${values['unit'] ?? ''} ${_itemKindLabel(values['kind'] ?? '')} '
+          'vào escrow của chợ.',
+    'market_order_reserved' =>
+      '${values['buyer'] ?? 'Người mua'} giữ ${values['merchandise_quantity'] ?? '?'} '
+          '${values['merchandise_unit'] ?? ''} '
+          '${_itemKindLabel(values['merchandise_kind'] ?? '')} và '
+          '${values['payment_quantity'] ?? '?'} ${values['payment_unit'] ?? ''} '
+          '${_itemKindLabel(values['payment_kind'] ?? '')}.',
+    'market_order_settled' =>
+      'Đơn ${fact.subjectId} đổi chủ ${values['merchandise_quantity'] ?? '?'} '
+          '${_itemKindLabel(values['merchandise_kind'] ?? '')} lấy '
+          '${values['payment_quantity'] ?? '?'} '
+          '${_itemKindLabel(values['payment_kind'] ?? '')}.',
+    'market_shipment_departed' =>
+      '${values['carrier'] ?? 'Người chở'} rời kho với '
+          '${values['quantity'] ?? '?'} ${values['unit'] ?? ''} '
+          '${_itemKindLabel(values['kind'] ?? '')}; đi '
+          '${((int.tryParse(values['distance_mm'] ?? '') ?? 0) / 1000000).toStringAsFixed(2)} km '
+          'và dự kiến trễ ${((int.tryParse(values['late_seconds'] ?? '') ?? 0) / 60).ceil()} phút.',
+    'market_shipment_delivered' =>
+      'Chuyến ${fact.subjectId} đã đưa ${values['quantity'] ?? '?'} '
+          '${values['unit'] ?? ''} ${_itemKindLabel(values['kind'] ?? '')} '
+          'vào ${values['destination'] ?? 'kho đích'} với chất lượng '
+          '${values['condition'] ?? '?'}/1000.',
+    'market_shipment_failed' =>
+      'Chuyến ${fact.subjectId} giao thất bại vì '
+          '${_marketShipmentFailureLabel(values['reason'])}; hàng vẫn được giữ trong hồ sơ chuyến.',
+    'supply_shock_started' =>
+      'Cú sốc ${fact.subjectId} làm thiếu ${_itemKindLabel(values['kind'] ?? '')} '
+          'ở các hộ ${values['households'] ?? '?'} tới mốc ${values['ends_at'] ?? '?'}.',
+    'supply_shock_response_recorded' =>
+      '${values['household'] ?? 'Một hộ'} thay đổi sinh kế bằng '
+          '${values['response'] ?? '?'}; bằng chứng ${values['evidence'] ?? '?'}.',
+    'supply_shock_day_recorded' =>
+      'Ngày ${values['day'] ?? '?'} của cú sốc: kho + hàng đang đi '
+          '${values['stocks'] ?? '?'}; ${values['adapted_households'] ?? '0'} hộ đã phản ứng.',
+    'supply_shock_resolved' =>
+      'Cú sốc kết thúc sau đối chiếu ngày ${values['day'] ?? '?'}; '
+          '${values['adapted_households'] ?? '0'} hộ có phản ứng thật.',
     'caregiver_unavailable' =>
       '${fact.subjectId} tạm không thể nhận việc chăm sóc vì ${_reasonLabel(values['reason'])}.',
     'caregiver_available' =>
@@ -4566,6 +6432,46 @@ String _factDetail(WorldFact fact) {
     'infant_cry' => 'Căng thẳng đạt ${values['distress'] ?? '?'}/1000.',
     'infant_elimination' =>
       'Bài tiết ${values['urine_ml'] ?? '0'} ml nước tiểu và ${values['stool_g'] ?? '0'} g phân.',
+    'child_activity_started' =>
+      '${fact.subjectId} bắt đầu ${values['intent'] ?? 'một hoạt động'} trong '
+          '${((int.tryParse(values['duration_seconds'] ?? '') ?? 0) ~/ 60)} phút tại '
+          '${values['room'] ?? 'không gian hiện tại'}.',
+    'child_activity_succeeded' =>
+      '${fact.subjectId} hoàn thành ${values['intent'] ?? 'hoạt động'}; '
+          'năng lực ${values['score'] ?? '?'}/${values['threshold'] ?? '?'}.',
+    'child_activity_failed' =>
+      '${fact.subjectId} chưa hoàn thành ${values['intent'] ?? 'hoạt động'}; '
+          'nguyên nhân ${values['reason'] ?? 'chưa rõ'}.',
+    'child_activity_cancelled' =>
+      'Hoạt động của ${fact.subjectId} bị dừng vì cam kết thời gian không còn hiệu lực.',
+    'child_learning_succeeded' =>
+      '${fact.subjectId} học được ${values['concept'] ?? 'một điều mới'} từ '
+          '${values['source'] ?? 'nguồn không rõ'}; tin hiệu quả '
+          '${values['score'] ?? '?'}/${values['threshold'] ?? '?'}.',
+    'child_learning_failed' =>
+      '${fact.subjectId} chưa học được qua ${values['intent'] ?? 'hoạt động'}; '
+          'nguyên nhân ${values['reason'] ?? 'chưa rõ'}.',
+    'child_hazard_detected' =>
+      '${fact.subjectId} mất thăng bằng, '
+          '${values['noticed'] == 'true' ? 'nhận ra sớm' : 'không nhận ra kịp'}; '
+          'đã tìm ${values['caregiver'] ?? 'không ai'} theo mức ưu tiên '
+          '${values['preference'] ?? '?'}.',
+    'child_hazard_soothed' =>
+      '${values['caregiver'] ?? 'Người chăm'} đã đến trấn an ${fact.subjectId}; '
+          'cảm giác an toàn đổi ${values['security_change'] ?? '0'} điểm.',
+    'child_hazard_unattended' =>
+      '${fact.subjectId} không được đáp ứng sau sự cố; cảm giác an toàn đổi '
+          '${values['security_change'] ?? '?'} điểm.',
+    'child_memories_compressed' =>
+      '${fact.subjectId} đã chuyển ${values['compressed'] ?? '0'} lần nhớ cũ '
+          'thành tóm tắt; còn ${values['recent'] ?? '0'} ký ức gần, '
+          '${values['anchors'] ?? '0'} ký ức nổi bật và '
+          '${values['summaries'] ?? '0'} giai đoạn tóm tắt.',
+    'child_daily_nutrition' =>
+      '${fact.subjectId} nhận ${values['food_g'] ?? '0'}/${values['food_need_g'] ?? '?'} g thức ăn và '
+          '${values['water_ml'] ?? '0'}/${values['water_need_ml'] ?? '?'} ml nước; '
+          'khối lượng ${values['mass_g'] ?? '?'} g, hỗ trợ phát triển '
+          '${values['development_support'] ?? '?'}/1000.',
     _ => fact.detail,
   };
 }
@@ -4576,6 +6482,16 @@ String _itemKindLabel(String kind) => switch (kind) {
   'firewood' => 'củi',
   'infant_feed' => 'dịch dinh dưỡng',
   'swaddling_cloth' => 'khăn quấn',
+  'child_play_object' => 'vật chơi mềm',
+  'raw_timber' => 'gỗ thô',
+  'plant_fiber' => 'sợi thực vật',
+  'hand_axe' => 'rìu tay',
+  'carrying_frame' => 'khung gùi gỗ',
+  'raw_grain' => 'ngũ cốc thô',
+  'raw_root' => 'củ tươi dự trữ',
+  'dried_root_food' => 'lương thực củ hong',
+  'labor_rice' => 'gạo trả công',
+  'dried_herb' => 'dược thảo khô',
   _ => kind,
 };
 
@@ -4615,6 +6531,20 @@ String _factLabel(String kind) => switch (kind) {
   'infant_fell_asleep' => 'Trẻ chìm vào giấc ngủ',
   'infant_woke_up' => 'Trẻ thức dậy',
   'infant_elimination' => 'Bài tiết',
+  'childhood_started' => 'Bước qua tháng sơ sinh',
+  'child_development_stage_changed' => 'Sang giai đoạn phát triển mới',
+  'child_activity_started' => 'Bắt đầu hoạt động tuổi thơ',
+  'child_activity_completed' => 'Hoàn tất hoạt động tuổi thơ',
+  'child_activity_succeeded' => 'Hoạt động tuổi thơ thành công',
+  'child_activity_failed' => 'Hoạt động tuổi thơ chưa thành công',
+  'child_activity_cancelled' => 'Hoạt động tuổi thơ bị dừng',
+  'child_learning_succeeded' => 'Trẻ học được điều có nguồn',
+  'child_learning_failed' => 'Trẻ chưa học được',
+  'child_hazard_detected' => 'Trẻ gặp nguy hiểm',
+  'child_hazard_soothed' => 'Người chăm đã trấn an',
+  'child_hazard_unattended' => 'Nguy hiểm không được đáp ứng',
+  'child_memories_compressed' => 'Ký ức tuổi thơ được tóm tắt',
+  'child_daily_nutrition' => 'Cơ thể trẻ nhận khẩu phần ngày',
   'birth' => 'Ra đời',
   'person_created' => 'Nhân vật tồn tại',
   'item_created' => 'Vật phẩm tồn tại',
@@ -4638,8 +6568,8 @@ String _factLabel(String kind) => switch (kind) {
   'community_resource_introduction_started' =>
     'Đang đi gặp nguồn được giới thiệu',
   'community_resource_introduction_arrived' => 'Đã gặp người của hộ nguồn',
-  'personal_time_committed' => 'NPC bắt đầu hành trình',
-  'personal_time_released' => 'NPC kết thúc hành trình',
+  'personal_time_committed' => 'Bắt đầu cam kết thời gian',
+  'personal_time_released' => 'Kết thúc cam kết thời gian',
   'community_survival_day_recorded' => 'Ghi sức sống cuối ngày',
   'community_survival_audit_completed' => 'Hoàn tất hồ sơ 30 ngày',
   'household_meal_completed' => 'Hộ hoàn tất bữa ăn',
@@ -4690,6 +6620,31 @@ String _factLabel(String kind) => switch (kind) {
   'illness_resolved' => 'Bệnh đã lui',
   'household_supply_delivered' => 'Hộ nhận tiếp tế',
   'household_production_completed' => 'Hộ hoàn tất sản xuất',
+  'production_batch_started' => 'Mẻ chế tác bắt đầu',
+  'production_batch_completed' => 'Mẻ chế tác hoàn tất',
+  'production_batch_blocked' => 'Mẻ chế tác bị chặn',
+  'service_appointment_booked' => 'Đã đặt lịch dịch vụ',
+  'service_appointment_started' => 'Dịch vụ bắt đầu',
+  'service_appointment_completed' => 'Dịch vụ hoàn tất',
+  'service_appointment_blocked' => 'Dịch vụ bị chặn',
+  'labor_offer_created' => 'Lời mời lao động được đưa ra',
+  'labor_offer_accepted' => 'Người làm nhận việc',
+  'labor_offer_refused' => 'Người làm từ chối',
+  'labor_work_started' => 'Ca lao động bắt đầu',
+  'labor_work_completed' => 'Công việc hoàn tất',
+  'labor_work_blocked' => 'Ca lao động bị chặn',
+  'labor_payment_failed' => 'Chưa trả được quyền lợi',
+  'labor_payment_settled' => 'Quyền lợi đã được thanh toán',
+  'market_offer_published' => 'Hàng thật được đăng tại chợ',
+  'market_order_reserved' => 'Đơn chợ đã giữ hai phía',
+  'market_order_settled' => 'Đơn chợ đã đổi chủ',
+  'market_shipment_departed' => 'Hàng giao dịch rời kho',
+  'market_shipment_delivered' => 'Hàng giao dịch tới kho',
+  'market_shipment_failed' => 'Chuyến giao hàng thất bại',
+  'supply_shock_started' => 'Cú sốc thiếu hàng bắt đầu',
+  'supply_shock_response_recorded' => 'Hộ thay đổi sinh kế',
+  'supply_shock_day_recorded' => 'Đối chiếu thiếu hàng cuối ngày',
+  'supply_shock_resolved' => 'Cú sốc thiếu hàng kết thúc',
   'caregiver_unavailable' => 'Người chăm sóc bị gián đoạn',
   'caregiver_available' => 'Người chăm sóc trở lại',
   'caregiver_substituted' => 'Hộ thay người chăm sóc',

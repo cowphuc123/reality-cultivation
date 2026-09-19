@@ -4,6 +4,7 @@ import 'geometry.dart';
 import 'region.dart';
 
 const String worldGeneratorVersion = 'v2.15.0';
+const String worldEnvironmentGeneratorVersion = 'v5.0-dev.4';
 const int minimumWorldSeed = 1;
 const int maximumWorldSeed = 2147483646;
 
@@ -125,6 +126,7 @@ class WorldGenerator {
   static GeneratedWorld generate({
     required int rootSeed,
     WorldGenerationConfig config = WorldGenerationConfig.anKhe,
+    bool includeTerrainProfile = false,
   }) {
     if (rootSeed < minimumWorldSeed || rootSeed > maximumWorldSeed) {
       throw RangeError.range(
@@ -144,6 +146,26 @@ class WorldGenerator {
       rootSeed,
       '${config.id}:region_dimensions',
     );
+    final _SeedStream terrain = _SeedStream.derived(
+      rootSeed,
+      '${config.id}:terrain_profile',
+    );
+    final int valleyFloorElevationM = includeTerrainProfile
+        ? 180 + terrain.nextInt(341)
+        : 0;
+    final int rimElevationM = includeTerrainProfile
+        ? valleyFloorElevationM + 420 + terrain.nextInt(681)
+        : 0;
+    final int annualRainfallMm = includeTerrainProfile
+        ? 900 + terrain.nextInt(1201)
+        : 0;
+    final String climateCode = !includeTerrainProfile
+        ? 'unspecified'
+        : annualRainfallMm >= 1650
+        ? 'humid_monsoon_valley'
+        : annualRainfallMm >= 1250
+        ? 'seasonal_monsoon_valley'
+        : 'dry_monsoon_valley';
     final WorldRegion region = WorldRegion(
       id: config.regionId,
       name: config.regionName,
@@ -155,14 +177,26 @@ class WorldGenerator {
       heightMm:
           config.minHeightMm +
           dimensions.nextInt(config.maxHeightMm - config.minHeightMm + 1),
+      valleyFloorElevationM: valleyFloorElevationM,
+      rimElevationM: rimElevationM,
+      annualRainfallMm: annualRainfallMm,
+      climateCode: climateCode,
     );
     final List<WorldSite> sites = <WorldSite>[
       for (final _SiteTemplate template in _siteTemplates)
-        _generateSite(rootSeed, config.id, region, template),
+        _generateSite(
+          rootSeed,
+          config.id,
+          region,
+          template,
+          includeTerrainProfile: includeTerrainProfile,
+        ),
     ];
     return GeneratedWorld(
       rootSeed: rootSeed,
-      generatorVersion: worldGeneratorVersion,
+      generatorVersion: includeTerrainProfile
+          ? worldEnvironmentGeneratorVersion
+          : worldGeneratorVersion,
       configId: config.id,
       region: region,
       sites: sites,
@@ -191,8 +225,9 @@ class WorldGenerator {
     int rootSeed,
     String configId,
     WorldRegion region,
-    _SiteTemplate template,
-  ) {
+    _SiteTemplate template, {
+    required bool includeTerrainProfile,
+  }) {
     final _SeedStream stream = _SeedStream.derived(
       rootSeed,
       '$configId:site:${template.id}',
@@ -219,6 +254,30 @@ class WorldGenerator {
       maximum: maxY,
       positionPerMille: template.yPerMille,
     );
+    final int elevationM = includeTerrainProfile
+        ? region.valleyFloorElevationM +
+              template.minElevationAboveFloorM +
+              stream.nextInt(
+                template.maxElevationAboveFloorM -
+                    template.minElevationAboveFloorM +
+                    1,
+              )
+        : 0;
+    final List<NaturalResourceDeposit> resources = includeTerrainProfile
+        ? _generateResources(
+            rootSeed: rootSeed,
+            configId: configId,
+            region: region,
+            template: template,
+          )
+        : const <NaturalResourceDeposit>[];
+    final List<EcologicalPopulationState> ecology = includeTerrainProfile
+        ? _generateEcology(
+            rootSeed: rootSeed,
+            configId: configId,
+            template: template,
+          )
+        : const <EcologicalPopulationState>[];
     return WorldSite(
       id: template.id,
       regionId: region.id,
@@ -226,7 +285,194 @@ class WorldGenerator {
       kind: template.kind,
       center: WorldPoint(x, y),
       radiusMm: radius,
+      terrainCode: includeTerrainProfile
+          ? template.terrainCode
+          : 'unspecified',
+      elevationM: elevationM,
+      resourceDeposits: resources,
+      ecologicalPopulations: ecology,
     );
+  }
+
+  static List<EcologicalPopulationState> _generateEcology({
+    required int rootSeed,
+    required String configId,
+    required _SiteTemplate template,
+  }) {
+    final _SeedStream stream = _SeedStream.derived(
+      rootSeed,
+      '$configId:ecology:${template.id}',
+    );
+    EcologicalPopulationState population({
+      required String species,
+      required String kind,
+      required int minimumCapacity,
+      required int capacityRange,
+      required int growth,
+      required int mortality,
+      String? resource,
+      String? food,
+    }) {
+      final int capacity = minimumCapacity + stream.nextInt(capacityRange + 1);
+      return EcologicalPopulationState(
+        id: 'ECO-${template.id}-$species',
+        speciesCode: species,
+        kind: kind,
+        population: capacity * (560 + stream.nextInt(321)) ~/ 1000,
+        carryingCapacity: capacity,
+        health: 600 + stream.nextInt(351),
+        annualGrowthPerMille: growth,
+        annualMortalityPerMille: mortality,
+        requiredResourceKind: resource,
+        foodSpeciesCode: food,
+      );
+    }
+
+    return switch (template.kind) {
+      'river' => <EcologicalPopulationState>[
+          population(
+            species: 'river_reed',
+            kind: 'plant',
+            minimumCapacity: 50000,
+            capacityRange: 50000,
+            growth: 520,
+            mortality: 140,
+            resource: 'surface_water',
+          ),
+        ],
+      'field' => <EcologicalPopulationState>[
+          population(
+            species: 'meadow_grass',
+            kind: 'plant',
+            minimumCapacity: 240000,
+            capacityRange: 260000,
+            growth: 620,
+            mortality: 180,
+            resource: 'fertile_topsoil',
+          ),
+          population(
+            species: 'field_hare',
+            kind: 'herbivore',
+            minimumCapacity: 600,
+            capacityRange: 900,
+            growth: 420,
+            mortality: 210,
+            resource: 'surface_water',
+            food: 'meadow_grass',
+          ),
+        ],
+      'pass' => <EcologicalPopulationState>[
+          population(
+            species: 'upland_pine',
+            kind: 'plant',
+            minimumCapacity: 9000,
+            capacityRange: 11000,
+            growth: 90,
+            mortality: 35,
+            resource: 'timber_stand',
+          ),
+          population(
+            species: 'muntjac_deer',
+            kind: 'herbivore',
+            minimumCapacity: 180,
+            capacityRange: 360,
+            growth: 260,
+            mortality: 150,
+            resource: 'surface_water',
+            food: 'upland_pine',
+          ),
+        ],
+      _ => const <EcologicalPopulationState>[],
+    };
+  }
+
+  static List<NaturalResourceDeposit> _generateResources({
+    required int rootSeed,
+    required String configId,
+    required WorldRegion region,
+    required _SiteTemplate template,
+  }) {
+    final _SeedStream stream = _SeedStream.derived(
+      rootSeed,
+      '$configId:natural_resources:${template.id}',
+    );
+    NaturalResourceDeposit deposit({
+      required String suffix,
+      required String kind,
+      required int minimumCapacity,
+      required int capacityRange,
+      required String unit,
+      required int renewalPerMille,
+      required String origin,
+      int accessibilityBase = 500,
+    }) {
+      final int capacity = minimumCapacity + stream.nextInt(capacityRange + 1);
+      final int initialPerMille = 650 + stream.nextInt(351);
+      return NaturalResourceDeposit(
+        id: 'RESOURCE-${template.id}-$suffix',
+        kind: kind,
+        quantity: capacity * initialPerMille ~/ 1000,
+        capacity: capacity,
+        unit: unit,
+        quality: 400 + stream.nextInt(601),
+        accessibility: (accessibilityBase + stream.nextSigned(180)).clamp(
+          100,
+          1000,
+        ).toInt(),
+        annualRenewal: capacity * renewalPerMille ~/ 1000,
+        origin: origin,
+      );
+    }
+
+    return switch (template.kind) {
+      'river' => <NaturalResourceDeposit>[
+          deposit(
+            suffix: 'WATER',
+            kind: 'surface_water',
+            minimumCapacity: 1200000 + region.annualRainfallMm * 400,
+            capacityRange: 900000,
+            unit: 'm3',
+            renewalPerMille: 850,
+            origin: 'watershed_and_monsoon_rain',
+            accessibilityBase: 760,
+          ),
+        ],
+      'field' => <NaturalResourceDeposit>[
+          deposit(
+            suffix: 'SOIL',
+            kind: 'fertile_topsoil',
+            minimumCapacity: 18000,
+            capacityRange: 14000,
+            unit: 'tonne',
+            renewalPerMille: 8,
+            origin: 'river_alluvium',
+            accessibilityBase: 820,
+          ),
+        ],
+      'pass' => <NaturalResourceDeposit>[
+          deposit(
+            suffix: 'TIMBER',
+            kind: 'timber_stand',
+            minimumCapacity: 3200000,
+            capacityRange: 2800000,
+            unit: 'kg',
+            renewalPerMille: 35,
+            origin: 'upland_woodland_growth',
+            accessibilityBase: 430,
+          ),
+          deposit(
+            suffix: 'MINERAL',
+            kind: 'mixed_stone_ore',
+            minimumCapacity: 900000,
+            capacityRange: 2200000,
+            unit: 'kg',
+            renewalPerMille: 0,
+            origin: 'valley_bedrock',
+            accessibilityBase: 280,
+          ),
+        ],
+      _ => const <NaturalResourceDeposit>[],
+    };
   }
 
   static int _placedCoordinate({
@@ -252,6 +498,9 @@ class _SiteTemplate {
     required this.yPerMille,
     required this.minRadiusMm,
     required this.maxRadiusMm,
+    required this.terrainCode,
+    required this.minElevationAboveFloorM,
+    required this.maxElevationAboveFloorM,
   });
 
   final String id;
@@ -261,6 +510,9 @@ class _SiteTemplate {
   final int yPerMille;
   final int minRadiusMm;
   final int maxRadiusMm;
+  final String terrainCode;
+  final int minElevationAboveFloorM;
+  final int maxElevationAboveFloorM;
 }
 
 const List<_SiteTemplate> _siteTemplates = <_SiteTemplate>[
@@ -272,6 +524,9 @@ const List<_SiteTemplate> _siteTemplates = <_SiteTemplate>[
     yPerMille: 240,
     minRadiusMm: 90000,
     maxRadiusMm: 150000,
+    terrainCode: 'alluvial_terrace',
+    minElevationAboveFloorM: 12,
+    maxElevationAboveFloorM: 38,
   ),
   _SiteTemplate(
     id: 'SITE-RIVER',
@@ -281,6 +536,9 @@ const List<_SiteTemplate> _siteTemplates = <_SiteTemplate>[
     yPerMille: 330,
     minRadiusMm: 220000,
     maxRadiusMm: 350000,
+    terrainCode: 'river_channel',
+    minElevationAboveFloorM: 0,
+    maxElevationAboveFloorM: 6,
   ),
   _SiteTemplate(
     id: 'SITE-FIELD',
@@ -290,6 +548,9 @@ const List<_SiteTemplate> _siteTemplates = <_SiteTemplate>[
     yPerMille: 830,
     minRadiusMm: 350000,
     maxRadiusMm: 550000,
+    terrainCode: 'floodplain',
+    minElevationAboveFloorM: 4,
+    maxElevationAboveFloorM: 18,
   ),
   _SiteTemplate(
     id: 'SITE-PASS',
@@ -299,6 +560,9 @@ const List<_SiteTemplate> _siteTemplates = <_SiteTemplate>[
     yPerMille: 300,
     minRadiusMm: 300000,
     maxRadiusMm: 500000,
+    terrainCode: 'mountain_pass',
+    minElevationAboveFloorM: 280,
+    maxElevationAboveFloorM: 400,
   ),
   _SiteTemplate(
     id: 'SITE-MARKET',
@@ -308,6 +572,9 @@ const List<_SiteTemplate> _siteTemplates = <_SiteTemplate>[
     yPerMille: 220,
     minRadiusMm: 450000,
     maxRadiusMm: 650000,
+    terrainCode: 'alluvial_terrace',
+    minElevationAboveFloorM: 18,
+    maxElevationAboveFloorM: 55,
   ),
 ];
 

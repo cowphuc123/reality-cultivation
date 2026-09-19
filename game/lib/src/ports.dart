@@ -1,6 +1,7 @@
 import 'adult_body.dart';
 import 'agenda.dart';
 import 'care.dart';
+import 'childhood.dart';
 import 'community_survival.dart';
 import 'domestic.dart';
 import 'family.dart';
@@ -80,6 +81,8 @@ class WorldHistoryView {
   int get completedEpochCount => state.epochs.length;
   int get expectedEpochCount => state.expectedEpochCount;
   List<HistoricalAnchor> get anchors => state.anchors;
+  List<HistoricalAnchor> get recentAnchors => state.recentAnchors;
+  int get macroStepCount => state.macroStepCount;
   HistoricalMetrics? get currentMetrics => state.currentMetrics;
 }
 
@@ -90,6 +93,7 @@ class PersonView {
     required this.ageSeconds,
     required this.activeGoal,
     required this.infancy,
+    this.childhood,
     required this.roomName,
     required this.health,
   });
@@ -99,6 +103,7 @@ class PersonView {
   final int ageSeconds;
   final String? activeGoal;
   final InfantView? infancy;
+  final ChildhoodView? childhood;
   final String? roomName;
   final HealthView? health;
 }
@@ -121,6 +126,106 @@ class HealthView {
   final List<String> symptoms;
   final bool detected;
   final int careMinutes;
+}
+
+class ChildhoodView {
+  const ChildhoodView({
+    required this.stage,
+    required this.security,
+    required this.grossMotor,
+    required this.fineMotor,
+    required this.receptiveLanguage,
+    required this.expressiveLanguage,
+    required this.observationExperience,
+    required this.movementPractice,
+    required this.languageExposure,
+    required this.playExperience,
+    required this.body,
+    required this.maturationEquivalentDays,
+    required this.completedPhysicalActivities,
+    required this.successfulPhysicalActivities,
+    required this.failedPhysicalActivities,
+    required this.completedLearningActivities,
+    required this.successfulLearningActivities,
+    required this.failedLearningActivities,
+    required this.allowedIntents,
+    required this.lastIntent,
+    required this.lastOutcome,
+    required this.lastActivityRoomId,
+    required this.lastActivityItemId,
+    required this.lastActivityDurationSeconds,
+    required this.activeActivity,
+    required this.activeActivityEndsAtSeconds,
+    required this.learningRecords,
+    required this.caregiverPreferenceScores,
+    required this.hazardIncidents,
+    required this.hazardsNoticedBeforeHarm,
+    required this.hazardsResolvedByCaregiver,
+    required this.lastHazard,
+    required this.recentMemories,
+    required this.memoryAnchors,
+    required this.memorySummaries,
+    required this.compressedMemoryCount,
+  });
+
+  final ChildDevelopmentStage stage;
+  final int security;
+  final int grossMotor;
+  final int fineMotor;
+  final int receptiveLanguage;
+  final int expressiveLanguage;
+  final int observationExperience;
+  final int movementPractice;
+  final int languageExposure;
+  final int playExperience;
+  final ChildBodyState body;
+  final int maturationEquivalentDays;
+  final int completedPhysicalActivities;
+  final int successfulPhysicalActivities;
+  final int failedPhysicalActivities;
+  final int completedLearningActivities;
+  final int successfulLearningActivities;
+  final int failedLearningActivities;
+  final List<ChildIntent> allowedIntents;
+  final ChildIntent? lastIntent;
+  final String? lastOutcome;
+  final String? lastActivityRoomId;
+  final String? lastActivityItemId;
+  final int? lastActivityDurationSeconds;
+  final String? activeActivity;
+  final int? activeActivityEndsAtSeconds;
+  final List<ChildLearningView> learningRecords;
+  final Map<String, int> caregiverPreferenceScores;
+  final int hazardIncidents;
+  final int hazardsNoticedBeforeHarm;
+  final int hazardsResolvedByCaregiver;
+  final ChildHazardIncidentState? lastHazard;
+  final List<ChildMemoryEpisodeState> recentMemories;
+  final List<ChildMemoryEpisodeState> memoryAnchors;
+  final List<ChildMemorySummaryState> memorySummaries;
+  final int compressedMemoryCount;
+}
+
+class ChildLearningView {
+  const ChildLearningView({
+    required this.conceptId,
+    required this.summary,
+    required this.learnedAtSeconds,
+    required this.acquisition,
+    required this.sourcePersonId,
+    required this.sourceObjectId,
+    required this.activity,
+    required this.confidence,
+  });
+
+  final String conceptId;
+  final String summary;
+  final int learnedAtSeconds;
+  final KnowledgeAcquisition acquisition;
+  final String sourcePersonId;
+  final String? sourceObjectId;
+  final String activity;
+  final int confidence;
 }
 
 class InfantView {
@@ -704,6 +809,11 @@ class SimulationHost implements CommandPort, QueryPort {
     final int ageSeconds =
         simulation.state.now.seconds - state.birthTime.seconds;
     final InfantState? infancy = state.infancy;
+    final ChildhoodState? childhood = state.childhood;
+    final PersonalTimeCommitment? childActivity =
+        state.timeCommitment?.kind.startsWith('child_') == true
+        ? state.timeCommitment
+        : null;
     final IllnessState? illness = simulation.state.illnesses.values
         .where((IllnessState value) => value.personId == id)
         .firstOrNull;
@@ -785,6 +895,88 @@ class SimulationHost implements CommandPort, QueryPort {
                   Map<String, InfantCareExpectationState>.unmodifiable(
                     infancy.careExpectations,
                   ),
+            ),
+      childhood: childhood == null
+          ? null
+          : ChildhoodView(
+              stage: childhood.stage,
+              security: childhood.security,
+              grossMotor: childhood.grossMotor,
+              fineMotor: childhood.fineMotor,
+              receptiveLanguage: childhood.receptiveLanguage,
+              expressiveLanguage: childhood.expressiveLanguage,
+              observationExperience: childhood.observationExperience,
+              movementPractice: childhood.movementPractice,
+              languageExposure: childhood.languageExposure,
+              playExperience: childhood.playExperience,
+              body: childhood.body,
+              maturationEquivalentDays:
+                  childhood.maturationProgressPerMille ~/ 1000,
+              completedPhysicalActivities:
+                  childhood.completedPhysicalActivities,
+              successfulPhysicalActivities:
+                  childhood.successfulPhysicalActivities,
+              failedPhysicalActivities: childhood.failedPhysicalActivities,
+              completedLearningActivities:
+                  childhood.completedLearningActivities,
+              successfulLearningActivities:
+                  childhood.successfulLearningActivities,
+              failedLearningActivities: childhood.failedLearningActivities,
+              allowedIntents: List<ChildIntent>.unmodifiable(
+                childActivity == null
+                    ? childhood.allowedIntents
+                    : const <ChildIntent>[],
+              ),
+              lastIntent: childhood.lastIntent,
+              lastOutcome: childhood.lastOutcome,
+              lastActivityRoomId: childhood.lastActivityRoomId,
+              lastActivityItemId: childhood.lastActivityItemId,
+              lastActivityDurationSeconds:
+                  childhood.lastActivityDurationSeconds,
+              activeActivity: childActivity?.activity,
+              activeActivityEndsAtSeconds: childActivity?.endsAtSeconds,
+              learningRecords: List<ChildLearningView>.unmodifiable(
+                (state.beliefs.values
+                        .where(
+                          (BeliefState belief) =>
+                              belief.learningActivity != null,
+                        )
+                        .toList()
+                      ..sort(
+                        (BeliefState a, BeliefState b) =>
+                            b.learnedAtSeconds.compareTo(a.learnedAtSeconds),
+                      ))
+                    .map(
+                      (BeliefState belief) => ChildLearningView(
+                        conceptId: belief.claimId,
+                        summary: belief.summary,
+                        learnedAtSeconds: belief.learnedAtSeconds,
+                        acquisition: belief.acquisition,
+                        sourcePersonId: belief.sourcePersonId,
+                        sourceObjectId: belief.sourceObjectId,
+                        activity: belief.learningActivity!,
+                        confidence: belief.confidence,
+                      ),
+                    )
+                    .toList(),
+              ),
+              caregiverPreferenceScores: simulation.childCaregiverPreferences(
+                id,
+              ),
+              hazardIncidents: childhood.hazardIncidents,
+              hazardsNoticedBeforeHarm: childhood.hazardsNoticedBeforeHarm,
+              hazardsResolvedByCaregiver: childhood.hazardsResolvedByCaregiver,
+              lastHazard: childhood.lastHazard,
+              recentMemories: List<ChildMemoryEpisodeState>.unmodifiable(
+                childhood.recentMemories.reversed,
+              ),
+              memoryAnchors: List<ChildMemoryEpisodeState>.unmodifiable(
+                childhood.memoryAnchors,
+              ),
+              memorySummaries: List<ChildMemorySummaryState>.unmodifiable(
+                childhood.memorySummaries.reversed,
+              ),
+              compressedMemoryCount: childhood.compressedMemoryCount,
             ),
       roomName: state.roomId == null
           ? null
@@ -1021,6 +1213,10 @@ class SimulationHost implements CommandPort, QueryPort {
       quantities[entry.key] = item.quantity;
       units[entry.key] = item.unit;
     }
+    final List<CareItemState> ownedItems = simulation.state.items.values
+        .where((CareItemState item) => item.ownerHouseholdId == id)
+        .toList()
+      ..sort((CareItemState a, CareItemState b) => a.id.compareTo(b.id));
     return HouseholdView(
       id: household.id,
       name: household.name,
@@ -1123,18 +1319,17 @@ class SimulationHost implements CommandPort, QueryPort {
       ],
       needs: simulation.householdNeeds(id),
       items: <HouseholdItemView>[
-        for (final String itemId in household.resourceItemIds.values)
-          if (simulation.state.items[itemId] case final CareItemState item)
-            HouseholdItemView(
-              id: item.id,
-              kind: item.kind,
-              quantity: item.quantity,
-              unit: item.unit,
-              condition: item.condition,
-              roomName: item.roomId == null
-                  ? null
-                  : simulation.state.rooms[item.roomId]?.name,
-            ),
+        for (final CareItemState item in ownedItems)
+          HouseholdItemView(
+            id: item.id,
+            kind: item.kind,
+            quantity: item.quantity,
+            unit: item.unit,
+            condition: item.condition,
+            roomName: item.roomId == null
+                ? null
+                : simulation.state.rooms[item.roomId]?.name,
+          ),
       ],
     );
   }
